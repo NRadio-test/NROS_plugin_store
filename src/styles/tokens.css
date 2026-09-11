@@ -22,6 +22,7 @@
   --signal-hover: #84e8ff;
   --signal-text: #5cdeff;
   --on-signal: #050e17;
+  --on-danger: #050e17;
   /* 线上未定义选中底色，此处为 signal 12% 叠加在 surface 上的实色等价值 */
   --signal-surface: #173243;
 
@@ -84,12 +85,13 @@
 
   --text: #08131f;
   --text-2: #44576a;
-  --text-3: #5f7183;
+  --text-3: #596b7c;
 
   --signal: #0e7490;
   --signal-hover: #155e75;
   --signal-text: #0e7490;
   --on-signal: #ffffff;
+  --on-danger: #ffffff;
   --signal-surface: #e0f1f7;
 
   --success: #0b6b45;
@@ -156,7 +158,7 @@
   --r-xl: var(--r-page);
   --r-full: var(--r-pill);
   --shadow-xs: none;
-  --shadow-sm: var(--shadow-shell);
+  --shadow-sm: none;
   --shadow-md: var(--shadow-shell);
   --shadow-lg: var(--shadow-shell);
   --shadow-xl: var(--shadow-dialog);
@@ -185,3 +187,5 @@
   --ease-in-out: var(--ease);
   --font-body: var(--font-sans);
 }
+
+@media (max-width: 767px) { :root { --header-h: 112px; } }

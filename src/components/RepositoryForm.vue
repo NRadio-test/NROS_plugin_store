@@ -63,8 +63,8 @@ async function submit() {
           autocomplete="off"
           placeholder="https://github.com/owner/repository"
         />
-        <span v-if="preview" class="repo-form__preview">{{ preview }}</span>
       </div>
+      <p v-if="preview" class="repo-form__preview">仓库：{{ preview }}</p>
     </AppField>
 
     <div class="repo-form__actions">
@@ -95,17 +95,7 @@ async function submit() {
 .repo-form__input { position: relative; display: flex; align-items: center; }
 .repo-form__prefix { position: absolute; left: 14px; color: var(--text-tertiary); display: inline-flex; }
 .repo-form__field { padding-left: 42px; }
-.repo-form__preview {
-  position: absolute;
-  right: 12px;
-  padding: 3px 9px;
-  border-radius: var(--r-full);
-  background: var(--primary-surface);
-  color: var(--primary-text);
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  font-weight: 600;
-}
+.repo-form__preview { color: var(--signal-text); font-family: var(--font-mono); font-size: var(--fs-sm); overflow-wrap: anywhere; }
 .repo-form__actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .repo-form__note { flex: 1; min-width: 220px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
 .repo-form__result { align-items: flex-start; }
@@ -113,5 +103,5 @@ async function submit() {
 .repo-form__task { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--text-small); }
 .repo-form__task span { color: var(--text-tertiary); }
 .repo-form__task code { padding: 2px 7px; border-radius: var(--r-xs); background: var(--bg-card); border: 1px solid var(--border-base); font-size: var(--text-micro); }
-@media (max-width: 560px) { .repo-form__preview { display: none; } }
+@media (max-width: 560px) { .repo-form__actions .btn { width: 100%; } .repo-form__task { flex-wrap: wrap; overflow-wrap: anywhere; } }
 </style>

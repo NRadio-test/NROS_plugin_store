@@ -39,14 +39,18 @@ const classes = computed(() => [
   (props.icon || props.iconRight) && !props.block && 'btn--with-icon',
 ])
 const attrs = computed(() => {
-  if (props.to) return { to: props.to }
-  if (props.href) return { href: props.href, target: '_blank', rel: 'noopener noreferrer' }
+  const inactive = props.disabled || props.loading
+  if (props.to) return { to: props.to, 'aria-disabled': inactive || undefined, tabindex: inactive ? -1 : undefined }
+  if (props.href) return { href: props.href, target: '_blank', rel: 'noopener noreferrer', 'aria-disabled': inactive || undefined, tabindex: inactive ? -1 : undefined }
   return { type: props.type, disabled: props.disabled || props.loading }
 })
+function guard(event: MouseEvent) {
+  if (props.disabled || props.loading) { event.preventDefault(); event.stopImmediatePropagation() }
+}
 </script>
 
 <template>
-  <component :is="tag" :class="classes" v-bind="attrs" :aria-busy="loading || undefined" :title="title">
+  <component :is="tag" :class="classes" v-bind="attrs" :aria-busy="loading || undefined" :title="title" @click.capture="guard">
     <span v-if="loading" class="btn__spinner" aria-hidden="true" />
     <AppIcon v-else-if="icon" :name="icon" :size="size === 'sm' ? 17 : 19" />
     <slot />

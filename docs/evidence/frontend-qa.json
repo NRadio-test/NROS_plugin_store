@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-09-11T04:53:34.443Z",
+  "ranAt": "2026-09-11T13:40:13.330Z",
   "checks": [
     {
       "name": "公开闭环",
@@ -13,7 +13,7 @@
     },
     {
       "name": "焦点可见",
-      "detail": "DIV.search 焦点指示：outline 3px none，box-shadow rgba(114, 236, 255, 0.44) 0px 0px 0px 3px, rgba(0, 2, 7, 0.34) 0px 18px 50px 0px",
+      "detail": "A.skip-link 焦点指示：outline 2px solid，box-shadow none",
       "passed": true
     },
     {
@@ -32,8 +32,18 @@
       "passed": true
     },
     {
+      "name": "搜索与错误状态",
+      "detail": "375/768/1280 图标、输入区与快捷键无重叠；筛选后焦点保持；排序文案同步；错误不显示虚假零计数；指定说明框已删除",
+      "passed": true
+    },
+    {
+      "name": "弹窗与键盘",
+      "detail": "后台菜单进入浏览器顶层且不出视口；弹窗循环焦点/Esc/焦点恢复通过；移动抽屉无溢出；详情支持方向键标签页",
+      "passed": true
+    },
+    {
       "name": "响应式",
-      "detail": "4 种宽度 × 6 条路由无水平溢出；Studio 六个面板与移动端面板均有截图",
+      "detail": "4 种宽度 × 6 条路由无水平溢出；Studio 七个面板均有桌面和手机截图",
       "passed": true
     }
   ]

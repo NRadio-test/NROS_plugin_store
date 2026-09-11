@@ -24,17 +24,17 @@ defineEmits<{ retry: [] }>()
         <AppSkeleton v-for="index in skeletonCount" :key="index" variant="card" />
       </div>
       <div v-else class="async-rows">
-        <AppSkeleton v-for="index in skeletonCount" :key="index" variant="row" :width="`${90 - index * 7}%`" />
+        <div v-for="index in skeletonCount" :key="index" class="async-row" aria-hidden="true"><div class="async-row__body"><AppSkeleton variant="row" width="42%" /><AppSkeleton variant="row" width="82%" /><AppSkeleton variant="row" width="28%" /></div><AppSkeleton class="async-row__action" height="44px" width="88px" /></div>
       </div>
     </slot>
     <span class="sr-only">正在加载</span>
   </div>
 
-  <div v-else-if="error" class="empty" role="alert">
-    <span class="empty__icon" style="background: var(--danger-surface); color: var(--danger-text)"><AppIcon name="alert" :size="22" /></span>
+  <div v-else-if="error" class="empty empty--error" role="alert">
+    <span class="empty__icon"><AppIcon name="alert" :size="22" /></span>
     <h3 class="empty__title">暂时无法加载</h3>
     <p class="empty__text">{{ error }}</p>
-    <AppButton icon="refresh" style="margin-top: 8px" @click="$emit('retry')">重新加载</AppButton>
+    <AppButton icon="refresh" class="empty__action" @click="$emit('retry')">重新加载</AppButton>
   </div>
 
   <div v-else-if="empty" class="empty">
@@ -49,6 +49,12 @@ defineEmits<{ retry: [] }>()
 
 <style scoped>
 .async-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
-.async-rows { display: flex; flex-direction: column; gap: 14px; padding: 16px; }
+.async-rows { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.async-row { display: flex; align-items: center; gap: var(--sp-6); padding: var(--sp-6) var(--sp-3); border-bottom: 1px solid var(--line); }
+.async-row__body { flex: 1; display: flex; flex-direction: column; gap: var(--sp-3); min-width: 0; }
+.async-row__action { flex: none; }
+.empty--error .empty__icon { background: var(--danger-surface); color: var(--danger); }
+.empty__action { margin-top: var(--sp-3); }
+
 @media (max-width: 640px) { .async-grid { grid-template-columns: 1fr; } }
 </style>

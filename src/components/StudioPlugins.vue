@@ -11,6 +11,8 @@ import AppBadge from './AppBadge.vue'
 import AppButton from './AppButton.vue'
 import AppModal from './AppModal.vue'
 import AppDrawer from './AppDrawer.vue'
+import AppMenu from './AppMenu.vue'
+import { navigateTabs } from '../composables/tabs'
 import RepositoryForm from './RepositoryForm.vue'
 
 type Action = 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
@@ -49,7 +51,7 @@ const detail = ref<StudioPluginDetail | null>(null)
 const detailLoading = ref(false)
 const detailTab = ref<'snapshot' | 'tasks' | 'audits'>('snapshot')
 const pending = ref<{ plugin: StudioPlugin; action: Action } | null>(null)
-const openMenu = ref('')
+
 
 let timer: ReturnType<typeof setTimeout>
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
@@ -71,7 +73,6 @@ async function load() {
 }
 
 function ask(plugin: StudioPlugin, action: Action) {
-  openMenu.value = ''
   pending.value = { plugin, action }
 }
 
@@ -165,7 +166,7 @@ void load()
       @retry="load"
     >
       <div class="card sp__table-card">
-        <div class="table-wrap">
+        <div class="table-wrap" role="region" aria-label="插件管理表格，可横向滚动" tabindex="0">
           <table class="table sp__table">
             <thead>
               <tr>
@@ -210,27 +211,16 @@ void load()
                   <div class="table__actions">
                     <AppButton size="sm" variant="ghost" icon="external-link" @click="openDetail(plugin.id)">详情</AppButton>
                     <AppButton size="sm" :loading="busy === plugin.id && pending?.action === 'sync'" @click="ask(plugin, 'sync')">同步</AppButton>
-                    <div class="sp__menu-wrap">
-                      <button
-                        type="button"
-                        class="btn btn--secondary btn--sm btn--icon"
-                        aria-haspopup="menu"
-                        :aria-expanded="openMenu === plugin.id"
-                        :aria-label="`${plugin.full_name} 的更多操作`"
-                        @click="openMenu = openMenu === plugin.id ? '' : plugin.id"
-                      >
-                        <AppIcon name="sliders" :size="15" />
-                      </button>
-                      <div v-if="openMenu === plugin.id" class="menu sp__menu" role="menu">
-                        <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新审核</button>
-                        <button type="button" class="menu__item" role="menuitem" :disabled="!!plugin.blocked" @click="ask(plugin, 'unlist')"><AppIcon name="ban" :size="15" />下架</button>
-                        <button type="button" class="menu__item menu__item--danger" role="menuitem" @click="ask(plugin, 'delete')"><AppIcon name="trash" :size="15" />删除</button>
-                        <template v-if="plugin.blocked || ['deleted', 'unlisted', 'removed'].includes(plugin.status || '')">
-                          <div class="menu__sep" />
-                          <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'restore')"><AppIcon name="rotate-ccw" :size="15" />显式恢复</button>
-                        </template>
-                      </div>
-                    </div>
+                    <AppMenu :label="`${plugin.full_name} 的更多操作`">
+                      <template #trigger><AppIcon name="sliders" :size="19" /></template>
+                      <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新审核</button>
+                      <button type="button" class="menu__item" role="menuitem" :disabled="!!plugin.blocked" @click="ask(plugin, 'unlist')"><AppIcon name="ban" :size="15" />下架</button>
+                      <button type="button" class="menu__item menu__item--danger" role="menuitem" @click="ask(plugin, 'delete')"><AppIcon name="trash" :size="15" />删除</button>
+                      <template v-if="plugin.blocked || ['deleted', 'unlisted', 'removed'].includes(plugin.status || '')">
+                        <div class="menu__sep" />
+                        <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'restore')"><AppIcon name="rotate-ccw" :size="15" />显式恢复</button>
+                      </template>
+                    </AppMenu>
                   </div>
                 </td>
               </tr>
@@ -294,20 +284,20 @@ void load()
 
         <p class="sp__drawer-reason">{{ detail.plugin.public_reason || '暂无公开理由' }}</p>
 
-        <nav class="tabs sp__drawer-tabs" role="tablist">
-          <button type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'snapshot'" @click="detailTab = 'snapshot'">
+        <nav class="tabs sp__drawer-tabs" role="tablist" aria-label="插件管理详情" @keydown="navigateTabs">
+          <button id="studio-tab-snapshot" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'snapshot'" :tabindex="detailTab === 'snapshot' ? 0 : -1" aria-controls="studio-panel-snapshot" @click="detailTab = 'snapshot'">
             <AppIcon name="shield-check" :size="15" />已批准快照
           </button>
-          <button type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'tasks'" @click="detailTab = 'tasks'">
+          <button id="studio-tab-tasks" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'tasks'" :tabindex="detailTab === 'tasks' ? 0 : -1" aria-controls="studio-panel-tasks" @click="detailTab = 'tasks'">
             <AppIcon name="activity" :size="15" />任务记录
             <span class="tabs__count">{{ detail.tasks.length }}</span>
           </button>
-          <button type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'audits'" @click="detailTab = 'audits'">
+          <button id="studio-tab-audits" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'audits'" :tabindex="detailTab === 'audits' ? 0 : -1" aria-controls="studio-panel-audits" @click="detailTab = 'audits'">
             <AppIcon name="history" :size="15" />审计
           </button>
         </nav>
 
-        <section v-if="detailTab === 'snapshot'" class="sp__drawer-section">
+        <section v-if="detailTab === 'snapshot'" :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
           <template v-if="detail.snapshot">
             <div class="sp__kv">
               <div><span>结论</span><span><AppBadge :variant="statusMeta(detail.snapshot.verdict).tone">{{ statusMeta(detail.snapshot.verdict).label }}</AppBadge></span></div>
@@ -346,7 +336,7 @@ void load()
           <p v-else class="muted small">该插件还没有已批准的快照。</p>
         </section>
 
-        <section v-else-if="detailTab === 'tasks'" class="sp__drawer-section">
+        <section v-else-if="detailTab === 'tasks'" :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
           <article v-for="task in detail.tasks" :key="task.id" class="sp__task-card">
             <div class="row gap-2 wrap">
               <AppBadge :variant="statusMeta(task.status).tone" dot>{{ statusMeta(task.status).label }}</AppBadge>
@@ -362,7 +352,7 @@ void load()
           <p v-if="!detail.tasks.length" class="muted small">没有任务记录。</p>
         </section>
 
-        <section v-else class="sp__drawer-section">
+        <section v-else :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
           <article v-for="entry in detail.audits" :key="entry.id" class="sp__audit">
             <AppIcon name="history" :size="15" />
             <span class="grow">{{ entry.action }}</span>
@@ -387,9 +377,14 @@ void load()
 .sp__title { font-size: var(--text-h2); }
 .sp__desc { margin-top: 5px; max-width: 88ch; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
 .sp__toolbar { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr) auto; gap: 10px; align-items: center; }
-.sp__search .input { padding-left: 40px; }
+.sp__search { display: flex; align-items: center; gap: 10px; padding-inline: 12px; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); color: var(--text-3); }
+.sp__search:focus-within { border-color: var(--signal); }
+.sp__search > svg { flex: none; }
+.sp__search .input { flex: 1; width: 0; min-width: 0; padding-inline: 0; border: 0; background: transparent; box-shadow: none; }
+.sp__search .input:focus-visible { outline-offset: 1px; }
 .sp__filters { display: flex; gap: 8px; flex-wrap: wrap; }
 .sp__table-card { overflow: hidden; }
+.sp__table { min-width: 900px; }
 .sp__table :deep(td) { vertical-align: top; }
 .sp__actions-col { text-align: right; }
 .sp__repo { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }

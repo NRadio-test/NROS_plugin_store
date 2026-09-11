@@ -20,3 +20,19 @@ const iconFor: Record<string, IconName> = { success: 'check-circle', danger: 'al
     </TransitionGroup>
   </div>
 </template>
+
+<style scoped>
+.toaster { position: fixed; z-index: 100; right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: min(25rem, calc(100vw - 32px)); display: flex; flex-direction: column; gap: var(--sp-3); pointer-events: none; }
+.toast { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-4); border-radius: var(--r-group); background: var(--surface-raised); color: var(--text); box-shadow: var(--shadow-dialog); pointer-events: auto; }
+.toast__icon { flex: none; padding-top: 4px; color: var(--signal-text); }
+.toast--success .toast__icon { color: var(--success); }
+.toast--danger .toast__icon { color: var(--danger); }
+.toast--warning .toast__icon { color: var(--warning); }
+.toast__body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.toast__title { font-size: var(--fs-body); font-weight: 600; }
+.toast__desc { margin-top: var(--sp-1); font-size: var(--fs-sm); color: var(--text-2); }
+.toast__close { display: grid; place-items: center; flex: none; width: 44px; height: 44px; margin: -8px -8px -8px 0; padding: 0; border: 0; border-radius: var(--r-control); color: var(--text-2); background: transparent; }
+.toast__close:hover { background: var(--surface-hover); }
+.toast-enter-active, .toast-leave-active { transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease); }
+.toast-enter-from, .toast-leave-to, .toast--leaving { opacity: 0; transform: translateY(8px); }
+</style>

@@ -230,6 +230,91 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     record('键盘可用性', '/ 聚焦搜索、Tab 焦点环可见');
   });
 
+  test('搜索框布局、持续输入与错误计数不误导', async ({ page }) => {
+    for (const width of [375, 768, 1280]) {
+      await page.setViewportSize({ width, height: 812 });
+      await page.goto('/');
+      const search = page.getByRole('searchbox');
+      await expect(search).toBeVisible();
+      const geometry = await page.locator('.search').evaluate(el => {
+        const input = el.querySelector('input')!.getBoundingClientRect();
+        const icon = el.querySelector('.search__icon')!.getBoundingClientRect();
+        const shortcut = el.querySelector('.search__kbd') as HTMLElement;
+        const right = shortcut && getComputedStyle(shortcut).display !== 'none' ? shortcut.getBoundingClientRect().left : el.getBoundingClientRect().right;
+        return { gap: input.left - icon.right, inputRight: input.right, right, width: input.width };
+      });
+      expect(geometry.gap).toBeGreaterThanOrEqual(8);
+      expect(geometry.gap).toBeLessThanOrEqual(16);
+      expect(geometry.inputRight).toBeLessThanOrEqual(geometry.right);
+      expect(geometry.width).toBeGreaterThan(230);
+      await search.fill('har');
+      await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('har');
+      await expect(search).toBeFocused();
+      await search.pressSequentially('mless');
+      await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('harmless');
+      await page.getByRole('button', { name: '清空搜索', exact: true }).click();
+      await expect(search).toHaveValue('');
+      await expect(search).toBeFocused();
+      await page.selectOption('#market-sort', 'favorites');
+      await expect(page.locator('.page-head__meta')).toContainText('按收藏最多排序');
+    }
+    await page.route('**/api/plugins?*', route => route.fulfill({ status: 503, json: { error: '隔离测试：服务暂不可用', code: 'configuration' } }));
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: '暂时无法加载' })).toBeVisible();
+    await expect(page.locator('.page-head__meta')).not.toContainText('共 0');
+    await page.unroute('**/api/plugins?*');
+    await page.getByRole('button', { name: '重新加载', exact: true }).click();
+    await expect(page.locator('.pkg')).toHaveCount(1);
+    await page.goto('/login');
+    await expect(page.locator('#phone-note')).toHaveCount(0);
+    record('搜索与错误状态', '375/768/1280 图标、输入区与快捷键无重叠；筛选后焦点保持；排序文案同步；错误不显示虚假零计数；指定说明框已删除');
+  });
+
+  test('后台菜单不被表格裁切、原生弹窗焦点与详情标签页', async ({ page }) => {
+    await page.goto('/studio');
+    await page.getByLabel('用户名', { exact: true }).fill('e2e-admin');
+    await page.getByLabel('密码', { exact: true }).fill('E2e-Only!Fixture-2468');
+    await page.getByRole('button', { name: '管理员登录', exact: true }).click();
+    await page.getByRole('button', { name: '插件管理', exact: true }).click();
+    const more = page.getByRole('button', { name: /的更多操作$/ }).first();
+    await more.focus();
+    await more.press('ArrowDown');
+    const menu = page.getByRole('menu', { name: /的更多操作$/ });
+    await expect(menu).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: '重新审核', exact: true })).toBeFocused();
+    await expect(menu).toHaveJSProperty('popover', 'auto');
+    const box = (await menu.boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height);
+    await page.keyboard.press('Escape');
+    await expect(more).toBeFocused();
+    await page.getByRole('button', { name: '详情', exact: true }).first().click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveJSProperty('open', true);
+    for (let i = 0; i < 16; i++) {
+      await page.keyboard.press('Tab');
+      expect(await dialog.evaluate(el => el.contains(document.activeElement))).toBe(true);
+    }
+    await page.setViewportSize({ width: 375, height: 812 });
+    const mobile = (await dialog.boundingBox())!;
+    expect(mobile.x).toBeGreaterThanOrEqual(0);
+    expect(mobile.width).toBeLessThanOrEqual(375);
+    expect(mobile.height).toBeLessThanOrEqual(812);
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByRole('button', { name: '详情', exact: true }).first()).toBeFocused();
+    await page.goto(`/plugins/${pluginId}`);
+    const tabs = page.getByRole('tab');
+    await tabs.first().focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(tabs.nth(1)).toBeFocused();
+    await expect(tabs.nth(1)).toHaveAttribute('aria-selected', 'true');
+    const selected = await tabs.nth(1).getAttribute('aria-controls');
+    await expect(page.locator(`#${selected}`)).toBeVisible();
+    record('弹窗与键盘', '后台菜单进入浏览器顶层且不出视口；弹窗循环焦点/Esc/焦点恢复通过；移动抽屉无溢出；详情支持方向键标签页');
+  });
+
   test('手机、平板与桌面真实页面无水平溢出并留截图', async ({ page }) => {
     await mkdir('docs/evidence', { recursive: true });
     const routes: Array<[string, string]> = [
@@ -256,13 +341,17 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
       for (const [route, label] of [['/', 'market'], [`/plugins/${pluginId}`, 'detail'], ['/login', 'login'], ['/studio', 'studio-login']]) {
         await page.goto(route);
         await page.waitForLoadState('networkidle');
-        await page.screenshot({ path: `docs/evidence/e2e-${label}-${width}.png`, fullPage: true });
+        await page.waitForTimeout(250);
+      await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0);
+      await page.screenshot({ path: `docs/evidence/e2e-${label}-${width}.png`, fullPage: true });
       }
     }
     await page.setViewportSize({ width: 1280, height: 900 });
     for (const [route, label] of [['/', 'market'], ['/submit', 'submit'], ['/me', 'me']]) {
       await page.goto(route);
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(250);
+      await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0);
       await page.screenshot({ path: `docs/evidence/ui-${label}-1280.png`, fullPage: true });
     }
     await page.goto('/');
@@ -270,6 +359,8 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     for (const [route, label] of [['/', 'market'], [`/plugins/${pluginId}`, 'detail']]) {
       await page.goto(route);
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(250);
+      await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0);
       await page.screenshot({ path: `docs/evidence/ui-${label}-dark-1280.png`, fullPage: true });
     }
     await page.goto('/studio');
@@ -277,20 +368,25 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.getByLabel('密码', { exact: true }).fill('E2e-Only!Fixture-2468');
     await page.getByRole('button', { name: '管理员登录', exact: true }).click();
     await expect(page.getByRole('button', { name: '退出管理员', exact: true })).toBeVisible();
-    for (const [panel, label] of [['总览', 'studio-overview'], ['插件管理', 'studio-plugins'], ['审核任务', 'studio-tasks'], ['AI 设置', 'studio-ai'], ['下载源', 'studio-sources'], ['账号安全', 'studio-security']]) {
+    for (const close of await page.getByRole('button', { name: '关闭提示', exact: true }).all()) await close.click();
+    for (const [panel, label] of [['总览', 'studio-overview'], ['插件管理', 'studio-plugins'], ['审核任务', 'studio-tasks'], ['操作日志', 'studio-logs'], ['AI 设置', 'studio-ai'], ['下载源', 'studio-sources'], ['账号安全', 'studio-security']]) {
       await page.getByRole('button', { name: panel, exact: true }).click();
       await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(250);
+      await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0);
       await page.screenshot({ path: `docs/evidence/ui-${label}-1280.png`, fullPage: true });
     }
     await page.setViewportSize({ width: 375, height: 812 });
-    for (const [panel, label] of [['总览', 'studio-overview'], ['插件管理', 'studio-plugins']]) {
+    for (const [panel, label] of [['总览', 'studio-overview'], ['插件管理', 'studio-plugins'], ['审核任务', 'studio-tasks'], ['操作日志', 'studio-logs'], ['AI 设置', 'studio-ai'], ['下载源', 'studio-sources'], ['账号安全', 'studio-security']]) {
       await page.getByRole('button', { name: '切换 Studio 导航' }).click();
       await page.getByRole('button', { name: panel, exact: true }).click();
       await page.waitForLoadState('networkidle');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `studio ${label} 375`).toBe(true);
+      await page.waitForTimeout(250);
+      await expect(page.locator('main [aria-busy="true"]')).toHaveCount(0);
       await page.screenshot({ path: `docs/evidence/ui-${label}-375.png`, fullPage: true });
     }
-    record('响应式', '4 种宽度 × 6 条路由无水平溢出；Studio 六个面板与移动端面板均有截图');
+    record('响应式', '4 种宽度 × 6 条路由无水平溢出；Studio 七个面板均有桌面和手机截图');
   });
 
   test.afterAll(async () => {

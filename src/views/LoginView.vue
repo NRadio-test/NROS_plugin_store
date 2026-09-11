@@ -42,7 +42,7 @@ async function login() {
   <div class="auth container">
     <section class="auth__aside">
       <div class="auth__aside-inner">
-        <p class="eyebrow auth__eyebrow"><AppIcon name="sparkles" :size="14" />你的插件档案</p>
+        <p class="eyebrow auth__eyebrow">你的插件档案</p>
         <h1 class="auth__headline">用手机号进入，<br />继续你的插件清单。</h1>
         <p class="auth__lead">不需要密码，也不发送短信验证码。这个号码只用来把你的收藏与投稿归到一个档案里。</p>
         <ul class="auth__list">
@@ -83,21 +83,12 @@ async function login() {
             maxlength="24"
             required
             placeholder="请输入手机号"
-            aria-describedby="phone-note"
           />
         </AppField>
 
         <AppButton variant="primary" size="lg" type="submit" block :loading="busy" icon-right="arrow-right">
           {{ busy ? '正在进入…' : '进入' }}
         </AppButton>
-
-        <div id="phone-note" class="notice auth__notice">
-          <AppIcon name="info" :size="16" />
-          <span>
-            这是自报手机号识别，不是实名或小店会员验证：商店不校验号码归属，也不显示「已核验」标记。
-            知道同一号码的人可能进入同一档案，请不要在这里存放敏感信息。
-          </span>
-        </div>
 
         <p class="auth__foot">
           <RouterLink to="/">返回插件市场</RouterLink>
@@ -110,39 +101,39 @@ async function login() {
 </template>
 
 <style scoped>
-.auth { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; align-items: stretch; padding-top: 48px; }
+.auth { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; align-items: center; padding-top: var(--sp-12); max-width: 66rem; }
 .auth__aside {
   position: relative;
   overflow: hidden;
   padding: 40px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-xl);
-  background: var(--bg-card);
-  background-image: var(--hero-gradient);
-  box-shadow: var(--shadow-sm);
+  background: transparent;
+  box-shadow: none;
 }
 .auth__aside-inner { position: relative; max-width: 46ch; }
 .auth__eyebrow { color: var(--primary-text); }
-.auth__headline { margin-top: 16px; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem); letter-spacing: -0.035em; line-height: 1.15; }
+.auth__headline { margin-top: 16px; font-size: var(--fs-h1); letter-spacing: -0.035em; line-height: 1.4; }
 .auth__lead { margin-top: 14px; color: var(--text-secondary); line-height: 1.75; }
 .auth__list { display: flex; flex-direction: column; gap: 14px; margin-top: 30px; list-style: none; }
 .auth__list li { display: flex; gap: 12px; }
-.auth__list-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--bg-card); border: 1px solid var(--border-base); color: var(--primary-text); box-shadow: var(--shadow-xs); }
+.auth__list-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-sm); background: var(--signal-surface); border: 0; color: var(--primary-text); box-shadow: var(--shadow-xs); }
 .auth__list-title { display: block; font-weight: 640; font-size: var(--text-body); }
-.auth__list-text { display: block; margin-top: 2px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.auth__list-text { display: block; margin-top: 2px; font-size: var(--fs-body); color: var(--text-2); line-height: 1.6; }
 
 .auth__form-wrap { display: flex; align-items: center; }
-.auth__form { width: 100%; display: flex; flex-direction: column; gap: 20px; padding: 32px; border: 1px solid var(--border-base); border-radius: var(--r-xl); background: var(--bg-card); box-shadow: var(--shadow-md); }
+.auth__form { width: 100%; display: flex; flex-direction: column; gap: 20px; padding: var(--sp-8); border: 0; border-radius: var(--r-xl); background: var(--bg-card); box-shadow: var(--shadow-md); }
 .auth__form-head { display: flex; align-items: center; gap: 13px; }
 .auth__form-icon { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--r-md); background: var(--primary-surface); color: var(--primary-text); }
-.auth__form-title { font-size: 1.25rem; }
+.auth__form-title { font-size: var(--fs-h2); }
 .auth__form-sub { margin-top: 3px; font-size: var(--text-small); color: var(--text-tertiary); }
-.auth__notice { align-items: flex-start; line-height: 1.65; }
 .auth__foot { display: flex; align-items: center; gap: 8px; font-size: var(--text-small); color: var(--text-tertiary); }
 
 @media (max-width: 900px) {
   .auth { grid-template-columns: 1fr; gap: 20px; padding-top: 28px; }
-  .auth__aside { padding: 26px; }
+  .auth__aside { padding: 0; }
+  .auth__list { display: none; }
+  .auth__headline { margin-top: var(--sp-2); }
+  .auth__lead { margin-top: var(--sp-3); }
   .auth__list { margin-top: 22px; }
   .auth__form { padding: 24px; }
 }

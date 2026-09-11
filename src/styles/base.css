@@ -48,3 +48,9 @@ img, svg { display: block; max-width: 100%; }
 .micro { font-size: var(--fs-cap); }
 .strong { font-weight: 600; }
 .eyebrow { font-size: var(--fs-cap); color: var(--text-3); }
+
+html { scroll-padding-top: calc(var(--header-h) + 16px); }
+#app { display: flex; flex-direction: column; min-height: 100svh; }
+input, textarea, select { font-family: inherit; }
+
+@media (max-width: 767px) { #app:has(.detail-mobile-bar) { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); } }

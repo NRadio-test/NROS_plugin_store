@@ -70,6 +70,20 @@
     "passed": true
   },
   {
+    "name": "深色危险按钮文字",
+    "foreground": "#050e17",
+    "background": "#ff9689",
+    "contrast": 9.22,
+    "passed": true
+  },
+  {
+    "name": "深色弱化文字/悬浮面",
+    "foreground": "#9cadbf",
+    "background": "#1d384f",
+    "contrast": 5.28,
+    "passed": true
+  },
+  {
     "name": "深色成功/成功底",
     "foreground": "#6bd3a3",
     "background": "#073120",
@@ -127,9 +141,9 @@
   },
   {
     "name": "浅色弱化文字/表面",
-    "foreground": "#5f7183",
+    "foreground": "#596b7c",
     "background": "#ffffff",
-    "contrast": 5.03,
+    "contrast": 5.5,
     "passed": true
   },
   {
@@ -141,9 +155,9 @@
   },
   {
     "name": "浅色弱化文字/抬升面",
-    "foreground": "#5f7183",
+    "foreground": "#596b7c",
     "background": "#f1f6fa",
-    "contrast": 4.62,
+    "contrast": 5.05,
     "passed": true
   },
   {
@@ -172,6 +186,20 @@
     "foreground": "#ffffff",
     "background": "#155e75",
     "contrast": 7.27,
+    "passed": true
+  },
+  {
+    "name": "浅色危险按钮文字",
+    "foreground": "#ffffff",
+    "background": "#b3261e",
+    "contrast": 6.54,
+    "passed": true
+  },
+  {
+    "name": "浅色弱化文字/悬浮面",
+    "foreground": "#596b7c",
+    "background": "#e6eef5",
+    "contrast": 4.69,
     "passed": true
   },
   {

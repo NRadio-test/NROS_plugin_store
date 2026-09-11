@@ -165,7 +165,7 @@ const tiles = () => {
 </template>
 
 <style scoped>
-.ov__tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.ov__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .ov__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
 .ov__config { display: flex; flex-direction: column; gap: 4px; }
 .ov__config-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
@@ -190,4 +190,5 @@ const tiles = () => {
   .ov__task { grid-template-columns: 110px minmax(0, 1fr) auto; }
   .ov__task-reason { display: none; }
 }
+@media (max-width: 560px) { .ov__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
 </style>

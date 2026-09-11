@@ -17,6 +17,6 @@ onMounted(loadSession)
 </template>
 
 <style scoped>
-.app-main { display: block; min-height: 60vh; padding-bottom: 8px; }
+.app-main { display: block; flex: 1; min-width: 0; padding-bottom: var(--sp-12); }
 .app-main:focus { outline: none; }
 </style>

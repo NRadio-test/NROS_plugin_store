@@ -15,7 +15,7 @@ export const router = createRouter({
   ],
   scrollBehavior(to, from, saved) {
     if (saved) return saved
-    if (to.hash) return { el: to.hash, top: 88, behavior: 'smooth' }
+    if (to.hash) return { el: to.hash, top: window.innerWidth <= 767 ? 128 : 80, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }
     return to.path === from.path ? {} : { top: 0 }
   },
 })
@@ -25,8 +25,8 @@ export function setMetadata(title: string, description = DEFAULT_DESCRIPTION) {
   document.querySelector('meta[name="description"]')?.setAttribute('content', description)
 }
 
-router.afterEach(to => {
+router.afterEach((to, from) => {
   setMetadata(String(to.meta.title || '张导插件商店'))
   document.querySelector('meta[name="robots"]')?.setAttribute('content', to.meta.private ? 'noindex,nofollow' : 'index,follow')
-  requestAnimationFrame(() => document.getElementById('main')?.focus({ preventScroll: true }))
+  if (to.path !== from.path) requestAnimationFrame(() => document.getElementById('main')?.focus({ preventScroll: true }))
 })

@@ -53,7 +53,7 @@ async function submit() {
     <header class="sec__head">
       <div>
         <h2 class="sec__title">账号安全</h2>
-        <p class="sec__desc">使用与导入兼容的 PBKDF2-SHA256 参数重新散列密码；保存后该管理员的其它会话会立即失效。</p>
+        <p class="sec__desc">使用当前密码设置新密码。保存后，其他设备上的管理员登录状态会立即失效。</p>
       </div>
       <span class="sec__who"><AppIcon name="user" :size="15" />{{ session.admin?.username }}</span>
     </header>
@@ -125,7 +125,7 @@ async function submit() {
 .sec__aside { display: flex; flex-direction: column; gap: 14px; }
 .sec__note { padding: 18px; }
 .sec__note-title { display: flex; align-items: center; gap: 8px; font-weight: 640; margin-bottom: 10px; }
-.sec__note ul { display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.sec__note ul { list-style: disc; display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
 .sec__note li::marker { color: var(--primary); }
 
 @media (max-width: 1000px) { .sec__grid { grid-template-columns: 1fr; } }

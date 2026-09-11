@@ -85,14 +85,17 @@ async function download() {
         type="button"
         :aria-pressed="active"
         :disabled="!!busy"
+        :aria-busy="busy === 'favorite' || undefined"
         :aria-label="active ? `取消收藏 ${plugin.full_name}` : `收藏 ${plugin.full_name}`"
         @click="favorite"
       >
-        <AppIcon :name="active ? 'heart-filled' : 'heart'" :size="19" />
+        <span v-if="busy === 'favorite'" class="btn__spinner" aria-hidden="true" />
+        <AppIcon v-else :name="active ? 'heart-filled' : 'heart'" :size="19" />
       </button>
       <AppButton
-        variant="primary"
+        variant="secondary"
         icon="download"
+        :disabled="busy === 'favorite'"
         :loading="busy === 'download'"
         :aria-label="`下载 ${plugin.full_name}`"
         @click="download"
@@ -110,4 +113,5 @@ async function download() {
 /* 标题链接覆盖整块文字区；统计与操作区保持在覆盖层之上 */
 .pkg__name a::after { content: ''; position: absolute; inset: 0; }
 .pkg__stats, .pkg__actions { position: relative; z-index: 1; }
+.pkg__actions [aria-pressed='true'] { color: var(--signal-text); background: var(--signal-surface); }
 </style>

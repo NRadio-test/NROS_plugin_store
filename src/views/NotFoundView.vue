@@ -23,12 +23,9 @@ import AppButton from '../components/AppButton.vue'
   font-weight: 750;
   letter-spacing: -0.06em;
   line-height: 1;
-  background: var(--brand-gradient);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--signal-text);
 }
-.nf__title { font-size: 1.5rem; }
+.nf__title { font-size: var(--fs-h1); }
 .nf__text { max-width: 52ch; color: var(--text-tertiary); line-height: 1.7; }
 .nf__actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
 .nf__hint { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: var(--text-small); color: var(--text-tertiary); }

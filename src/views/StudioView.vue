@@ -117,18 +117,7 @@ function select(key: PanelKey) {
     <div v-else class="studio-shell">
       <aside class="studio__sidebar" :class="navOpen && 'studio__sidebar--open'">
         <div class="studio__brand">
-          <svg class="studio__logo" viewBox="0 0 32 32" aria-hidden="true">
-            <rect width="32" height="32" rx="9" fill="url(#zdBrandStudio)" />
-            <defs>
-              <linearGradient id="zdBrandStudio" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#2f5bff" />
-                <stop offset="0.5" stop-color="#6a4bff" />
-                <stop offset="1" stop-color="#12b5cb" />
-              </linearGradient>
-            </defs>
-            <path d="M16 6.8 24.6 11.6v8.8L16 25.2 7.4 20.4v-8.8Z" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" opacity=".96" />
-            <path d="M7.7 11.8 16 16.2l8.3-4.4M16 16.4V25" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" opacity=".96" />
-          </svg>
+          <span class="signal-mark" aria-hidden="true"><i /><i /><i /></span>
           <span class="studio__brand-text">
             <span class="studio__brand-name">Studio</span>
             <span class="studio__brand-sub">张导插件商店</span>
@@ -182,7 +171,7 @@ function select(key: PanelKey) {
             >
               {{ current.label }}
             </AppButton>
-            <RouterLink to="/" class="btn btn--secondary btn--sm">
+            <RouterLink to="/" class="btn btn--raised btn--sm">
               <AppIcon name="arrow-left" :size="15" />返回市场
             </RouterLink>
           </div>
@@ -208,16 +197,14 @@ function select(key: PanelKey) {
 <style scoped>
 .studio { min-height: 70vh; }
 
-.studio-login { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; padding-top: 48px; align-items: stretch; }
+.studio-login { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 32px; padding-top: 48px; align-items: center; max-width: 66rem; }
 .studio-login__aside {
-  padding: 40px;
-  border: 1px solid var(--border-base);
+  padding: var(--sp-8);
   border-radius: var(--r-xl);
   background: var(--bg-card);
-  background-image: var(--hero-gradient);
   box-shadow: var(--shadow-sm);
 }
-.studio-login__title { margin-top: 16px; font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem); letter-spacing: -0.035em; line-height: 1.16; }
+.studio-login__title { margin-top: 16px; font-size: var(--fs-h1); letter-spacing: -0.035em; line-height: 1.4; }
 .studio-login__lead { margin-top: 14px; max-width: 46ch; color: var(--text-secondary); line-height: 1.75; }
 .studio-login__list { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; list-style: none; font-size: var(--text-small); color: var(--text-secondary); }
 .studio-login__list li { display: flex; align-items: center; gap: 9px; }
@@ -228,7 +215,6 @@ function select(key: PanelKey) {
   gap: 18px;
   align-self: center;
   padding: 32px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-xl);
   background: var(--bg-card);
   box-shadow: var(--shadow-md);
@@ -236,7 +222,7 @@ function select(key: PanelKey) {
 .studio-login__head { display: flex; align-items: center; gap: 13px; }
 .studio-login__icon { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--r-md); background: var(--primary-surface); color: var(--primary-text); flex: none; }
 
-.studio-shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 0; width: min(var(--container-wide), 100% - 48px); margin-inline: auto; padding: 22px 0 40px; align-items: start; }
+.studio-shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 0; width: min(var(--container-wide), 100% - 2 * var(--safe-x)); margin-inline: auto; padding: 22px 0 40px; align-items: start; }
 .studio__sidebar {
   position: sticky;
   top: calc(var(--header-h) + 22px);
@@ -244,13 +230,11 @@ function select(key: PanelKey) {
   flex-direction: column;
   gap: 18px;
   padding: 18px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-xl);
   background: var(--bg-card);
   box-shadow: var(--shadow-xs);
 }
 .studio__brand { display: flex; align-items: center; gap: 11px; padding: 2px 4px 14px; border-bottom: 1px solid var(--border-subtle); }
-.studio__logo { width: 32px; height: 32px; border-radius: 9px; }
 .studio__brand-text { display: flex; flex-direction: column; line-height: 1.2; }
 .studio__brand-name { font-weight: 700; letter-spacing: -0.02em; }
 .studio__brand-sub { font-size: var(--text-micro); color: var(--text-tertiary); }
@@ -260,6 +244,7 @@ function select(key: PanelKey) {
   align-items: center;
   gap: 10px;
   width: 100%;
+  min-height: 44px;
   padding: 9px 11px;
   border: 0;
   border-radius: var(--r-sm);
@@ -281,7 +266,7 @@ function select(key: PanelKey) {
 
 .studio__main { min-width: 0; padding-inline-start: 26px; }
 .studio__topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
-.studio__title { font-size: 1.5rem; letter-spacing: -0.03em; }
+.studio__title { font-size: var(--fs-h1); letter-spacing: -0.03em; }
 .studio__desc { margin-top: 5px; font-size: var(--text-small); color: var(--text-tertiary); }
 .studio__topbar-actions { display: flex; align-items: center; gap: 10px; }
 .studio__nav-toggle { display: none; }
@@ -290,16 +275,18 @@ function select(key: PanelKey) {
 @media (max-width: 1000px) {
   .studio-shell { grid-template-columns: 1fr; gap: 16px; padding-top: 18px; }
   .studio__sidebar { position: static; }
+  .studio__sidebar:not(.studio__sidebar--open) { display: none; }
   .studio__sidebar:not(.studio__sidebar--open) .studio__nav,
   .studio__sidebar:not(.studio__sidebar--open) .studio__sidebar-foot { display: none; }
   .studio__nav { flex-direction: row; flex-wrap: wrap; }
-  .studio__nav-item { width: auto; }
+  .studio__nav-item { width: auto; flex: 1 1 9rem; }
   .studio__main { padding-inline-start: 0; }
   .studio__nav-toggle { display: inline-flex; }
 }
 @media (max-width: 900px) {
   .studio-login { grid-template-columns: 1fr; gap: 20px; padding-top: 28px; }
-  .studio-login__aside { padding: 26px; }
+  .studio-login__aside { padding: 0; background: transparent; }
+  .studio-login__list { display: none; }
   .studio-login__form { padding: 24px; }
 }
 </style>

@@ -12,6 +12,7 @@ import AppIcon from '../components/AppIcon.vue'
 import AppBadge from '../components/AppBadge.vue'
 import AppButton from '../components/AppButton.vue'
 import MonogramAvatar from '../components/MonogramAvatar.vue'
+import { navigateTabs } from '../composables/tabs'
 import CopyButton from '../components/CopyButton.vue'
 
 type TabKey = 'readme' | 'packages' | 'review'
@@ -79,7 +80,7 @@ async function download(assetId: string, assetName: string) {
 
 /** 只滚动到下载卡片，不切换标签页，保证 README 始终可见。 */
 function scrollToDownloads() {
-  requestAnimationFrame(() => document.getElementById('downloads')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  requestAnimationFrame(() => document.getElementById('downloads')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }))
 }
 
 watch(() => route.params.id, load, { immediate: true })
@@ -148,14 +149,16 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
           <div class="detail-layout">
             <div class="detail-main">
-              <div class="tabs detail__tabs" role="tablist" aria-label="插件详情分区">
+              <div class="tabs detail__tabs" role="tablist" aria-label="插件详情分区" @keydown="navigateTabs">
                 <button
                   v-for="item in TABS"
+                  :id="`detail-tab-${item.key}`"
                   :key="item.key"
                   type="button"
                   role="tab"
                   class="tabs__item"
                   :aria-selected="tab === item.key"
+                  :tabindex="tab === item.key ? 0 : -1" :aria-controls="`detail-panel-${item.key}`"
                   :aria-current="tab === item.key ? 'page' : undefined"
                   @click="tab = item.key"
                 >
@@ -163,7 +166,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </button>
               </div>
 
-              <section v-if="tab === 'readme'" class="card detail__panel" role="tabpanel">
+              <section v-if="tab === 'readme'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
                 <header class="detail__panel-head">
                   <div>
                     <p class="detail__panel-title">仓库 README</p>
@@ -193,7 +196,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </p>
               </section>
 
-              <section v-else-if="tab === 'packages'" class="card detail__panel" role="tabpanel">
+              <section v-else-if="tab === 'packages'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
                 <header class="detail__panel-head">
                   <div>
                     <p class="detail__panel-title">安装包与校验</p>
@@ -237,7 +240,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </p>
               </section>
 
-              <section v-else class="card detail__panel" role="tabpanel">
+              <section v-else :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
                 <header class="detail__panel-head">
                   <div>
                     <p class="detail__panel-title">审核信息</p>
@@ -366,7 +369,9 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
 <style scoped>
 .detail { padding-top: 26px; }
-.detail__crumbs { margin-bottom: 20px; }
+.detail__crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; font-size: var(--fs-sm); color: var(--text-3); }
+.detail__crumbs > svg { flex: none; }
+.breadcrumb__current { overflow-wrap: anywhere; }
 .detail__crumbs a { display: inline-flex; align-items: center; gap: 5px; }
 
 .detail-hero {
@@ -375,16 +380,14 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   gap: 22px 28px;
   align-items: start;
   padding: 26px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-xl);
   background: var(--bg-card);
-  background-image: var(--hero-gradient);
   box-shadow: var(--shadow-sm);
 }
 .detail-hero__ident { display: flex; gap: 16px; min-width: 0; }
 .detail-hero__text { min-width: 0; }
-.detail-hero__text h1 { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); letter-spacing: -0.032em; }
-.detail-hero__owner { display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: var(--text-small); color: var(--text-tertiary); font-family: var(--font-mono); }
+.detail-hero__text h1 { overflow-wrap: anywhere; font-size: var(--fs-h1); letter-spacing: -0.032em; }
+.detail-hero__owner { overflow-wrap: anywhere; word-break: break-word; display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: var(--text-small); color: var(--text-tertiary); font-family: var(--font-mono); }
 .detail-hero__desc { margin-top: 12px; max-width: 68ch; color: var(--text-secondary); line-height: 1.7; }
 .detail-hero__actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .detail-hero__stats {
@@ -397,11 +400,11 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   border-top: 1px solid var(--border-subtle);
 }
 .detail-hero__stats dd { margin: 0; }
-.stat__value--text { font-size: 1.0625rem; font-weight: 620; }
+.stat__value--text { font-size: var(--fs-body); font-weight: 620; }
 
 .detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; margin-top: 24px; align-items: start; }
 .detail-main { min-width: 0; }
-.detail__tabs { margin-bottom: 16px; }
+.detail__tabs { margin-bottom: 16px; flex-wrap: wrap; }
 .detail__panel { padding: 24px; }
 .detail__panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); }
 .detail__panel-title { font-size: var(--text-h3); font-weight: 650; }
@@ -422,20 +425,20 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .download-card__head { display: flex; align-items: center; gap: 12px; }
 .download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--r-md); background: var(--primary-surface); color: var(--primary-text); }
 .download-card__title { font-size: var(--text-small); font-weight: 600; color: var(--text-tertiary); }
-.download-card__version { font-size: 1.25rem; font-weight: 680; letter-spacing: -0.025em; }
+.download-card__version { font-size: var(--fs-h2); font-weight: 680; letter-spacing: -0.025em; }
 .download-card__note { margin-top: 12px; font-size: var(--text-small); color: var(--text-secondary); line-height: 1.6; }
 .asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 14px; border: 1px solid var(--border-base); border-radius: var(--r-md); background: var(--bg-subtle); }
 .asset__name { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 600; word-break: break-all; }
 .asset__meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: var(--text-micro); color: var(--text-tertiary); }
 .asset__hash { font-size: var(--text-micro); color: var(--text-tertiary); }
-.asset__hash summary { cursor: pointer; padding-block: 2px; min-height: 0; }
+.asset__hash summary { cursor: pointer; padding-block: 2px; min-height: 44px; display: flex; align-items: center; }
 .asset__hash code { display: block; word-break: break-all; color: var(--text-secondary); }
 .download-card__extra { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; }
 .download-card__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--text-small); }
 
 .detail__side-card { padding: 18px; }
 .detail__side-title { display: flex; align-items: center; gap: 8px; font-size: var(--text-body); font-weight: 640; }
-.detail__side-list { margin-top: 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.detail__side-list { list-style: disc; margin-top: 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
 .detail__side-list li::marker { color: var(--primary); }
 
 .detail-mobile-bar { display: none; }
@@ -446,7 +449,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   .detail-hero__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {
-  .detail { padding-top: 16px; }
+  .detail { padding-top: 16px; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
   .detail-hero { grid-template-columns: 1fr; padding: 20px; gap: 18px; }
   .detail-hero__ident { gap: 12px; }
   .detail-hero__actions { width: 100%; }
@@ -454,19 +457,17 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   .detail__panel { padding: 18px; }
   .detail__review-row { grid-template-columns: 1fr; gap: 6px; }
   .detail-mobile-bar {
-    position: sticky;
+    position: fixed;
+    inset-inline: 0;
     bottom: 0;
     z-index: 20;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin-top: 20px;
-    padding: 12px 14px;
-    border: 1px solid var(--border-base);
-    border-radius: var(--r-lg);
+    padding: 12px var(--safe-x) calc(12px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line);
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
     box-shadow: var(--shadow-lg);
   }
   .detail-mobile-bar__info { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }

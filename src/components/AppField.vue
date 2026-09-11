@@ -1,5 +1,7 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
+import { ref, useId, watchPostEffect } from 'vue'
+
+const props = withDefaults(defineProps<{
   label?: string
   forId?: string
   hint?: string
@@ -7,18 +9,30 @@ withDefaults(defineProps<{
   required?: boolean
   optional?: boolean
 }>(), { label: '', forId: undefined, hint: '', error: '' })
+const field = ref<HTMLElement | null>(null)
+const hintId = useId()
+watchPostEffect(() => {
+  const control = field.value?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('input:not([type="checkbox"]), textarea, select')
+  if (!control || control.id !== props.forId) return
+  const described = (control.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== hintId)
+  if (props.error || props.hint) described.push(hintId)
+  if (described.length) control.setAttribute('aria-describedby', described.join(' '))
+  else control.removeAttribute('aria-describedby')
+  if (props.error) control.setAttribute('aria-invalid', 'true')
+  else control.removeAttribute('aria-invalid')
+})
 </script>
 
 <template>
-  <div class="field">
+  <div ref="field" class="field">
     <div v-if="label" class="field__head">
       <label class="field__label" :for="forId">{{ label }}</label>
       <span v-if="required" class="field__flag" aria-hidden="true">必填</span>
       <span v-else-if="optional" class="field__flag">可选</span>
     </div>
     <slot />
-    <p v-if="error" class="field__hint field__hint--error" role="alert">{{ error }}</p>
-    <p v-else-if="hint" class="field__hint">{{ hint }}</p>
+    <p v-if="error" :id="hintId" class="field__hint field__hint--error" role="alert">{{ error }}</p>
+    <p v-else-if="hint" :id="hintId" class="field__hint">{{ hint }}</p>
   </div>
 </template>
 

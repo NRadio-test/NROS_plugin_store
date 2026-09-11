@@ -16,10 +16,9 @@ const steps = [
   <div class="submit">
     <section class="submit__hero">
       <div class="container submit__hero-inner">
-        <p class="eyebrow"><AppIcon name="upload" :size="14" />分享公开仓库</p>
         <h1 class="submit__title">提交一个插件</h1>
         <p class="submit__lead">
-          商店不接收上传的安装包。你只需要提供公开 GitHub 仓库链接，剩下的读取、检查与上架都会在后台自动完成。
+          提供公开 GitHub 仓库链接，安装包继续由作者发布在 Release。提交后，审核与上架将在后台完成。
         </p>
       </div>
     </section>
@@ -57,7 +56,7 @@ const steps = [
         <div class="card submit__aside-card">
           <p class="submit__aside-title"><AppIcon name="check-circle" :size="15" />收录要求</p>
           <ul>
-            <li>github.com 上的公开仓库，可按 repository ID 去重</li>
+            <li>GitHub 公开仓库；同一仓库无需重复提交</li>
             <li>正式 Release 中直接上传的 .ipk 附件</li>
             <li>可读的源码与构建配置，便于建立二进制关联</li>
             <li>仓库 description 与真实 README</li>
@@ -84,16 +83,17 @@ const steps = [
 </template>
 
 <style scoped>
-.submit__hero { border-bottom: 1px solid var(--border-base); background-image: var(--hero-gradient); }
-.submit__hero-inner { padding: 46px 0 38px; max-width: 760px; }
-.submit__title { margin-top: 14px; }
-.submit__lead { margin-top: 14px; font-size: 1.0625rem; color: var(--text-secondary); line-height: 1.75; }
-.submit__body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; padding-top: 32px; align-items: start; }
+.submit__hero { background: transparent; }
+.submit__hero-inner { padding: var(--sp-10) 0 var(--sp-6); }
+.submit__title { margin: 0; }
+.submit__lead { margin-top: 14px; font-size: var(--fs-body); max-width: 68ch; color: var(--text-secondary); line-height: 1.75; }
+.submit__body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; padding-top: 0; align-items: start; }
 .submit__main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .submit__gate { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .submit__gate-icon { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: var(--r-md); background: var(--primary-surface); color: var(--primary-text); flex: none; }
 .submit__gate-title { font-size: var(--text-h3); margin-bottom: 3px; }
 .submit__gate > div { flex: 1; min-width: 200px; }
+.submit__steps { padding: var(--sp-2) 0; }
 .submit__section-title { font-size: var(--text-h3); margin-bottom: 18px; }
 .submit__timeline { display: flex; flex-direction: column; gap: 0; list-style: none; }
 .submit__timeline li { position: relative; display: flex; gap: 14px; padding-bottom: 22px; }
@@ -111,11 +111,11 @@ const steps = [
   font-weight: 680;
 }
 .submit__step-title { display: flex; align-items: center; gap: 7px; font-weight: 640; }
-.submit__step-text { margin-top: 3px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
+.submit__step-text { margin-top: 3px; font-size: var(--fs-body); color: var(--text-tertiary); line-height: 1.65; }
 .submit__aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-h) + 18px); }
-.submit__aside-card { padding: 18px; }
+.submit__aside-card { padding: var(--sp-5); box-shadow: none; }
 .submit__aside-title { display: flex; align-items: center; gap: 8px; font-weight: 640; margin-bottom: 12px; }
-.submit__aside-card ul { display: flex; flex-direction: column; gap: 9px; padding-left: 18px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.submit__aside-card ul { display: flex; flex-direction: column; gap: 9px; padding-left: 18px; list-style: disc; font-size: var(--fs-body); color: var(--text-tertiary); line-height: 1.6; }
 .submit__aside-card li::marker { color: var(--primary); }
 .submit__aside-card--note { background: var(--bg-subtle); }
 
@@ -124,7 +124,8 @@ const steps = [
   .submit__aside { position: static; }
 }
 @media (max-width: 767px) {
-  .submit__hero-inner { padding: 32px 0 26px; }
+  .submit__hero-inner { padding: var(--sp-6) 0; }
+  .submit__gate .btn { width: 100%; }
   .submit__lead { font-size: var(--text-body); }
 }
 </style>

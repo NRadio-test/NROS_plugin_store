@@ -35,6 +35,8 @@ const PAIRS = [
   ['链接/表面', 'signal', 'surface'],
   ['主按钮文字', 'on-signal', 'signal'],
   ['主按钮悬浮文字', 'on-signal', 'signal-hover'],
+  ['危险按钮文字', 'on-danger', 'danger'],
+  ['弱化文字/悬浮面', 'text-3', 'surface-hover'],
   ['成功/成功底', 'success', 'success-surface'],
   ['警告/警告底', 'warning', 'warning-surface'],
   ['失败/失败底', 'danger', 'danger-surface'],

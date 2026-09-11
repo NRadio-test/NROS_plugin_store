@@ -11,6 +11,7 @@ import AppIcon from '../components/AppIcon.vue'
 import AppBadge from '../components/AppBadge.vue'
 import AppButton from '../components/AppButton.vue'
 import MonogramAvatar from '../components/MonogramAvatar.vue'
+import { navigateTabs } from '../composables/tabs'
 
 type TabKey = 'submissions' | 'favorites'
 const REMOVED = ['removed', 'deleted', 'unlisted']
@@ -101,18 +102,18 @@ watch(() => session.user?.id, load, { immediate: true })
         </dl>
       </header>
 
-      <nav class="tabs me__tabs" role="tablist" aria-label="个人中心分区">
-        <button type="button" role="tab" class="tabs__item" :aria-selected="tab === 'submissions'" @click="tab = 'submissions'">
+      <nav class="tabs me__tabs" role="tablist" aria-label="个人中心分区" @keydown="navigateTabs">
+        <button id="me-tab-submissions" type="button" role="tab" class="tabs__item" :aria-selected="tab === 'submissions'" :tabindex="tab === 'submissions' ? 0 : -1" aria-controls="me-panel-submissions" @click="tab = 'submissions'">
           <AppIcon name="upload" :size="15" />我的提交
           <span class="tabs__count">{{ submissions.length }}</span>
         </button>
-        <button type="button" role="tab" class="tabs__item" :aria-selected="tab === 'favorites'" @click="tab = 'favorites'">
+        <button id="me-tab-favorites" type="button" role="tab" class="tabs__item" :aria-selected="tab === 'favorites'" :tabindex="tab === 'favorites' ? 0 : -1" aria-controls="me-panel-favorites" @click="tab = 'favorites'">
           <AppIcon name="heart" :size="15" />我的收藏
           <span class="tabs__count">{{ favorites.length }}</span>
         </button>
       </nav>
 
-      <section v-if="tab === 'submissions'" class="me__panel" role="tabpanel">
+      <section v-if="tab === 'submissions'" :id="`me-panel-${tab}`" class="me__panel" role="tabpanel" :aria-labelledby="`me-tab-${tab}`">
         <div class="section__head">
           <div>
             <h2>我的提交</h2>
@@ -156,7 +157,7 @@ watch(() => session.user?.id, load, { immediate: true })
         </div>
       </section>
 
-      <section v-else class="me__panel" role="tabpanel">
+      <section v-else :id="`me-panel-${tab}`" class="me__panel" role="tabpanel" :aria-labelledby="`me-tab-${tab}`">
         <div class="section__head">
           <div>
             <h2>我的收藏</h2>
@@ -168,7 +169,7 @@ watch(() => session.user?.id, load, { immediate: true })
         <div v-if="!favorites.length" class="empty">
           <span class="empty__icon"><AppIcon name="heart" :size="22" /></span>
           <h3 class="empty__title">还没有收藏</h3>
-          <p class="empty__text">在市场里点一下卡片上的心形按钮，插件就会出现在这里。</p>
+          <p class="empty__text">在市场里点击插件旁的心形按钮，插件就会出现在这里。</p>
           <AppButton to="/" variant="primary" icon="compass" style="margin-top: 10px">发现插件</AppButton>
         </div>
 
@@ -182,7 +183,7 @@ watch(() => session.user?.id, load, { immediate: true })
 
     <div v-else class="empty me__gate">
       <span class="empty__icon"><AppIcon name="lock" :size="22" /></span>
-      <h3 class="empty__title">登录后查看个人中心</h3>
+      <h1 class="empty__title">登录后查看个人中心</h1>
       <p class="empty__text">用手机号进入你的档案，即可查看提交与收藏。</p>
       <AppButton to="/login?next=/me" variant="primary" icon="user" style="margin-top: 10px">手机号进入</AppButton>
     </div>
@@ -197,10 +198,8 @@ watch(() => session.user?.id, load, { immediate: true })
   gap: 18px 20px;
   align-items: center;
   padding: 26px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-xl);
   background: var(--bg-card);
-  background-image: var(--hero-gradient);
   box-shadow: var(--shadow-sm);
 }
 .me__profile-text { min-width: 0; }
@@ -226,20 +225,19 @@ watch(() => session.user?.id, load, { immediate: true })
   align-items: center;
   gap: 18px;
   padding: 18px 20px;
-  border: 1px solid var(--border-base);
   border-radius: var(--r-lg);
   background: var(--bg-card);
   box-shadow: var(--shadow-xs);
   transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
 }
-.submission-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.submission-row:hover { background: var(--surface-raised); }
 .submission-row__main { flex: 1; min-width: 0; }
 .submission-row__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.submission-row__name { font-size: var(--text-h3); font-weight: 640; letter-spacing: -0.015em; color: var(--text-primary); }
+.submission-row__name { overflow-wrap: anywhere; font-size: var(--text-h3); font-weight: 640; letter-spacing: -0.015em; color: var(--text-primary); }
 .submission-row__reason { margin-top: 7px; font-size: var(--text-body); color: var(--text-secondary); line-height: 1.6; }
 .submission-row__time { display: flex; align-items: center; gap: 5px; margin-top: 7px; font-size: var(--text-small); color: var(--text-tertiary); }
 .submission-row__actions { flex: none; }
-.me__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 18px; }
+.me__grid { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
 .me__gate { margin-top: 40px; }
 
 @media (max-width: 900px) {
