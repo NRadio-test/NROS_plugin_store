@@ -1,0 +1,3 @@
+import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-plugin';
+import { defineConfig } from 'vitest/config';
+export default defineConfig({plugins:[cloudflareTest(async()=>({wrangler:{configPath:'./wrangler.jsonc'},miniflare:{bindings:{TEST_MIGRATIONS:await readD1Migrations('./migrations'),APP_ENV:'test',APP_ORIGIN:'https://store.example.com',MASTER_KEY:'isolated-test-master-key-with-at-least-32-characters',PHONE_HMAC_KEY:'isolated-test-phone-key-with-at-least-32-characters',GITHUB_TOKEN:'isolated-test-github-token'}}}))],test:{include:['tests/**/*.test.ts'],setupFiles:['./tests/setup.ts'],testTimeout:30000}});

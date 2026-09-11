@@ -1,0 +1,51 @@
+{
+  "name": "zhangdao-plugin-store",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false vite --host 127.0.0.1",
+    "typecheck": "vue-tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+    "lint": "eslint src worker tests scripts *.ts",
+    "test": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false vitest run && node --test scripts/admin.test.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "test:e2e": "node scripts/e2e.mjs",
+    "db:migrate:local": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false wrangler d1 migrations apply DB --remote",
+    "deploy": "node scripts/build.mjs && wrangler deploy",
+    "admin": "node scripts/admin.mjs",
+    "setup:local": "node scripts/setup-local.mjs"
+  },
+  "dependencies": {
+    "dompurify": "3.4.15",
+    "hono": "4.13.7",
+    "marked": "18.0.12",
+    "vue": "3.5.42",
+    "vue-router": "5.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "1.54.6",
+    "@cloudflare/vitest-plugin": "1.1.6",
+    "@cloudflare/workers-types": "5.20260908.1",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.1",
+    "@vitejs/plugin-vue": "6.0.8",
+    "eslint": "10.10.0",
+    "eslint-plugin-vue": "10.11.0",
+    "globals": "17.12.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vite": "8.2.2",
+    "vitest": "4.1.11",
+    "vue-eslint-parser": "10.4.1",
+    "vue-tsc": "3.3.11",
+    "wrangler": "4.130.0"
+  }
+}

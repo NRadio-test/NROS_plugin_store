@@ -1,0 +1,40 @@
+{
+  "ranAt": "2026-09-10T13:21:37.355Z",
+  "checks": [
+    {
+      "name": "公开闭环",
+      "detail": "投稿 → 自动上架 → 收藏 → 多架构下载 → 个人中心状态一致",
+      "passed": true
+    },
+    {
+      "name": "Studio 权限与操作",
+      "detail": "登录、配置测试、下架阻断下载、显式恢复重新审核、审计日志、退出失效",
+      "passed": true
+    },
+    {
+      "name": "焦点可见",
+      "detail": "DIV.search 焦点指示：outline 3px none，box-shadow rgba(47, 91, 255, 0.22) 0px 0px 0px 3px, rgba(16, 24, 40, 0.1) 0px 4px 12px -2px, rgba(16, 24, 40, 0.06) 0px 2px 6px -2px",
+      "passed": true
+    },
+    {
+      "name": "设计系统",
+      "detail": "令牌生效：主色 #2f5bff、圆角 16px、正文 15px、头部 69px",
+      "passed": true
+    },
+    {
+      "name": "主题",
+      "detail": "深色模式切换、持久化与浅色还原通过",
+      "passed": true
+    },
+    {
+      "name": "键盘可用性",
+      "detail": "/ 聚焦搜索、Tab 焦点环可见",
+      "passed": true
+    },
+    {
+      "name": "响应式",
+      "detail": "4 种宽度 × 6 条路由无水平溢出；Studio 六个面板与移动端面板均有截图",
+      "passed": true
+    }
+  ]
+}

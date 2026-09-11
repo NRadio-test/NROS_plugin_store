@@ -1,0 +1,11 @@
+张导插件商店 V1
+
+本项目为 AstrBot 独立市场适用组件的修改版本，修改日期 2026-09-10。
+上游：https://github.com/AstrBotDevs/Astrbot_Plugins_Market
+上游 commit：fcfc2d00795156cc3db8750af6f938e0c282cc49
+许可：GNU GPL version 3。无担保；可按许可证条款使用、修改和再分发。
+
+本地交付的完整对应源码位于项目根目录；构建步骤见 README.md，复用记录见 docs/UPSTREAM.md。
+当前未创建公开远程仓库，也未部署公共站点。
+正式提供前端构建产物之前，运营者必须在此文件填写可公开获取本版本完整对应源码的地址，并使其持续可用。
+不得将凭据、用户资料或真实数据库随源码公开。

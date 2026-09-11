@@ -1,0 +1,240 @@
+[
+  {
+    "name": "浅色正文",
+    "foreground": "#0f1729",
+    "background": "#f5f7fa",
+    "contrast": 16.65,
+    "passed": true
+  },
+  {
+    "name": "浅色正文卡片",
+    "foreground": "#0f1729",
+    "background": "#ffffff",
+    "contrast": 17.87,
+    "passed": true
+  },
+  {
+    "name": "浅色辅助文字",
+    "foreground": "#46536b",
+    "background": "#ffffff",
+    "contrast": 7.75,
+    "passed": true
+  },
+  {
+    "name": "浅色占位文字",
+    "foreground": "#667085",
+    "background": "#ffffff",
+    "contrast": 4.97,
+    "passed": true
+  },
+  {
+    "name": "浅色链接",
+    "foreground": "#2a4ee0",
+    "background": "#ffffff",
+    "contrast": 6.43,
+    "passed": true
+  },
+  {
+    "name": "浅色按钮文字",
+    "foreground": "#ffffff",
+    "background": "#2f5bff",
+    "contrast": 5.17,
+    "passed": true
+  },
+  {
+    "name": "浅色按钮悬浮",
+    "foreground": "#ffffff",
+    "background": "#2247d9",
+    "contrast": 7.07,
+    "passed": true
+  },
+  {
+    "name": "浅色按钮按下",
+    "foreground": "#ffffff",
+    "background": "#1b3ab8",
+    "contrast": 8.96,
+    "passed": true
+  },
+  {
+    "name": "浅色链接悬浮",
+    "foreground": "#2247d9",
+    "background": "#ffffff",
+    "contrast": 7.07,
+    "passed": true
+  },
+  {
+    "name": "浅色主色徽章",
+    "foreground": "#2a4ee0",
+    "background": "#eef2ff",
+    "contrast": 5.75,
+    "passed": true
+  },
+  {
+    "name": "浅色成功徽章",
+    "foreground": "#067647",
+    "background": "#ecfdf3",
+    "contrast": 5.4,
+    "passed": true
+  },
+  {
+    "name": "浅色警告徽章",
+    "foreground": "#b54708",
+    "background": "#fffaeb",
+    "contrast": 5.2,
+    "passed": true
+  },
+  {
+    "name": "浅色危险徽章",
+    "foreground": "#b42318",
+    "background": "#fef3f2",
+    "contrast": 6.05,
+    "passed": true
+  },
+  {
+    "name": "浅色信息徽章",
+    "foreground": "#175cd3",
+    "background": "#eff8ff",
+    "contrast": 5.57,
+    "passed": true
+  },
+  {
+    "name": "浅色中性徽章",
+    "foreground": "#46536b",
+    "background": "#eef1f6",
+    "contrast": 6.84,
+    "passed": true
+  },
+  {
+    "name": "浅色反向文字",
+    "foreground": "#ffffff",
+    "background": "#0f1729",
+    "contrast": 17.87,
+    "passed": true
+  },
+  {
+    "name": "浅色悬浮底文字",
+    "foreground": "#0f1729",
+    "background": "#f1f4f9",
+    "contrast": 16.21,
+    "passed": true
+  },
+  {
+    "name": "深色正文",
+    "foreground": "#e8edf6",
+    "background": "#080b12",
+    "contrast": 16.75,
+    "passed": true
+  },
+  {
+    "name": "深色正文卡片",
+    "foreground": "#e8edf6",
+    "background": "#10151f",
+    "contrast": 15.56,
+    "passed": true
+  },
+  {
+    "name": "深色辅助文字",
+    "foreground": "#9aa7bd",
+    "background": "#10151f",
+    "contrast": 7.52,
+    "passed": true
+  },
+  {
+    "name": "深色占位文字",
+    "foreground": "#7c8aa3",
+    "background": "#10151f",
+    "contrast": 5.24,
+    "passed": true
+  },
+  {
+    "name": "深色链接",
+    "foreground": "#7c9bff",
+    "background": "#10151f",
+    "contrast": 6.95,
+    "passed": true
+  },
+  {
+    "name": "深色按钮文字",
+    "foreground": "#ffffff",
+    "background": "#3d63ff",
+    "contrast": 4.74,
+    "passed": true
+  },
+  {
+    "name": "深色按钮悬浮",
+    "foreground": "#ffffff",
+    "background": "#2f52e6",
+    "contrast": 6.05,
+    "passed": true
+  },
+  {
+    "name": "深色按钮按下",
+    "foreground": "#ffffff",
+    "background": "#2643c4",
+    "contrast": 7.83,
+    "passed": true
+  },
+  {
+    "name": "深色链接悬浮",
+    "foreground": "#9db3ff",
+    "background": "#10151f",
+    "contrast": 8.99,
+    "passed": true
+  },
+  {
+    "name": "深色主色徽章",
+    "foreground": "#7c9bff",
+    "background": "#141d3d",
+    "contrast": 6.28,
+    "passed": true
+  },
+  {
+    "name": "深色成功徽章",
+    "foreground": "#75e0a7",
+    "background": "#06281c",
+    "contrast": 9.77,
+    "passed": true
+  },
+  {
+    "name": "深色警告徽章",
+    "foreground": "#fec84b",
+    "background": "#2a1d06",
+    "contrast": 10.63,
+    "passed": true
+  },
+  {
+    "name": "深色危险徽章",
+    "foreground": "#fda29b",
+    "background": "#2c1310",
+    "contrast": 8.96,
+    "passed": true
+  },
+  {
+    "name": "深色信息徽章",
+    "foreground": "#84caff",
+    "background": "#101f35",
+    "contrast": 9.35,
+    "passed": true
+  },
+  {
+    "name": "深色中性徽章",
+    "foreground": "#9aa7bd",
+    "background": "#0c111a",
+    "contrast": 7.78,
+    "passed": true
+  },
+  {
+    "name": "深色反向文字",
+    "foreground": "#0b0f18",
+    "background": "#e8edf6",
+    "contrast": 16.31,
+    "passed": true
+  },
+  {
+    "name": "深色悬浮底文字",
+    "foreground": "#e8edf6",
+    "background": "#1a2130",
+    "contrast": 13.71,
+    "passed": true
+  }
+]

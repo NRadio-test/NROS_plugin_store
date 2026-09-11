@@ -1,0 +1,29 @@
+{
+  "checked_at": "2026-09-10T13:30:00+08:00",
+  "command": "pnpm dev",
+  "origin": "http://127.0.0.1:5173",
+  "runtime": "Vite 8 + @cloudflare/vite-plugin + 本地 Miniflare D1/Queues",
+  "database": "local D1 initialized by pnpm setup:local; no fixture data",
+  "results": [
+    { "route": "/", "status": 200, "content_type": "text/html", "vue_entry": true },
+    { "route": "/studio（SPA 深链）", "status": 200 },
+    { "route": "/robots.txt", "status": 200 },
+    { "route": "/src/style.css", "status": 200, "note": "返回设计令牌、基础层、组件层与 Markdown 排版层的完整样式" },
+    {
+      "route": "/api/plugins",
+      "status": 200,
+      "content_type": "application/json",
+      "body": { "items": [], "total": 0, "page": 1, "pageSize": 12, "sort": "updated" }
+    },
+    {
+      "route": "/api/session",
+      "status": 200,
+      "content_type": "application/json",
+      "body": { "user": null, "admin": null }
+    }
+  ],
+  "notes": [
+    "以上为真实本地 D1（空市场、未登录）的响应，不是模拟页面。",
+    "本轮验证后已停止临时开发服务；未创建远程仓库、未部署、未执行远程迁移。"
+  ]
+}
