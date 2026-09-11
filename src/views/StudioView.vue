@@ -20,12 +20,12 @@ type PanelKey = 'overview' | 'plugins' | 'tasks' | 'logs' | 'ai' | 'sources' | '
 interface NavItem { key: PanelKey; label: string; icon: IconName; desc: string }
 
 const NAV: NavItem[] = [
-  { key: 'overview', label: '总览', icon: 'bar-chart', desc: '市场、审核与配置的整体状态' },
-  { key: 'plugins', label: '插件管理', icon: 'package', desc: '搜索仓库、同步、重审、下架与显式恢复' },
-  { key: 'tasks', label: '审核任务', icon: 'activity', desc: '持久化任务状态、尝试次数与公开理由' },
-  { key: 'logs', label: '操作日志', icon: 'history', desc: '管理员敏感操作的审计记录' },
-  { key: 'ai', label: 'AI 设置', icon: 'sparkles', desc: 'OpenAI 兼容接口、预算与审核规则' },
-  { key: 'sources', label: '下载源', icon: 'layers', desc: '官方源默认启用，第三方源需测试并显式信任' },
+  { key: 'overview', label: '总览', icon: 'bar-chart', desc: '整体状态' },
+  { key: 'plugins', label: '插件管理', icon: 'package', desc: '搜索、同步、下架与恢复' },
+  { key: 'tasks', label: '审核任务', icon: 'activity', desc: '任务状态与理由' },
+  { key: 'logs', label: '操作日志', icon: 'history', desc: '管理员操作记录' },
+  { key: 'ai', label: 'AI 设置', icon: 'sparkles', desc: '接口、预算与规则' },
+  { key: 'sources', label: '下载源', icon: 'layers', desc: '官方源与第三方源' },
   { key: 'security', label: '账号安全', icon: 'lock', desc: '前往留言箱管理密码' },
 ]
 
@@ -73,18 +73,12 @@ function select(key: PanelKey) {
 
 <template>
   <div class="studio">
-    <p v-if="!session.loaded" class="loading-row"><span class="spinner" />正在检查管理员会话…</p>
+    <p v-if="!session.loaded" class="loading-row"><span class="spinner" />加载中…</p>
 
     <div v-else-if="!session.admin" class="studio-login container">
       <section class="studio-login__aside">
-        <p class="eyebrow"><AppIcon name="lock" :size="14" />仅管理员</p>
-        <h1 class="studio-login__title">张导插件商店<br />Studio 控制台</h1>
-        <p class="studio-login__lead">审核流程、发布状态、AI 设置与下载源都在这里管理。管理员提交同样走自动审核，不会绕过流程。</p>
-        <ul class="studio-login__list">
-          <li><AppIcon name="check" :size="15" />审核任务与公开理由</li>
-          <li><AppIcon name="check" :size="15" />下架、删除与显式恢复</li>
-          <li><AppIcon name="check" :size="15" />审计日志与密钥掩码</li>
-        </ul>
+        <h1 class="studio-login__title">Studio</h1>
+        <p class="auth__lead">使用留言箱的管理员账号登录。</p>
       </section>
 
       <form class="studio-login__form" @submit.prevent="login">
@@ -92,7 +86,7 @@ function select(key: PanelKey) {
           <span class="studio-login__icon"><AppIcon name="shield" :size="20" /></span>
           <div>
             <h2>管理员登录</h2>
-            <p class="small muted">使用留言箱的当前管理员账号；两站需要分别登录。</p>
+            <p class="small muted">使用留言箱的管理员账号。</p>
           </div>
         </header>
 
@@ -111,7 +105,7 @@ function select(key: PanelKey) {
 
         <div class="notice">
           <AppIcon name="info" :size="16" />
-          <span>登录、提交、下架等敏感操作都会写入审计日志；连续失败会被限流。</span>
+          <span>敏感操作会写入审计日志。</span>
         </div>
       </form>
     </div>
@@ -188,7 +182,7 @@ function select(key: PanelKey) {
             <AISettings v-else-if="panel === 'ai'" />
             <SourceSettings v-else-if="panel === 'sources'" />
             <StudioSecurity v-else />
-            <template #fallback><p class="loading-row"><span class="spinner" />正在加载功能…</p></template>
+            <template #fallback><p class="loading-row"><span class="spinner" />加载中…</p></template>
           </Suspense>
         </div>
       </div>

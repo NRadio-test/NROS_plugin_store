@@ -13,12 +13,6 @@ const phone = ref('')
 const busy = ref(false)
 const error = ref('')
 
-const benefits = [
-  { icon: 'heart' as const, title: '收藏插件', text: '把常用插件收进自己的清单，换设备也能找回。' },
-  { icon: 'upload' as const, title: '提交仓库', text: '提交公开 GitHub 仓库，自动审核通过后出现在市场。' },
-  { icon: 'history' as const, title: '跟进进度', text: '在个人中心查看审核状态与公开原因，可手动触发重新检查。' },
-]
-
 async function login() {
   busy.value = true
   error.value = ''
@@ -42,18 +36,8 @@ async function login() {
   <div class="auth container">
     <section class="auth__aside">
       <div class="auth__aside-inner">
-        <p class="eyebrow auth__eyebrow">你的插件档案</p>
-        <h1 class="auth__headline">用手机号进入，<br />继续你的插件清单。</h1>
-        <p class="auth__lead">不需要密码，也不发送短信验证码。这个号码只用来把你的收藏与投稿归到一个档案里。</p>
-        <ul class="auth__list">
-          <li v-for="item in benefits" :key="item.title">
-            <span class="auth__list-icon"><AppIcon :name="item.icon" :size="16" /></span>
-            <span>
-              <span class="auth__list-title">{{ item.title }}</span>
-              <span class="auth__list-text">{{ item.text }}</span>
-            </span>
-          </li>
-        </ul>
+        <h1 class="auth__headline">手机号进入</h1>
+        <p class="auth__lead">用来收藏插件、查看投稿进度。</p>
       </div>
     </section>
 
@@ -63,7 +47,6 @@ async function login() {
           <span class="auth__form-icon"><AppIcon name="user" :size="20" /></span>
           <div>
             <h2 class="auth__form-title">手机号识别</h2>
-            <p class="auth__form-sub">输入张导小店绑定的手机号</p>
           </div>
         </header>
 
@@ -93,7 +76,7 @@ async function login() {
         <p class="auth__foot">
           <RouterLink to="/">返回插件市场</RouterLink>
           <span aria-hidden="true">·</span>
-          <RouterLink to="/submit">了解提交流程</RouterLink>
+          <RouterLink to="/submit">提交插件</RouterLink>
         </p>
       </form>
     </section>

@@ -261,7 +261,7 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     }
     await page.route('**/api/plugins?*', route => route.fulfill({ status: 503, json: { error: '隔离测试：服务暂不可用', code: 'configuration' } }));
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: '暂时无法加载' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '加载失败' })).toBeVisible();
     await expect(page.locator('.page-head__meta')).not.toContainText('共 0');
     await page.unroute('**/api/plugins?*');
     await page.getByRole('button', { name: '重新加载', exact: true }).click();

@@ -85,10 +85,10 @@ void load()
   <div class="wrap market">
     <div class="page-head">
       <h1>插件市场</h1>
-      <p class="muted">收录通过自动静态审核的 IPK 安装包，源码与 Release 由作者维护在 GitHub。</p>
+      <p class="muted">收录通过自动审核的 IPK 安装包。</p>
       <p class="page-head__meta">
-        <template v-if="loading">正在读取插件目录…</template>
-        <template v-else-if="error">目录暂不可用，请重新加载。</template>
+        <template v-if="loading">加载中…</template>
+        <template v-else-if="error">加载失败。</template>
         <template v-else>
           <span>共 <b class="num">{{ formatNumber(total) }}</b> 个插件</span>
           <span aria-hidden="true">·</span>
@@ -118,7 +118,7 @@ void load()
         :skeleton-count="6"
         skeleton="row"
         :empty-title="searching ? '没有找到匹配的插件' : '插件目录等待第一份发布'"
-        :empty-text="searching ? '试试更短的关键词，或清空搜索浏览全部插件。' : '提交公开 GitHub 仓库，正式 Release 中的 IPK 通过自动审核后会出现在这里。'"
+        :empty-text="searching ? '换个关键词试试。' : '提交公开 GitHub 仓库即可收录。'"
         @retry="load"
       >
         <div class="list">
@@ -126,7 +126,7 @@ void load()
         </div>
         <template #empty>
           <RouterLink v-if="!searching" to="/submit" class="btn btn--signal" style="margin-top: var(--sp-2)">提交插件</RouterLink>
-          <button v-else type="button" class="btn btn--raised" style="margin-top: var(--sp-2)" @click="search = ''">清空搜索条件</button>
+          <button v-else type="button" class="btn btn--raised" style="margin-top: var(--sp-2)" @click="search = ''">清空搜索</button>
         </template>
       </AsyncState>
     </div>

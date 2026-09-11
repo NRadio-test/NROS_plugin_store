@@ -5,10 +5,10 @@ import AppIcon from '../components/AppIcon.vue'
 import AppButton from '../components/AppButton.vue'
 
 const steps = [
-  { title: '准备公开仓库', text: '仓库需要真实的 GitHub description、README、源码与许可说明。', icon: 'git-branch' as const },
-  { title: '发布正式 Release', text: '由你在 GitHub 构建 .ipk 并上传到正式 Release；多架构请分别命名。', icon: 'package' as const },
-  { title: '等待自动审核', text: '后台读取仓库与 Release 快照，静态解析安装包；通过后自动上架。', icon: 'shield-check' as const },
-  { title: '持续同步更新', text: '每天两次检查仓库变化，新版本需要重新通过审核才会替换下载。', icon: 'refresh' as const },
+  { title: '准备公开仓库', text: '需要 description、README、源码与许可说明。', icon: 'git-branch' as const },
+  { title: '发布正式 Release', text: '在正式 Release 上传 .ipk，多架构分别命名。', icon: 'package' as const },
+  { title: '等待自动审核', text: '通过后自动上架。', icon: 'shield-check' as const },
+  { title: '持续同步更新', text: '每天两次检查，新版本需重新审核。', icon: 'refresh' as const },
 ]
 </script>
 
@@ -16,9 +16,9 @@ const steps = [
   <div class="submit">
     <section class="submit__hero">
       <div class="container submit__hero-inner">
-        <h1 class="submit__title">提交一个插件</h1>
+        <h1 class="submit__title">提交插件</h1>
         <p class="submit__lead">
-          提供公开 GitHub 仓库链接，安装包继续由作者发布在 Release。提交后，审核与上架将在后台完成。
+          提供公开 GitHub 仓库链接，安装包由你发布在 Release。
         </p>
       </div>
     </section>
@@ -29,8 +29,7 @@ const steps = [
         <div v-else-if="!session.user" class="card card--pad submit__gate">
           <span class="submit__gate-icon"><AppIcon name="lock" :size="20" /></span>
           <div>
-            <h2 class="submit__gate-title">先进入你的插件档案</h2>
-            <p class="muted small">提交插件需要手机号识别档案，用于在个人中心跟进审核状态。</p>
+            <h2 class="submit__gate-title">请先登录</h2>
           </div>
           <AppButton to="/login?next=/submit" variant="primary" icon="user">手机号进入</AppButton>
         </div>
@@ -56,26 +55,20 @@ const steps = [
         <div class="card submit__aside-card">
           <p class="submit__aside-title"><AppIcon name="check-circle" :size="15" />收录要求</p>
           <ul>
-            <li>GitHub 公开仓库；同一仓库无需重复提交</li>
-            <li>正式 Release 中直接上传的 .ipk 附件</li>
-            <li>可读的源码与构建配置，便于建立二进制关联</li>
-            <li>仓库 description 与真实 README</li>
+            <li>GitHub 公开仓库</li>
+            <li>Release 中的 .ipk 附件</li>
+            <li>可读的源码与构建配置</li>
+            <li>仓库 description 与 README</li>
           </ul>
         </div>
         <div class="card submit__aside-card">
           <p class="submit__aside-title"><AppIcon name="x-circle" :size="15" />不会被收录</p>
           <ul>
-            <li>私有仓库、源码压缩包或网盘地址</li>
-            <li>只有 draft / prerelease 的版本</li>
-            <li>缺少 README、源码或安装包的仓库</li>
-            <li>包含欺骗、垃圾或恶意行为的插件</li>
+            <li>私有仓库或压缩包</li>
+            <li>只有 draft / prerelease</li>
+            <li>缺少 README、源码或 IPK</li>
+            <li>欺骗、垃圾或恶意插件</li>
           </ul>
-        </div>
-        <div class="card submit__aside-card submit__aside-card--note">
-          <p class="submit__aside-title"><AppIcon name="info" :size="15" />作者须知</p>
-          <p class="small">
-            构建、发布、Issue 与 PR 都在 GitHub 由作者和用户处理。商店不代替作者构建，也不接管仓库的任何权限。
-          </p>
         </div>
       </aside>
     </div>

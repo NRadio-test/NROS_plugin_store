@@ -55,8 +55,8 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
         <h2 class="records__title">{{ kind === 'tasks' ? '审核任务' : '操作日志' }}</h2>
         <p class="records__desc">
           {{ kind === 'tasks'
-            ? '任务按 revision 持久化保存，可重复、乱序与崩溃重试；公开理由对用户可见，内部依据仅管理员可见。'
-            : '所有敏感操作都会记录管理员、动作与目标，便于回溯下架与恢复过程。' }}
+            ? '公开理由对用户可见，内部依据仅管理员可见。'
+            : '记录管理员、动作与目标。' }}
         </p>
       </div>
       <AppButton size="sm" icon="refresh" :loading="loading" @click="load">刷新记录</AppButton>
@@ -69,7 +69,7 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
       skeleton="row"
       :skeleton-count="6"
       :empty-title="kind === 'tasks' ? '暂无审核任务' : '暂无操作日志'"
-      :empty-text="kind === 'tasks' ? '新投稿、定时同步与手动刷新都会生成任务。' : '管理员登录、下架、配置变更等操作会出现在这里。'"
+      :empty-text="kind === 'tasks' ? '新投稿与定时同步会生成任务。' : '管理员操作会记录在这里。'"
       @retry="load"
     >
       <div v-if="kind === 'tasks'" class="records__list">
@@ -82,7 +82,7 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
               <span class="record__rev">revision {{ task.revision }}</span>
               <span class="record__attempts">尝试 {{ task.attempts }} 次</span>
             </div>
-            <p class="record__reason">{{ task.public_reason || '暂无公开理由' }}</p>
+            <p class="record__reason">{{ task.public_reason || '—' }}</p>
             <p class="record__meta">
               <span class="mono">任务 {{ shortId(task.id) }}</span>
               <span aria-hidden="true">·</span>

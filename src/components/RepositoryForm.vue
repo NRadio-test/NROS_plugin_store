@@ -30,7 +30,7 @@ async function submit() {
     const value = await post<SubmitResult>(props.studio ? '/api/studio/submit' : '/api/submit', { url: url.value })
     result.value = value
     url.value = ''
-    toast.success('投稿已保存，已进入后台队列')
+    toast.success('投稿已保存')
     emit('submitted', value)
   } catch (caught) {
     error.value = errorMessage(caught)
@@ -47,7 +47,7 @@ async function submit() {
       label="GitHub 公开仓库链接"
       for-id="repository-url"
       :error="error"
-      hint="只接受 github.com 的 HTTPS 公开仓库；不支持私有仓库、任意文件地址或代理链接。"
+      hint="只接受 github.com 的 HTTPS 公开仓库。"
       required
     >
       <div class="repo-form__input">
@@ -71,7 +71,6 @@ async function submit() {
       <AppButton variant="primary" size="lg" type="submit" icon="send" :loading="busy">
         {{ busy ? '正在提交…' : '提交审核' }}
       </AppButton>
-      <span class="repo-form__note">提交者与 GitHub 作者是两个身份，商店不会把提交者认证为仓库所有者。</span>
     </div>
 
     <div v-if="result" class="notice notice--success repo-form__result" role="status">
@@ -79,7 +78,7 @@ async function submit() {
       <div>
         <p class="notice__title">{{ result.message }}</p>
         <p class="repo-form__result-line">
-          任务在后台继续处理，关闭页面不会中断。
+          任务在后台继续，可关闭页面。
           <RouterLink v-if="!studio" to="/me">查看我的提交 →</RouterLink>
         </p>
         <p v-if="result.taskId" class="repo-form__task">

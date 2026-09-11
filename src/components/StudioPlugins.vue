@@ -28,11 +28,11 @@ const FILTERS = [
 ]
 
 const ACTION_META: Record<Action, { label: string; title: string; confirm: string; danger: boolean; hint: string }> = {
-  sync: { label: '同步', title: '同步原仓库', confirm: '开始同步', danger: false, hint: '按当前 revision 重新读取 GitHub 快照。' },
-  retry: { label: '重新审核', title: '重新审核', confirm: '重新审核', danger: false, hint: '强制重新读取材料并送审，不沿用已缓存结果。' },
-  unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，后续同步不会自动恢复。' },
-  delete: { label: '删除', title: '删除插件', confirm: '确认删除', danger: true, hint: '公开移除并清理快照、附件与收藏记录，仅保留最小提交状态与原因。' },
-  restore: { label: '显式恢复', title: '显式恢复', confirm: '恢复并重新审核', danger: false, hint: '清除停用标记并重新进入审核，通过后才会再次上架。' },
+  sync: { label: '同步', title: '同步原仓库', confirm: '开始同步', danger: false, hint: '重新读取 GitHub 快照。' },
+  retry: { label: '重新审核', title: '重新审核', confirm: '重新审核', danger: false, hint: '重新读取材料并送审。' },
+  unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，不可自动恢复。' },
+  delete: { label: '删除', title: '删除插件', confirm: '确认删除', danger: true, hint: '清理快照、附件与收藏，仅保留提交状态与原因。' },
+  restore: { label: '显式恢复', title: '显式恢复', confirm: '恢复并重新审核', danger: false, hint: '重新进入审核，通过后上架。' },
 }
 
 const items = ref<StudioPlugin[]>([])
@@ -123,7 +123,7 @@ void load()
     <header class="sp__head">
       <div>
         <h2 class="sp__title">插件管理</h2>
-        <p class="sp__desc">搜索已提交仓库，查看审核状态与公开理由，并执行同步、重审、下架与显式恢复。管理员提交同样走自动审核。</p>
+        <p class="sp__desc">搜索仓库，执行同步、重审、下架与恢复。</p>
       </div>
       <AppButton variant="primary" icon="plus" @click="submitOpen = true">提交 GitHub 仓库</AppButton>
     </header>
@@ -137,7 +137,7 @@ void load()
       <div class="input-icon sp__search">
         <AppIcon name="flag" :size="16" />
         <label for="studio-reason" class="sr-only">操作原因（对用户可见）</label>
-        <input id="studio-reason" v-model="reason" class="input" maxlength="300" placeholder="操作原因（对用户可见）" />
+        <input id="studio-reason" v-model="reason" class="input" maxlength="300" placeholder="操作原因" />
       </div>
       <AppButton size="md" icon="refresh" :loading="loading" @click="load">刷新</AppButton>
     </div>
@@ -162,7 +162,7 @@ void load()
       skeleton="row"
       :skeleton-count="6"
       empty-title="没有匹配的插件"
-      empty-text="调整关键词或筛选条件，也可以直接提交一个公开 GitHub 仓库。"
+      empty-text="换个关键词或筛选条件试试。"
       @retry="load"
     >
       <div class="card sp__table-card">
@@ -190,7 +190,7 @@ void load()
                       <span aria-hidden="true">·</span>
                       <span>revision {{ plugin.revision }}</span>
                     </span>
-                    <span class="sp__repo-reason">{{ plugin.public_reason || '暂无公开理由' }}</span>
+                    <span class="sp__repo-reason">{{ plugin.public_reason || '—' }}</span>
                   </div>
                 </td>
                 <td>
@@ -234,7 +234,7 @@ void load()
       </div>
     </AsyncState>
 
-    <AppModal v-model="submitOpen" title="提交 GitHub 仓库" description="提交后立即进入持久化审核队列，通过自动审核才会出现在市场。">
+    <AppModal v-model="submitOpen" title="提交 GitHub 仓库">
       <RepositoryForm studio @submitted="submitOpen = false; load()" />
     </AppModal>
 
@@ -251,7 +251,7 @@ void load()
         <dl class="sp__confirm">
           <div><dt>当前状态</dt><dd><AppBadge :variant="statusMeta(pending.plugin.status).tone">{{ statusMeta(pending.plugin.status).label }}</AppBadge></dd></div>
           <div><dt>已批准版本</dt><dd class="mono small">{{ pending.plugin.version || '尚无' }}</dd></div>
-          <div><dt>公开原因</dt><dd class="small">{{ reason || pending.plugin.public_reason || '未填写，将使用默认说明' }}</dd></div>
+          <div><dt>公开原因</dt><dd class="small">{{ reason || pending.plugin.public_reason || '未填写' }}</dd></div>
         </dl>
       </template>
       <template #footer>
@@ -282,7 +282,7 @@ void load()
           <div><span>收藏 / 下载</span><span class="tnum">{{ formatNumber(detail.plugin.favorite_count) }} / {{ formatNumber(detail.plugin.download_count) }}</span></div>
         </div>
 
-        <p class="sp__drawer-reason">{{ detail.plugin.public_reason || '暂无公开理由' }}</p>
+        <p class="sp__drawer-reason">{{ detail.plugin.public_reason || '—' }}</p>
 
         <nav class="tabs sp__drawer-tabs" role="tablist" aria-label="插件管理详情" @keydown="navigateTabs">
           <button id="studio-tab-snapshot" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'snapshot'" :tabindex="detailTab === 'snapshot' ? 0 : -1" aria-controls="studio-panel-snapshot" @click="detailTab = 'snapshot'">
@@ -328,12 +328,12 @@ void load()
                       <AppBadge :variant="asset.disabled ? 'danger' : 'success'">{{ asset.disabled ? '已停用' : '可下载' }}</AppBadge>
                     </td>
                   </tr>
-                  <tr v-if="!detail.assets.length"><td colspan="4" class="muted">当前没有已批准附件。</td></tr>
+                  <tr v-if="!detail.assets.length"><td colspan="4" class="muted">—</td></tr>
                 </tbody>
               </table>
             </div>
           </template>
-          <p v-else class="muted small">该插件还没有已批准的快照。</p>
+          <p v-else class="muted small">—</p>
         </section>
 
         <section v-else-if="detailTab === 'tasks'" :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
@@ -342,14 +342,14 @@ void load()
               <AppBadge :variant="statusMeta(task.status).tone" dot>{{ statusMeta(task.status).label }}</AppBadge>
               <span class="mono micro muted">revision {{ task.revision }} · 尝试 {{ task.attempts }} 次</span>
             </div>
-            <p class="small" style="margin-top: 8px">{{ task.public_reason || '暂无公开理由' }}</p>
+            <p class="small" style="margin-top: 8px">{{ task.public_reason || '—' }}</p>
             <details v-if="task.internal_reason">
               <summary>内部依据</summary>
               <pre class="sp__internal">{{ task.internal_reason }}</pre>
             </details>
             <p class="micro muted" style="margin-top: 6px">{{ formatDateTime(task.created_at) }} · 更新于 {{ formatDateTime(task.updated_at) }}</p>
           </article>
-          <p v-if="!detail.tasks.length" class="muted small">没有任务记录。</p>
+          <p v-if="!detail.tasks.length" class="muted small">—</p>
         </section>
 
         <section v-else :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
@@ -359,7 +359,7 @@ void load()
             <span class="mono micro muted">{{ shortId(entry.admin_id || '', 8) }}</span>
             <span class="micro muted">{{ formatDateTime(entry.created_at) }}</span>
           </article>
-          <p v-if="!detail.audits.length" class="muted small">没有针对该插件的审计记录。</p>
+          <p v-if="!detail.audits.length" class="muted small">—</p>
         </section>
       </template>
 

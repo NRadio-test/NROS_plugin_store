@@ -24,7 +24,7 @@ const name = computed(() => props.plugin.full_name.split('/').at(-1) || props.pl
 
 async function favorite() {
   if (!session.user) {
-    toast.info('先识别手机号', '收藏需要先进入你的插件档案。')
+    toast.info('请先登录')
     await router.push({ path: '/login', query: { next: router.currentRoute.value.fullPath } })
     return
   }
@@ -66,9 +66,9 @@ async function download() {
         <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`">{{ name }}</RouterLink></h2>
         <span class="pkg__repo">{{ owner }}/{{ name }}</span>
       </div>
-      <p class="pkg__desc">{{ plugin.description || '作者尚未提供仓库描述。' }}</p>
+      <p class="pkg__desc">{{ plugin.description || '暂无描述' }}</p>
       <div class="pkg__meta">
-        <span class="mono">{{ plugin.version || '版本未提供' }}</span>
+        <span class="mono">{{ plugin.version || '—' }}</span>
         <span aria-hidden="true">·</span>
         <span>{{ formatRelative(plugin.updated_at) }}更新</span>
       </div>

@@ -41,7 +41,7 @@ async function load() {
   error.value = ''
   try {
     detail.value = await api<Detail>(`/api/plugins/${encodeURIComponent(String(route.params.id))}`)
-    setMetadata(detail.value.plugin.full_name, detail.value.plugin.description || '查看仓库 README 与已审核的 IPK 安装包。')
+    setMetadata(detail.value.plugin.full_name, detail.value.plugin.description || '查看仓库说明与安装包。')
   } catch (caught) {
     error.value = errorMessage(caught)
   } finally {
@@ -110,7 +110,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <p class="detail-hero__owner">
                   <AppIcon name="git-branch" :size="14" />{{ detail.plugin.full_name }}
                 </p>
-                <p class="detail-hero__desc">{{ detail.plugin.description || '作者尚未提供仓库描述。' }}</p>
+                <p class="detail-hero__desc">{{ detail.plugin.description || '暂无描述' }}</p>
               </div>
             </div>
 
@@ -129,7 +129,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
             <dl class="detail-hero__stats">
               <div class="stat">
-                <dt class="stat__label">已审核版本</dt>
+                <dt class="stat__label">版本</dt>
                 <dd class="stat__value">{{ detail.plugin.version || '—' }}</dd>
               </div>
               <div class="stat">
@@ -137,12 +137,12 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <dd class="stat__value">{{ formatNumber(detail.plugin.favorite_count) }}</dd>
               </div>
               <div class="stat">
-                <dt class="stat__label">下载尝试</dt>
+                <dt class="stat__label">下载</dt>
                 <dd class="stat__value">{{ formatNumber(detail.plugin.download_count) }}</dd>
               </div>
               <div class="stat">
                 <dt class="stat__label">许可证</dt>
-                <dd class="stat__value stat__value--text">{{ detail.license || '未明确' }}</dd>
+                <dd class="stat__value stat__value--text">{{ detail.license || '—' }}</dd>
               </div>
             </dl>
           </header>
@@ -172,7 +172,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                     <p class="detail__panel-title">仓库 README</p>
                     <p class="detail__panel-sub">
                       <AppIcon name="file-text" :size="13" />{{ detail.readmePath || '未找到 README' }}
-                      <span class="detail__panel-dot" aria-hidden="true">·</span>展示快照 {{ shortHash(detail.readmeCommit) }}
+                      <span class="detail__panel-dot" aria-hidden="true">·</span>commit {{ shortHash(detail.readmeCommit) }}
                     </p>
                   </div>
                   <div class="row gap-2">
@@ -189,10 +189,10 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </header>
                 <div v-if="readmeHtml" class="readme detail__readme" data-testid="readme" v-html="readmeHtml" />
                 <p v-else class="detail__missing">
-                  <AppIcon name="alert-circle" :size="16" />仓库没有提供 README，商店不会代写说明内容。
+                  <AppIcon name="alert-circle" :size="16" />仓库没有 README。
                 </p>
                 <p class="detail__footnote">
-                  以上为作者在 GitHub 仓库中的原文快照，商店不改写内容。相对图片与链接按读取时的 commit 解析，外部站点的图片不会加载。
+                  作者原文快照，外部站点的图片不会加载。
                 </p>
               </section>
 
@@ -200,7 +200,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <header class="detail__panel-head">
                   <div>
                     <p class="detail__panel-title">安装包与校验</p>
-                    <p class="detail__panel-sub">以下附件来自同一次自动审核通过的正式 Release</p>
                   </div>
                 </header>
                 <div class="table-wrap">
@@ -217,9 +216,9 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                       <tr v-for="asset in detail.assets" :key="asset.id">
                         <td class="table__primary">{{ asset.name }}</td>
                         <td>
-                          <span class="mono small">{{ asset.packageName || '未提供' }}</span>
+                          <span class="mono small">{{ asset.packageName || '—' }}</span>
                           <span class="detail__panel-dot" aria-hidden="true">·</span>
-                          <span class="small muted">{{ asset.architecture || '架构未提供' }}</span>
+                          <span class="small muted">{{ asset.architecture || '—' }}</span>
                         </td>
                         <td class="tnum">{{ formatSize(asset.size) }}</td>
                         <td>
@@ -230,13 +229,12 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                         </td>
                       </tr>
                       <tr v-if="!detail.assets.length">
-                        <td colspan="4" class="muted">当前没有可下载的已审核附件。</td>
+                        <td colspan="4" class="muted">暂无可下载的附件。</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <p class="detail__footnote">
-                  摘要由审核阶段完整计算；下载时商店会重新核验官方资产身份后再流式转发，纯流式分发无法在首字节前重算整包哈希。
                 </p>
               </section>
 
@@ -244,7 +242,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <header class="detail__panel-head">
                   <div>
                     <p class="detail__panel-title">审核信息</p>
-                    <p class="detail__panel-sub">公开结论与来源快照，不含内部检查依据</p>
                   </div>
                 </header>
                 <div class="detail__review">
@@ -254,14 +251,14 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                   </div>
                   <div class="detail__review-row">
                     <span class="detail__review-label">公开理由</span>
-                    <span>{{ detail.reviewPublicReason || '自动静态检查未发现拒绝原因。' }}</span>
+                    <span>{{ detail.reviewPublicReason || '未发现拒绝原因。' }}</span>
                   </div>
                   <div class="detail__review-row">
                     <span class="detail__review-label">审核时间</span>
                     <span>{{ detail.reviewedAt ? formatDateTime(detail.reviewedAt) : '—' }}</span>
                   </div>
                   <div class="detail__review-row">
-                    <span class="detail__review-label">展示快照 commit</span>
+                    <span class="detail__review-label">README commit</span>
                     <span class="row gap-1"><code class="small">{{ shortHash(detail.readmeCommit) }}</code><CopyButton :value="detail.readmeCommit" label="已复制 commit" :size="15" /></span>
                   </div>
                   <div class="detail__review-row">
@@ -271,7 +268,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </div>
                 <div class="notice notice--warning detail__notice">
                   <AppIcon name="alert" :size="16" />
-                  <span>自动审核为静态检查：不执行仓库构建命令、不运行动态沙箱或病毒引擎。「通过自动审核」不代表保证无病毒，请自行确认设备与用途是否匹配。</span>
+                  <span>自动审核为静态检查，不保证无病毒。</span>
                 </div>
               </section>
             </div>
@@ -282,28 +279,28 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                   <span class="download-card__icon"><AppIcon name="package" :size="19" /></span>
                   <div>
                     <p class="download-card__title">下载安装包</p>
-                    <p class="download-card__version">{{ detail.plugin.version || '版本未提供' }}</p>
+                    <p class="download-card__version">{{ detail.plugin.version || '—' }}</p>
                   </div>
                 </div>
                 <p class="download-card__note">
-                  <template v-if="detail.assets.length > 1">该版本有 {{ detail.assets.length }} 个 IPK，请选择与你设备架构相符的文件。</template>
-                  <template v-else-if="detail.assets.length === 1">由商店核验来源后转发 GitHub Release 文件到本地。</template>
-                  <template v-else>当前没有可下载的已审核附件。</template>
+                  <template v-if="detail.assets.length > 1">请选择与设备架构相符的文件。</template>
+                  <template v-else-if="detail.assets.length === 1"></template>
+                  <template v-else>暂无可下载的附件。</template>
                 </p>
 
                 <div v-for="asset in detail.assets" :key="asset.id" class="asset">
                   <p class="asset__name">{{ asset.name }}</p>
                   <p class="asset__meta">
-                    <span>{{ asset.packageName || '包名未提供' }}</span>
+                    <span>{{ asset.packageName || '—' }}</span>
                     <span class="detail__panel-dot" aria-hidden="true">·</span>
-                    <span>{{ asset.architecture || '架构未提供' }}</span>
+                    <span>{{ asset.architecture || '—' }}</span>
                     <span class="detail__panel-dot" aria-hidden="true">·</span>
                     <span class="tnum">{{ formatSize(asset.size) }}</span>
                   </p>
                   <details class="asset__hash">
                     <summary>SHA-256 摘要</summary>
                     <span class="row gap-1" style="margin-top: 6px">
-                      <code class="small">{{ asset.sha256 || '摘要未提供' }}</code>
+                      <code class="small">{{ asset.sha256 || '—' }}</code>
                       <CopyButton v-if="asset.sha256" :value="asset.sha256" label="已复制 SHA-256" :size="15" />
                     </span>
                   </details>
@@ -321,7 +318,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
                 <div v-if="!detail.assets.length" class="notice">
                   <AppIcon name="alert-circle" :size="16" />
-                  <span>作者尚未在正式 Release 上传可用的 IPK，或该附件已被停用。</span>
+                  <span>作者尚未上传可用的 IPK。</span>
                 </div>
 
                 <div class="download-card__extra">
@@ -335,21 +332,12 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                   </div>
                 </div>
               </div>
-
-              <div class="card detail__side-card">
-                <p class="detail__side-title"><AppIcon name="shield" :size="15" />下载与安全</p>
-                <ul class="detail__side-list">
-                  <li>商店不保存安装包副本，也不提供开放代理。</li>
-                  <li>只有当前已通过审核的附件可以被下载。</li>
-                  <li>已批准产物失效时会自动停止提供下载。</li>
-                </ul>
-              </div>
             </aside>
           </div>
 
           <div class="detail-mobile-bar">
             <div class="detail-mobile-bar__info">
-              <span class="strong">{{ detail.plugin.version || '版本未提供' }}</span>
+              <span class="strong">{{ detail.plugin.version || '—' }}</span>
               <span class="small muted">{{ detail.assets.length }} 个安装包</span>
             </div>
             <AppButton

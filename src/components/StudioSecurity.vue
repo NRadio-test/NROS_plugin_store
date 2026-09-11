@@ -9,7 +9,7 @@ import AppButton from './AppButton.vue'
     <header class="sec__head">
       <div>
         <h2 class="sec__title">账号安全</h2>
-        <p class="sec__desc">使用留言箱的当前管理员账号登录。密码由留言箱统一管理。</p>
+        <p class="sec__desc">密码由留言箱统一管理。</p>
       </div>
       <span class="sec__who"><AppIcon name="user" :size="15" />{{ session.admin?.username }}</span>
     </header>
@@ -18,7 +18,6 @@ import AppButton from './AppButton.vue'
         <header class="card__head">
           <div>
             <p class="card__title">修改管理员密码</p>
-            <p class="card__desc">在留言箱完成改密后，请使用新密码重新登录商店。</p>
           </div>
         </header>
         <div class="card__body">
@@ -30,8 +29,7 @@ import AppButton from './AppButton.vue'
           <p class="sec__note-title"><AppIcon name="shield-check" :size="15" />登录说明</p>
           <ul>
             <li>商店与留言箱分别登录、分别退出。</li>
-            <li>留言箱要求改密时，请先完成修改再登录商店。</li>
-            <li>忘记密码时，请使用留言箱的账号恢复流程。</li>
+            <li>忘记密码请走留言箱的恢复流程。</li>
           </ul>
         </div>
       </aside>

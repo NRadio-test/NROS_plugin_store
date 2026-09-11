@@ -4,7 +4,7 @@ import AppIcon from './AppIcon.vue'
 import { toast } from '../lib/toast'
 
 const props = withDefaults(defineProps<{ value: string; label?: string; floating?: boolean; size?: number }>(), {
-  label: '已复制到剪贴板',
+  label: '已复制',
   size: 16,
 })
 const copied = ref(false)

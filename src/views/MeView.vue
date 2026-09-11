@@ -46,7 +46,7 @@ async function refresh(id: string, name: string) {
   busy.value = id
   try {
     await post(`/api/plugins/${id}/refresh`)
-    toast.success('已请求重新检查', `${name} 会在后台重新读取原仓库。`)
+    toast.success('已请求重新检查', name)
     await load()
   } catch (caught) {
     toast.error('请求未生效', errorMessage(caught))
@@ -75,11 +75,10 @@ watch(() => session.user?.id, load, { immediate: true })
       <header class="me__profile">
         <MonogramAvatar :name="masked" size="lg" />
         <div class="me__profile-text">
-          <p class="eyebrow">手机号识别档案</p>
           <h1 class="me__profile-name">{{ masked }}</h1>
           <p class="me__profile-note">
             <AppIcon name="info" :size="14" />
-            自报号码识别，未验证归属，也不代表已绑定小店会员。知道同一号码的人可能进入同一档案。
+            自报号码，未验证归属。
           </p>
         </div>
         <div class="me__profile-actions">
@@ -117,15 +116,14 @@ watch(() => session.user?.id, load, { immediate: true })
         <div class="section__head">
           <div>
             <h2>我的提交</h2>
-            <p class="muted small">审核由后台自动完成；材料不足时会显示公开原因，可按需重新检查。</p>
           </div>
-          <AppButton size="sm" icon="refresh" :loading="loading" @click="load">更新状态</AppButton>
+          <AppButton size="sm" icon="refresh" :loading="loading" @click="load">刷新</AppButton>
         </div>
 
         <div v-if="!submissions.length" class="empty">
           <span class="empty__icon"><AppIcon name="upload" :size="22" /></span>
           <h3 class="empty__title">还没有提交</h3>
-          <p class="empty__text">提交公开 GitHub 仓库，正式 Release 里的 IPK 通过自动审核后会出现在市场。</p>
+          <p class="empty__text">提交公开 GitHub 仓库试试。</p>
           <AppButton to="/submit" variant="primary" icon="plus" style="margin-top: 10px">提交第一个仓库</AppButton>
         </div>
 
@@ -139,7 +137,7 @@ watch(() => session.user?.id, load, { immediate: true })
                   <AppIcon :name="statusMeta(item.task_status).icon" :size="12" />{{ statusMeta(item.task_status).label }}
                 </AppBadge>
               </div>
-              <p class="submission-row__reason">{{ item.public_reason || '等待后台检查结果。' }}</p>
+              <p class="submission-row__reason">{{ item.public_reason || '等待检查。' }}</p>
               <p v-if="item.updated_at" class="submission-row__time"><AppIcon name="clock" :size="13" />最近更新 {{ formatDateTime(item.updated_at) }}</p>
             </div>
             <div class="submission-row__actions">
@@ -161,16 +159,15 @@ watch(() => session.user?.id, load, { immediate: true })
         <div class="section__head">
           <div>
             <h2>我的收藏</h2>
-            <p class="muted small">收藏数是去重识别档案的当前有效数量，不代表已核验的自然人数。</p>
           </div>
-          <AppButton to="/" size="sm" icon="compass">去市场看看</AppButton>
+          <AppButton to="/" size="sm" icon="compass">去市场</AppButton>
         </div>
 
         <div v-if="!favorites.length" class="empty">
           <span class="empty__icon"><AppIcon name="heart" :size="22" /></span>
           <h3 class="empty__title">还没有收藏</h3>
-          <p class="empty__text">在市场里点击插件旁的心形按钮，插件就会出现在这里。</p>
-          <AppButton to="/" variant="primary" icon="compass" style="margin-top: 10px">发现插件</AppButton>
+          <p class="empty__text">在市场里点收藏即可。</p>
+          <AppButton to="/" variant="primary" icon="compass" style="margin-top: 10px">去市场</AppButton>
         </div>
 
         <div v-else class="me__grid">
@@ -184,7 +181,6 @@ watch(() => session.user?.id, load, { immediate: true })
     <div v-else class="empty me__gate">
       <span class="empty__icon"><AppIcon name="lock" :size="22" /></span>
       <h1 class="empty__title">登录后查看个人中心</h1>
-      <p class="empty__text">用手机号进入你的档案，即可查看提交与收藏。</p>
       <AppButton to="/login?next=/me" variant="primary" icon="user" style="margin-top: 10px">手机号进入</AppButton>
     </div>
   </div>

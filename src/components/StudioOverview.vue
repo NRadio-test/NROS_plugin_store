@@ -59,7 +59,6 @@ const tiles = () => {
           <header class="card__head">
             <div>
               <p class="card__title">运行配置</p>
-              <p class="card__desc">审核与下载的关键开关状态</p>
             </div>
             <AppButton size="sm" icon="refresh" @click="load">刷新</AppButton>
           </header>
@@ -70,7 +69,7 @@ const tiles = () => {
               </span>
               <div class="ov__config-text">
                 <p class="ov__config-title">AI 审核接口</p>
-                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '尚未配置模型与密钥，新投稿会停在待配置状态' }}</p>
+                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '未配置，新投稿会等待' }}</p>
               </div>
               <AppBadge :variant="data.ai.configured ? 'success' : 'warning'" dot>{{ data.ai.configured ? '已配置' : '待配置' }}</AppBadge>
             </div>
@@ -101,29 +100,25 @@ const tiles = () => {
           <header class="card__head">
             <div>
               <p class="card__title">市场统计</p>
-              <p class="card__desc">只统计收藏与下载两项业务指标</p>
             </div>
           </header>
           <div class="card__body ov__stats">
             <div class="stat">
               <span class="stat__label">收藏总数</span>
               <span class="stat__value">{{ formatNumber(data.counts.favorites) }}</span>
-              <span class="stat__meta"><AppIcon name="heart" :size="13" />去重识别档案的当前收藏</span>
             </div>
             <div class="stat">
               <span class="stat__label">下载尝试</span>
               <span class="stat__value">{{ formatNumber(data.counts.downloads) }}</span>
-              <span class="stat__meta"><AppIcon name="download" :size="13" />成功开始的下载，非安装数</span>
+              <span class="stat__meta">成功开始的下载</span>
             </div>
             <div class="stat">
               <span class="stat__label">识别档案</span>
               <span class="stat__value">{{ formatNumber(data.counts.users) }}</span>
-              <span class="stat__meta"><AppIcon name="user" :size="13" />未验证归属的手机号档案</span>
             </div>
             <div class="stat">
               <span class="stat__label">已下架 / 已删除</span>
               <span class="stat__value">{{ formatNumber(data.counts.removed) }}</span>
-              <span class="stat__meta"><AppIcon name="ban" :size="13" />保留最小提交状态，不保存副本</span>
             </div>
           </div>
         </article>
@@ -133,7 +128,6 @@ const tiles = () => {
         <header class="card__head">
           <div>
             <p class="card__title">最近的审核任务</p>
-            <p class="card__desc">按创建时间倒序，最多 8 条</p>
           </div>
           <AppButton size="sm" variant="ghost" icon-right="chevron-right" @click="emit('open', 'tasks')">全部任务</AppButton>
         </header>
@@ -141,7 +135,7 @@ const tiles = () => {
           <div class="empty" style="border: 0; padding: 28px">
             <span class="empty__icon"><AppIcon name="activity" :size="20" /></span>
             <h3 class="empty__title">还没有审核任务</h3>
-            <p class="empty__text">提交 GitHub 公开仓库后，这里会显示持久化的任务状态。</p>
+            <p class="empty__text">提交公开仓库后会显示任务。</p>
           </div>
         </div>
         <div v-else class="ov__tasks">

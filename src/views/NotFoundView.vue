@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import AppIcon from '../components/AppIcon.vue'
 import AppButton from '../components/AppButton.vue'
 </script>
 
@@ -7,12 +6,11 @@ import AppButton from '../components/AppButton.vue'
   <section class="nf container">
     <p class="nf__code">404</p>
     <h1 class="nf__title">这个页面不存在</h1>
-    <p class="nf__text">链接可能已经变更，或者对应的插件已经下架。市场里的插件详情地址会随仓库收录保持稳定。</p>
+    <p class="nf__text">链接可能已变更，或插件已下架。</p>
     <div class="nf__actions">
       <AppButton to="/" variant="primary" icon="compass">返回插件市场</AppButton>
       <AppButton to="/submit" icon="upload">提交插件</AppButton>
     </div>
-    <p class="nf__hint"><AppIcon name="info" :size="14" />如果你是从旧链接进入，可以在市场里搜索插件名称。</p>
   </section>
 </template>
 

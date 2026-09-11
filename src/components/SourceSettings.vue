@@ -68,7 +68,6 @@ async function save() {
   try {
     await put('/api/studio/sources', { items: sources.value })
     feedback.value = { ok: true, message: '下载源已保存。' }
-    toast.success('下载源已保存')
     await load()
   } catch (caught) {
     feedback.value = { ok: false, message: errorMessage(caught) }
@@ -91,7 +90,6 @@ async function test(id: string) {
       assetId: targetAsset.value,
     })
     feedback.value = { ok: result.ok, message: `测试通过：${result.message}` }
-    toast.success('下载源测试通过')
     await load()
   } catch (caught) {
     feedback.value = { ok: false, message: `测试失败：${errorMessage(caught)}` }
@@ -113,8 +111,7 @@ onMounted(load)
       <div>
         <h2 class="src__title">下载源设置</h2>
         <p class="src__desc">
-          默认只启用 GitHub 官方源。第三方源必须先保存为停用状态、针对具体附件测试成功，再勾选信任并启用；
-          修改地址、主机或超时后需要重新测试。
+          默认只启用 GitHub 官方源。第三方源需先停用测试，再信任并启用。
         </p>
       </div>
       <div class="row gap-2">
@@ -128,7 +125,6 @@ onMounted(load)
         <header class="card__head">
           <div>
             <p class="card__title">测试目标</p>
-            <p class="card__desc">测试只确认该固定资产可取且前缀匹配，不代表整包逐字节预验证</p>
           </div>
           <AppBadge variant="neutral"><AppIcon name="hash" :size="12" />{{ candidates.length }} 个已上架插件</AppBadge>
         </header>
@@ -151,7 +147,7 @@ onMounted(load)
           </AppField>
         </div>
         <div v-if="!candidates.length" class="card__body src__empty">
-          <AppIcon name="info" :size="15" />还没有已上架的插件，无法测试第三方下载源。
+          <AppIcon name="info" :size="15" />没有已上架的插件，无法测试。
         </div>
       </article>
 
@@ -205,7 +201,7 @@ onMounted(load)
                   />
                 </AppField>
               </div>
-              <AppField label="允许主机" :for-id="`source-hosts-${index}`" required hint="英文逗号分隔；只允许公共 HTTPS 主机。">
+              <AppField label="允许主机" :for-id="`source-hosts-${index}`" required hint="英文逗号分隔。">
                 <input
                   :id="`source-hosts-${index}`"
                   class="input mono"
@@ -252,7 +248,7 @@ onMounted(load)
       <div class="notice">
         <AppIcon name="info" :size="16" />
         <span>
-          切换下载源不会切换版本或附件；没有可用源时会明确报错。第三方镜像是否能访问某个仓库由该镜像自身决定，商店不保证存在可用的第三方镜像。
+          
         </span>
       </div>
     </AsyncState>

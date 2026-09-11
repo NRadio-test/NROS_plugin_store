@@ -32,15 +32,15 @@ defineEmits<{ retry: [] }>()
 
   <div v-else-if="error" class="empty empty--error" role="alert">
     <span class="empty__icon"><AppIcon name="alert" :size="22" /></span>
-    <h3 class="empty__title">暂时无法加载</h3>
+    <h3 class="empty__title">加载失败</h3>
     <p class="empty__text">{{ error }}</p>
     <AppButton icon="refresh" class="empty__action" @click="$emit('retry')">重新加载</AppButton>
   </div>
 
   <div v-else-if="empty" class="empty">
     <span class="empty__icon"><AppIcon :name="emptyIcon" :size="22" /></span>
-    <h3 class="empty__title">{{ emptyTitle || '这里还没有内容' }}</h3>
-    <p class="empty__text">{{ emptyText || '稍后再来看看。' }}</p>
+    <h3 class="empty__title">{{ emptyTitle || '暂无内容' }}</h3>
+    <p class="empty__text">{{ emptyText || '稍后再试。' }}</p>
     <slot name="empty" />
   </div>
 
