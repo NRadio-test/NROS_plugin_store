@@ -51,7 +51,7 @@ export async function publish(verdict: 'allow' | 'reject' | 'uncertain' = 'allow
 
 /** 写入管理员并签发真实会话 cookie。 */
 export async function seedAdmin(e: Env, passwordHash = 'unused') {
- await e.DB.prepare("INSERT INTO admins(id,username,password_hash,created_at,updated_at) VALUES('admin','fixture-admin',?,?,?)").bind(passwordHash, Date.now(), Date.now()).run();
+ await e.ADMIN_AUTH_DB.prepare("INSERT INTO admins(id,username,password_hash,created_at,updated_at) VALUES('admin','fixture-admin',?,?,?)").bind(passwordHash, Date.now(), Date.now()).run();
  return (await createSession(e, 'admin', 'admin')).cookie.split(';')[0]!;
 }
 

@@ -1,13 +1,13 @@
 import { Hono } from 'hono';
 import { AppError, type Env, type DownloadSource } from './contracts';
-import { assertOrigin, createSession, getSession, logoutSession, normalizePhone, verifyPassword, hmac, rateLimit } from './security';
+import { assertOrigin, createSession, getSession, logoutSession, normalizePhone, verifyPassword, hmac, rateLimit, sharedAdmin, activeAdmin } from './security';
 import { id, now, query, audit, setting, setSetting, purgeRemovedMaterials } from './db';
 import { submit, refresh, processTask, recover, scan, getApproved } from './pipeline';
 import { loadAI, saveAI } from './settings';
 import { testAI } from './ai';
 import { readBounded } from './network';
 import { forwardDownload, testSource, OFFICIAL_SOURCE, validateSource } from './download';
-import { changePassword, listPlugins, overview, pluginDetail, sourceCandidates } from './studio';
+import { listPlugins, overview, pluginDetail, sourceCandidates } from './studio';
 type Variables = {
     userId: string;
     adminId: string;
@@ -32,24 +32,19 @@ catch {
 async function limit(c: any, action: string, count = 15, seconds = 60) { const identity = await hmac(c.env.PHONE_HMAC_KEY, `${action}:${c.req.header('cf-connecting-ip') ?? 'local'}`); await rateLimit(c.env, identity, count, seconds); }
 app.use('/api/studio/*', async (c, next) => { if (c.req.path === '/api/studio/login')
     return next(); const session = await getSession(c.req.raw, c.env, 'admin'); if (!session)
-    throw new AppError(401, '请先登录 Studio'); const a = await query(c.env, 'SELECT id FROM admins WHERE id=?', session.subjectId).first(); if (!a)
-    throw new AppError(401, '管理员会话已失效'); c.set('adminId', session.subjectId); if (c.req.method !== 'GET')
+    throw new AppError(401, '请先登录 Studio'); c.set('adminId', session.subjectId); if (c.req.method !== 'GET')
     await limit(c, 'studio', 60); await next(); });
 async function requireUser(c: any) { const s = await getSession(c.req.raw, c.env, 'user'); if (!s)
     throw new AppError(401, '请先填写手机号进入'); return s.subjectId; }
-app.get('/api/session', async (c) => { const u = await getSession(c.req.raw, c.env, 'user'), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ user: u ? await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? await query(c.env, 'SELECT id,username FROM admins WHERE id=?', a.subjectId).first() : null }); });
+app.get('/api/session', async (c) => { const u = await getSession(c.req.raw, c.env, 'user'), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ user: u ? await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
 app.post('/api/login', async (c) => { await limit(c, 'login', 10, 600); const b = await body(c); const phone = normalizePhone(b.phone); const index = await hmac(c.env.PHONE_HMAC_KEY, phone); const uid = id(); await query(c.env, 'INSERT OR IGNORE INTO users(id,phone_index,phone_mask,created_at) VALUES(?,?,?,?)', uid, index, `${phone.slice(0, 4)}****${phone.slice(-4)}`, now()).run(); const user = await query(c.env, 'SELECT id,phone_mask FROM users WHERE phone_index=?', index).first<{
     id: string;
     phone_mask: string;
 }>(); const session = await createSession(c.env, 'user', user!.id); c.header('Set-Cookie', session.cookie); return c.json({ user }); });
 app.post('/api/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'user')); return c.json({ ok: true }); });
 app.post('/api/studio/login', async (c) => { await limit(c, 'admin-login', 5, 600); const b = await body(c); if (typeof b.username !== 'string' || typeof b.password !== 'string' || b.username.length > 100 || b.password.length > 1024)
-    throw new AppError(400, '账号或密码格式错误'); const admin = await query(c.env, 'SELECT id,username,password_hash FROM admins WHERE username=? COLLATE NOCASE', b.username).first<{
-    id: string;
-    username: string;
-    password_hash: string;
-}>(); const dummy = 'pbkdf2-sha256$100000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; if (!await verifyPassword(b.password, admin?.password_hash ?? dummy) || !admin)
-    throw new AppError(401, '账号或密码不正确'); const s = await createSession(c.env, 'admin', admin.id); c.header('Set-Cookie', s.cookie); await audit(c.env, admin.id, 'login', admin.id); return c.json({ admin: { id: admin.id, username: admin.username } }); });
+    throw new AppError(400, '账号或密码格式错误'); const admin = await sharedAdmin(c.env, 'username', b.username); const dummy = 'pbkdf2-sha256$100000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; if (!await verifyPassword(b.password, admin?.password_hash ?? dummy) || !admin)
+    throw new AppError(401, '账号或密码不正确'); if (!await activeAdmin(admin)) throw new AppError(403, '请先前往留言箱完成密码修改，再登录商店', 'password_change_required'); const s = await createSession(c.env, 'admin', admin.id, admin); c.header('Set-Cookie', s.cookie); await audit(c.env, admin.id, 'login', admin.id); return c.json({ admin: { id: admin.id, username: admin.username } }); });
 app.post('/api/studio/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'admin')); return c.json({ ok: true }); });
 const publicSelect = `SELECT p.id,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id`;
 /** 市场排序白名单：非法 sort 一律回落 updated，绝不把用户输入拼进 SQL。 */
@@ -86,8 +81,8 @@ app.get('/api/me', async (c) => { const uid = await requireUser(c); const submis
 app.get('/api/studio/plugins', async (c) => c.json(await listPlugins(c.env, { q: c.req.query('q'), status: c.req.query('status'), page: c.req.query('page'), pageSize: c.req.query('pageSize') })));
 app.get('/api/studio/plugins/:id', async (c) => c.json(await pluginDetail(c.env, c.req.param('id'))));
 app.get('/api/studio/overview', async (c) => c.json(await overview(c.env)));
-// 改密后数据库触发器会删除该管理员的全部会话，必须用同一响应重新签发 cookie。
-app.post('/api/studio/password', async (c) => { await limit(c, 'admin-password', 5, 600); const b = await body(c); const changed = await changePassword(c.env, c.get('adminId'), b.currentPassword, b.newPassword); c.header('Set-Cookie', changed.cookie); return c.json({ ok: true }); });
+// 兼容旧客户端：明确拒绝商店改密，不读取或转发提交的密码。
+app.post('/api/studio/password', () => { throw new AppError(403, '请前往留言箱修改管理员密码', 'password_managed_externally'); });
 app.post('/api/studio/submit', async (c) => { const b = await body(c); if (typeof b.url !== 'string')
     throw new AppError(400, '请填写链接'); const result = await submit(c.env, b.url, null); await audit(c.env, c.get('adminId'), 'submit', result.pluginId ?? ''); return c.json(result, 202); });
 app.post('/api/studio/plugins/:id/:action', async (c) => { const action = c.req.param('action'), pid = c.req.param('id'); if (!['sync', 'retry', 'unlist', 'delete', 'restore'].includes(action))

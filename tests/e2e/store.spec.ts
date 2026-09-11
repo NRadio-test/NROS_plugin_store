@@ -109,7 +109,8 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await expect(page.getByRole('button', { name: '测试已保存源', exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: '账号安全', exact: true }).click();
-    await expect(page.getByLabel('当前密码', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: '前往留言箱修改密码' })).toHaveAttribute('href', 'https://msg.zdwifi.com/studio');
+    await expect(page.locator('input[type=password]')).toHaveCount(0);
 
     await page.getByRole('button', { name: '插件管理', exact: true }).click();
     await page.getByLabel('操作原因（对用户可见）').fill('端到端隔离测试下架');

@@ -1,8 +1,6 @@
 import { AppError, type AIConfig, type DownloadSource, type Env } from './contracts';
-import { audit, likeTerm, now, query, setting } from './db';
+import { likeTerm, query, setting } from './db';
 import { OFFICIAL_SOURCE } from './download';
-import { hasControlCharacters } from './network';
-import { createSession, hashPassword, verifyPassword } from './security';
 import { defaultAI } from './settings';
 
 /** 列表与详情共用列：版本取已批准快照 tag，任务信息取 revision 最新的一条。 */
@@ -77,26 +75,4 @@ export async function sourceCandidates(env: Env) {
   if (row.assetId !== null && item.assets.length < 10) item.assets.push({ id: row.assetId, name: row.name ?? '', size: row.size ?? 0, architecture: assetField(row.data, 'architecture'), disabled: row.disabled ?? 0 });
  }
  return { items };
-}
-
-/** 新密码策略：12–200 位且同时含字母与数字，或 ≥16 位的可打印长密码。 */
-export function validateNewPassword(current: string, next: string): void {
- if (next.length < 12 || next.length > 200) throw new AppError(400, '新密码长度需为 12–200 个字符');
- if (next === current) throw new AppError(400, '新密码不能与当前密码相同');
- const mixed = /[A-Za-z]/.test(next) && /[0-9]/.test(next);
- if (!mixed && !(next.length >= 16 && !hasControlCharacters(next))) throw new AppError(400, '新密码需同时包含字母与数字，或使用至少 16 位且不含控制字符的长密码');
-}
-
-/** 改密：校验当前密码、写入新散列并由调用方用同一响应重新签发管理员会话。 */
-export async function changePassword(env: Env, adminId: string, currentPassword: unknown, newPassword: unknown): Promise<{ cookie: string }> {
- if (typeof currentPassword !== 'string' || currentPassword.length > 1024) throw new AppError(400, '当前密码格式错误');
- if (typeof newPassword !== 'string' || newPassword.length > 1024) throw new AppError(400, '新密码格式错误');
- const admin = await query(env, 'SELECT password_hash FROM admins WHERE id=?', adminId).first<{ password_hash: string }>();
- if (!admin || !await verifyPassword(currentPassword, admin.password_hash)) throw new AppError(401, '当前密码不正确');
- validateNewPassword(currentPassword, newPassword);
- await query(env, 'UPDATE admins SET password_hash=?,updated_at=? WHERE id=?', await hashPassword(newPassword), now(), adminId).run();
- // 数据库触发器会清空该管理员的全部会话，必须在同一请求内重新签发，否则用户会被登出。
- const session = await createSession(env, 'admin', adminId);
- await audit(env, adminId, 'password-change', adminId);
- return { cookie: session.cookie };
 }

@@ -26,7 +26,7 @@ const NAV: NavItem[] = [
   { key: 'logs', label: '操作日志', icon: 'history', desc: '管理员敏感操作的审计记录' },
   { key: 'ai', label: 'AI 设置', icon: 'sparkles', desc: 'OpenAI 兼容接口、预算与审核规则' },
   { key: 'sources', label: '下载源', icon: 'layers', desc: '官方源默认启用，第三方源需测试并显式信任' },
-  { key: 'security', label: '账号安全', icon: 'lock', desc: '修改当前管理员密码' },
+  { key: 'security', label: '账号安全', icon: 'lock', desc: '前往留言箱管理密码' },
 ]
 
 const panel = ref<PanelKey>('overview')
@@ -92,7 +92,7 @@ function select(key: PanelKey) {
           <span class="studio-login__icon"><AppIcon name="shield" :size="20" /></span>
           <div>
             <h2>管理员登录</h2>
-            <p class="small muted">使用安全导入的当前管理员账号；与旧站会话互相独立。</p>
+            <p class="small muted">使用留言箱的当前管理员账号；两站需要分别登录。</p>
           </div>
         </header>
 
@@ -106,6 +106,8 @@ function select(key: PanelKey) {
         <AppButton variant="primary" size="lg" type="submit" block icon="log-out" :loading="busy">
           {{ busy ? '正在登录…' : '管理员登录' }}
         </AppButton>
+
+        <AppButton href="https://msg.zdwifi.com/studio" variant="ghost" icon="lock">前往留言箱修改密码</AppButton>
 
         <div class="notice">
           <AppIcon name="info" :size="16" />

@@ -1,5 +1,5 @@
 export interface Env {
- DB: D1Database; JOBS: Queue<{taskId?:string; scanCursor?:string}>; ASSETS: Fetcher;
+ DB: D1Database; ADMIN_AUTH_DB: D1Database; JOBS: Queue<{taskId?:string; scanCursor?:string}>; ASSETS: Fetcher;
  APP_ENV: string; APP_ORIGIN: string; MASTER_KEY: string; PHONE_HMAC_KEY: string; GITHUB_TOKEN?: string;
  MAX_IPK_BYTES: string; DAILY_AI_BUDGET: string;
 }

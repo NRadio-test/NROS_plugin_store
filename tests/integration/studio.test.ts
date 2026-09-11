@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import type { Env } from '../../worker/contracts';
-import { hashPassword, verifyPassword } from '../../worker/security';
-import { validateNewPassword } from '../../worker/studio';
 import { INTERNAL_SENTINEL, publish, request, seedAdmin, seedPlugin, seedTask, testEnv } from './harness';
 
 const STUDIO_FIELDS = ['id', 'full_name', 'repository_id', 'description', 'status', 'blocked', 'revision', 'version', 'favorite_count', 'download_count', 'public_reason', 'created_at', 'updated_at', 'checked_at', 'approved_snapshot_id', 'submitter_id', 'task_status', 'task_attempts', 'last_task_at'].sort();
@@ -173,62 +171,6 @@ describe('Studio 管理、总览与改密接口', () => {
   expect(detail.assets).toEqual([]);
   expect(detail.tasks).toHaveLength(1);
   expect(detail.plugin.approved_snapshot_id).toBeNull();
- });
-
- it('改密参数校验拒绝错误当前密码、弱口令与同口令', async () => {
-  const e = testEnv();
-  const current = '第一版隔离密码-2024-with-letters';
-  const cookie = await seedAdmin(e, await hashPassword(current));
-  const tryChange = async (body: unknown) => request(e, '/api/studio/password', 'POST', body, cookie);
-  const wrong = await tryChange({ currentPassword: '完全不对的密码-000', newPassword: 'replacement-2025-x' });
-  expect(wrong.status).toBe(401);
-  expect(((await wrong.json()) as { error: string }).error).toContain('当前密码');
-  expect((await tryChange({ currentPassword: current, newPassword: 'Ab1' })).status).toBe(400);
-  expect((await tryChange({ currentPassword: current, newPassword: 'nodigitshere' })).status).toBe(400);
-  expect((await tryChange({ currentPassword: current, newPassword: current })).status).toBe(400);
-  expect((await tryChange({ currentPassword: current, newPassword: 12345678901234 })).status).toBe(400);
-  const stored = await e.DB.prepare('SELECT password_hash FROM admins WHERE id=?').bind('admin').first<{ password_hash: string }>();
-  expect(await verifyPassword(current, stored!.password_hash)).toBe(true);
-  expect((await e.DB.prepare("SELECT COUNT(*) n FROM audit WHERE action='password-change'").first<{ n: number }>())?.n).toBe(0);
- });
-
- it('改密成功后旧密码失效、新密码可用，旧会话失效但同一响应签发新会话', async () => {
-  const e = testEnv();
-  const current = '第一版隔离密码-2024-with-letters';
-  const next = 'replacement-password-2025-x';
-  const cookie = await seedAdmin(e, await hashPassword(current));
-  const changed = await request(e, '/api/studio/password', 'POST', { currentPassword: current, newPassword: next }, cookie);
-  expect(changed.status).toBe(200);
-  expect(await changed.json()).toEqual({ ok: true });
-  const issued = changed.headers.get('set-cookie');
-  expect(issued).toContain('plugin_store_admin=');
-  expect(issued).toContain('HttpOnly');
-  const fresh = issued!.split(';')[0]!;
-  expect(fresh).not.toBe(cookie);
-  expect((await request(e, '/api/studio/overview', 'GET', undefined, cookie)).status).toBe(401);
-  expect((await request(e, '/api/studio/overview', 'GET', undefined, fresh)).status).toBe(200);
-  expect((await e.DB.prepare("SELECT COUNT(*) n FROM sessions WHERE kind='admin' AND subject_id='admin'").first<{ n: number }>())?.n).toBe(1);
-  expect((await request(e, '/api/studio/login', 'POST', { username: 'fixture-admin', password: current })).status).toBe(401);
-  expect((await request(e, '/api/studio/login', 'POST', { username: 'fixture-admin', password: next })).status).toBe(200);
-  const stored = await e.DB.prepare('SELECT password_hash,updated_at FROM admins WHERE id=?').bind('admin').first<{ password_hash: string; updated_at: number }>();
-  expect(stored!.password_hash).toMatch(/^pbkdf2-sha256\$600000\$[A-Za-z0-9_-]{22}\$[A-Za-z0-9_-]{43}$/);
-  expect(stored!.password_hash).not.toContain(next);
-  expect(await verifyPassword(next, stored!.password_hash)).toBe(true);
-  expect(await verifyPassword(current, stored!.password_hash)).toBe(false);
-  expect((await e.DB.prepare("SELECT admin_id,action,target FROM audit WHERE action='password-change'").all<{ admin_id: string; action: string; target: string }>()).results).toEqual([{ admin_id: 'admin', action: 'password-change', target: 'admin' }]);
- });
-
- it('新密码策略要求字母与数字组合，或 16 位以上可打印长口令', () => {
-  expect(() => validateNewPassword('old-password-1', 'short1')).toThrow('12–200');
-  expect(() => validateNewPassword('old-password-1', 'a'.repeat(201))).toThrow('12–200');
-  expect(() => validateNewPassword('old-password-1', 'onlylettershere')).toThrow('字母与数字');
-  expect(() => validateNewPassword('old-password-1', '123456789012')).toThrow('字母与数字');
-  // 长度 ≥16 的可打印口令不强制混用字母与数字，但仍拒绝控制字符。
-  expect(() => validateNewPassword('old-password-1', 'abcdefghijklmnopqrst')).not.toThrow();
-  expect(() => validateNewPassword('old-password-1', 'long-passphrase-with-symbols')).not.toThrow();
-  expect(() => validateNewPassword('old-password-1', '密码口令需要足够长并且可以打印出来')).not.toThrow();
-  expect(() => validateNewPassword('old-password-1', 'with-control-char\u0007-abc')).toThrow();
-  expect(() => validateNewPassword('replacement-2025', 'replacement-2025')).toThrow('不能与当前密码相同');
  });
 
  it('下载源候选只包含已上架且有批准快照的插件', async () => {

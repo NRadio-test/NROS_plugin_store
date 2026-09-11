@@ -53,6 +53,10 @@ function hidden(prompt) {
 const sql = value => "'" + String(value).replaceAll("'", "''") + "'";
 async function main() {
  const args = process.argv.slice(2), mode = args[0];
+ if (/"binding"\s*:\s*"ADMIN_AUTH_DB"/.test(await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8'))) {
+  if (args.includes('--help') || !mode) { console.log('管理员认证使用留言箱 ADMIN_AUTH_DB；请在留言箱管理账号与密码。商店导入/设密命令已停用。'); return; }
+  throw new Error('共享认证已启用，请在留言箱管理账号与密码；商店不会导入或重置账号。');
+ }
  if (args.includes('--help') || !mode) { console.log('用法：pnpm admin set --username NAME --local\n     pnpm admin import --trusted-current-export /安全路径/admins.json --local\n远程由管理员自行将 --local 换为 --remote --confirm-remote；本工具不会读取旧站数据库或复制会话。'); return; }
  const flag = key => { const index = args.indexOf(key); return index >= 0 ? args[index + 1] : undefined; };
  const allowedFlags = new Set(['--username','--trusted-current-export','--local','--remote','--confirm-remote']);

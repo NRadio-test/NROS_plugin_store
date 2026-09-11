@@ -16,7 +16,7 @@ vi.spyOn(globalThis,'fetch').mockImplementation(async(input,init)=>{const url=St
 if(options.ai)await saveAI(e,{baseUrl:'https://ai.vendor.com/v1',model:'fixture-model',apiKey:'isolated-key',timeoutMs:1000,maxRetries:0,inputBudget:100000,outputBudget:1500,rules:'fixture rule',structuredOutput:false});
 return {e,fixture,aiCalls};}
 async function publish(){const x=await setup({ai:'allow'});const task=await submit(x.e,'https://github.com/fixture/harmless',null);await processTask(x.e,task.taskId!);return {...x,task};}
-async function adminCookie(e:Env){await e.DB.prepare("INSERT INTO admins VALUES('admin','fixture-admin','unused',?,?)").bind(Date.now(),Date.now()).run();return (await createSession(e,'admin','admin')).cookie.split(';')[0]!;}
+async function adminCookie(e:Env){await e.ADMIN_AUTH_DB.prepare("INSERT INTO admins(id,username,password_hash,created_at,updated_at) VALUES('admin','fixture-admin','unused',?,?)").bind(Date.now(),Date.now()).run();return (await createSession(e,'admin','admin')).cookie.split(';')[0]!;}
 
 describe('实际 Workers/D1 API 与持久审核流程',()=>{
 it('游客仅可浏览；写入要求会话与来源，普通用户不能调用Studio',async()=>{const e=env();expect((await request(e,'/api/plugins')).status).toBe(200);expect((await request(e,'/api/submit','POST',{url:'https://github.com/a/b'})).status).toBe(401);expect((await request(e,'/api/studio/tasks')).status).toBe(401);expect((await request(e,'/api/login','POST',{phone:'13800138000'},undefined,{Origin:'https://evil.com'})).status).toBe(403);

@@ -77,22 +77,15 @@ pnpm exec wrangler d1 execute DB --local --file backups/before-migration.sql
 
 生产恢复可能覆盖现有数据，应先停消费与写入、备份当前库并核对目标；本项目不提供无确认的“一键生产覆盖”。旧部署版本回滚不自动逆转数据库迁移，保留兼容schema后再切流量。
 
-## 5. 管理员安全导入/设密
+## 5. 留言箱共享管理员认证
 
-当前管理员凭据尚未导入。只读核对的旧实现为 `pbkdf2-sha256$iterations$saltBase64URL$hashBase64URL`，PBKDF2 SHA-256，参数100000–2000000、至少16字节盐和32字节结果。本商店保留算法参数兼容；拒绝旧迁移中公开默认验证值的单向指纹，不恢复旧默认密码。
+`DB` 保留商店原库；`ADMIN_AUTH_DB` 指向 `boss-message-box`。配置已分别保存两个绑定。管理员登录、权限检查与账号信息只读共享库的 `admins` 表，并要求 `must_change_password=0`；保留 PBKDF2 参数兼容和历史默认验证值拒绝机制，不回退到本地账号表。
 
-必须从确认当前有效的来源取得最小账号导出文件（JSON数组），字段仅为 `username`、`password_hash`、`must_change_password`，可包含旧 `id`；`must_change_password`须0/false。不要导出旧会话、业务记录或Secrets。文档不示例真实hash/账号。
+商店不写共享库，不复制密码验证记录、留言、会话或密钥。改密与账号恢复在 [留言箱 Studio](https://msg.zdwifi.com/studio) 完成，`pnpm admin set/import` 在共享绑定存在时停用。D1 绑定本身并非只读权限，本项目通过只读查询封装和隔离测试约束运行时代码。
 
-```sh
-chmod 600 credentials/current-admins.json
-pnpm admin import --trusted-current-export credentials/current-admins.json --local
-# 没有可信现有凭据时，创建本商店的新账号并交互设置强密码：
-pnpm admin set --username YOUR_ADMIN_NAME --local
-```
+管理员会话仍存商店 `sessions`，沿用独立 host-only Cookie。`subject_id` 对管理员使用带版本的 JSON 标识，包含共享账号 ID 与使用商店主密钥生成的验证记录 HMAC；普通用户格式不变。旧本地账号会话无法转换成共享权限。每次读取会话核验共享账号和 HMAC，留言箱改密、删除账号或设置改密标记后，下次请求拒绝旧会话。无需新增迁移；不要对 `ADMIN_AUTH_DB` 执行商店迁移。
 
-CLI逐账号隐藏输入当前密码验证hash匹配，校验全部账号后才写入，生成本商店新ID；不复用旧会话。设密时隐藏输入两次，新密码要求14–128字符、至少8种不同字符且不得包含已知弱默认口令片段，建议使用密码管理器生成的随机长密码。不得传命令行明文密码。输入导出文件权限须600；临时SQL与日志仅保留在私有临时目录，完成后清理。对既有本商店账号更新密码时，数据库触发器原子使该管理员的旧本商店会话失效。
-
-未来确实要操作远程时必须显式同时使用 `--remote --confirm-remote`（本次未执行）。不将一次导入宣传为SSO，后续两站改密不会自动同步。本商店用户与管理员分别使用host-only Cookie，生产Cookie带`__Host-`/Secure/HttpOnly/SameSite=Lax，无父域Cookie。
+本地 Wrangler 绑定是独立本地库，不自动读取生产留言箱。`pnpm run check` 与 `pnpm run test:e2e` 使用两个独立临时数据库，只在测试库创建最小账号表与随机盐测试记录。当前只验证本地实现，没有验证生产数据库结构或线上登录。
 
 ## 6. Studio配置与验证
 
@@ -131,7 +124,7 @@ pnpm test:e2e
 pnpm deploy
 ```
 
-`deploy`只提供可执行命令，不代表本次执行。`wrangler.jsonc` D1 UUID仍为占位值，上线前替换。首次上线再验证真实公开仓库→正式Release→真实AI→自动上架→多架构IPK本地下载哈希；检查下架后旧下载URL被阻止，Cron与Queues真实触发、死信和恢复链路。
+`deploy`只提供可执行命令，不代表本次执行。`wrangler.jsonc` 已配置商店与留言箱两个独立 D1 绑定；上线前核对目标资源。首次上线再验证真实公开仓库→正式Release→真实AI→自动上架→多架构IPK本地下载哈希；检查下架后旧下载URL被阻止，Cron与Queues真实触发、死信和恢复链路。
 
 ## 9. 大陆真实网络测试方法
 

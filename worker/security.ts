@@ -64,7 +64,21 @@ export async function verifyPassword(password: string, encoded: string): Promise
  } catch { return false; }
 }
 export type SessionKind = 'user' | 'admin';
-export interface Session { subjectId: string; expiresAt: number }
+export interface Session { subjectId: string; expiresAt: number; username?: string }
+
+export interface SharedAdmin { id: string; username: string; password_hash: string; must_change_password: number }
+/** 共享库只读；缺少绑定时不回退到商店 admins。 */
+export async function sharedAdmin(env: Env, field: 'id' | 'username', value: string): Promise<SharedAdmin | null> {
+ if (!env.ADMIN_AUTH_DB) throw new AppError(503, '管理员账号服务尚未配置', 'configuration');
+ return env.ADMIN_AUTH_DB.prepare(`SELECT id,username,password_hash,must_change_password FROM admins WHERE ${field}=? COLLATE NOCASE LIMIT 1`).bind(value).first<SharedAdmin>();
+}
+export async function activeAdmin(admin: SharedAdmin | null): Promise<boolean> {
+ return !!admin && admin.must_change_password === 0 && !LEGACY_DEFAULT_FINGERPRINTS.has(await hash(admin.password_hash));
+}
+async function adminSubject(env: Env, admin: SharedAdmin): Promise<string> {
+ // 命名空间隔离旧本地账号会话；HMAC 绑定当前验证记录，不在商店复制密码散列。
+ return JSON.stringify(['message-box:v1', admin.id, await hmac(env.MASTER_KEY, admin.password_hash)]);
+}
 function cookieName(env: Env, kind: SessionKind) { return `${env.APP_ENV === 'production' ? '__Host-' : ''}plugin_store_${kind}`; }
 function sessionCookie(env: Env, kind: SessionKind, token: string, seconds: number) {
  return `${cookieName(env, kind)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${seconds}${env.APP_ENV === 'production' ? '; Secure' : ''}`;
@@ -74,18 +88,31 @@ function cookieToken(request: Request, env: Env, kind: SessionKind) {
  const token = matches.length === 1 ? matches[0]?.[1] : undefined;
  return token && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : null;
 }
-export async function createSession(env: Env, kind: SessionKind, id: string) {
+export async function createSession(env: Env, kind: SessionKind, id: string, authenticated?: SharedAdmin) {
+ let subject = id;
+ if (kind === 'admin') {
+  const admin = authenticated ?? await sharedAdmin(env, 'id', id);
+  if (!await activeAdmin(admin) || admin!.id !== id) throw new AppError(401, '管理员账号不可用');
+  subject = await adminSubject(env, admin!);
+ }
  const token = base64url(crypto.getRandomValues(new Uint8Array(32)));
  const seconds = kind === 'admin' ? 12 * 3600 : 30 * 86400;
  const now = Date.now(), expiresAt = now + seconds * 1000;
- await env.DB.prepare('INSERT INTO sessions(token_hash,kind,subject_id,expires_at) VALUES(?,?,?,?)').bind(await hash(token), kind, id, expiresAt).run();
+ await env.DB.prepare('INSERT INTO sessions(token_hash,kind,subject_id,expires_at) VALUES(?,?,?,?)').bind(await hash(token), kind, subject, expiresAt).run();
  return { token, cookie: sessionCookie(env, kind, token, seconds), expiresAt };
 }
 export async function getSession(request: Request, env: Env, kind: SessionKind): Promise<Session | null> {
  const token = cookieToken(request, env, kind);
  if (!token) return null;
  const row = await env.DB.prepare('SELECT subject_id,expires_at FROM sessions WHERE token_hash=? AND kind=? AND expires_at>?').bind(await hash(token), kind, Date.now()).first<{ subject_id: string; expires_at: number }>();
- return row ? { subjectId: row.subject_id, expiresAt: row.expires_at } : null;
+ if (!row) return null;
+ if (kind === 'user') return { subjectId: row.subject_id, expiresAt: row.expires_at };
+ let subject: unknown;
+ try { subject = JSON.parse(row.subject_id); } catch { return null; }
+ if (!Array.isArray(subject) || subject.length !== 3 || subject[0] !== 'message-box:v1' || typeof subject[1] !== 'string') return null;
+ const admin = await sharedAdmin(env, 'id', subject[1]);
+ if (!await activeAdmin(admin) || row.subject_id !== await adminSubject(env, admin!)) return null;
+ return { subjectId: admin!.id, expiresAt: row.expires_at, username: admin!.username };
 }
 export async function logoutSession(request: Request, env: Env, kind: SessionKind): Promise<string> {
  const token = cookieToken(request, env, kind);

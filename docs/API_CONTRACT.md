@@ -20,8 +20,8 @@ tasks: 最多 20 条，按 revision DESC，字段 id,revision,status,attempts,pu
 audits: 最多 20 条，按 created_at DESC，只含 target 等于该插件 id 的记录，字段 id,action,target,created_at,admin_id。
 GET /api/studio/overview → {counts,ai,sources,recentTasks}
 counts: plugins,published,inReview,waiting,rejected,removed,blocked,favorites,downloads,users,tasksActive,tasksFailed（均为数字）；ai: {configured,model,baseUrl}，`configured` 当且仅当已保存配置同时有 model 与非空 apiKey，apiKey 的明文与密文都不返回；sources: {total,enabled}；recentTasks 最多 8 条按 created_at DESC：id,plugin_id,full_name(LEFT JOIN plugins，无插件时为空串),status,public_reason,attempts,created_at，不含 internal_reason。
-POST /api/studio/password {currentPassword,newPassword} → {ok:true}
-必须校验当前密码（错误 401）；新密码 12–200 位且至少含字母与数字，或 ≥16 位可打印字符，且不得与当前密码相同，不合规返回 400 与中文原因。写入 pbkdf2-sha256$600000$salt$hash（base64url、SHA-256、16 字节 salt、32 字节派生）。数据库触发器会删除该管理员全部会话，因此同一响应会通过 Set-Cookie 重新签发管理员会话，并记录审计 action='password-change'。限流 5 次/600 秒。
+POST /api/studio/password → 已登录返回 403，code=password_managed_externally，提示前往留言箱改密；不读取或转发请求里的密码，不写入账号库。
+管理员登录只查询 ADMIN_AUTH_DB；密码匹配但 must_change_password 非 0 时返回 403 / password_change_required。登录和会话响应只返回 id、username。共享库缺少绑定返回 503，故障时不回退到商店账号。管理员每次请求检查共享账号与会话中的凭据版本，改密、删除或强制改密使旧商店会话失效。
 POST /api/studio/submit {url}; POST /api/studio/plugins/:id/:action {reason?} actions sync,retry,unlist,delete,restore
 GET /api/studio/tasks → {items:[{id,plugin_id,status,public_reason,internal_reason,attempts,created_at}]}
 GET /api/studio/logs → {items:[{id,action,target,created_at}]}
