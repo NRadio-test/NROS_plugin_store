@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组件与状态 · 张导插件商店（原型）</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航"><a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a></nav>
+    <div class="top__end">
+      <a class="btn btn--raised btn--sm" href="index.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-browsers"></use></svg>原型目录</a>
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <div class="page-head">
+      <h1>组件与状态</h1>
+      <p class="muted">令牌、字阶、圆角与全部交互状态。颜色值可用脚本复核对比度，不靠肉眼判断。</p>
+    </div>
+
+    <section class="kit-section">
+      <h2>颜色与语义</h2>
+      <div class="swatches">
+        <div class="swatch"><i style="background:#07101b"></i><span class="swatch__body"><span class="swatch__name">--bg</span><span class="swatch__use">#07101b · 页面背景</span></span></div>
+        <div class="swatch"><i style="background:#030812"></i><span class="swatch__body"><span class="swatch__name">--bg-deep</span><span class="swatch__use">#030812 · 输入控件与代码块</span></span></div>
+        <div class="swatch"><i style="background:#0e1a29"></i><span class="swatch__body"><span class="swatch__name">--surface</span><span class="swatch__use">#0e1a29 · 分组表面</span></span></div>
+        <div class="swatch"><i style="background:#152c41"></i><span class="swatch__body"><span class="swatch__name">--surface-raised</span><span class="swatch__use">#152c41 · 抬升表面、次按钮</span></span></div>
+        <div class="swatch"><i style="background:#1d384f"></i><span class="swatch__body"><span class="swatch__name">--surface-hover</span><span class="swatch__use">#1d384f · 悬浮与选中</span></span></div>
+        <div class="swatch"><i style="background:#1b2c40"></i><span class="swatch__body"><span class="swatch__name">--line</span><span class="swatch__use">#1b2c40 · 分隔线</span></span></div>
+        <div class="swatch"><i style="background:#f3f8fd"></i><span class="swatch__body"><span class="swatch__name">--text</span><span class="swatch__use">#f3f8fd · 主文字</span></span></div>
+        <div class="swatch"><i style="background:#b7c6d5"></i><span class="swatch__body"><span class="swatch__name">--text-2</span><span class="swatch__use">#b7c6d5 · 次文字</span></span></div>
+        <div class="swatch"><i style="background:#9cadbf"></i><span class="swatch__body"><span class="swatch__name">--text-3</span><span class="swatch__use">#9cadbf · 弱化文字</span></span></div>
+        <div class="swatch"><i style="background:#4edfff"></i><span class="swatch__body"><span class="swatch__name">--signal</span><span class="swatch__use">#4edfff · 主要操作与焦点</span></span></div>
+        <div class="swatch"><i style="background:#0c2a38"></i><span class="swatch__body"><span class="swatch__name">--signal-surface</span><span class="swatch__use">#0c2a38 · 选中底色</span></span></div>
+        <div class="swatch"><i style="background:#6bd3a3"></i><span class="swatch__body"><span class="swatch__name">--success</span><span class="swatch__use">#6bd3a3 · 成功状态</span></span></div>
+        <div class="swatch"><i style="background:#f7c662"></i><span class="swatch__body"><span class="swatch__name">--warning</span><span class="swatch__use">#f7c662 · 等待状态</span></span></div>
+        <div class="swatch"><i style="background:#ff9688"></i><span class="swatch__body"><span class="swatch__name">--error</span><span class="swatch__use">#ff9688 · 失败状态</span></span></div>
+      </div>
+    </section>
+
+    <section class="kit-section">
+      <h2>字阶</h2>
+      <div class="spec"><span class="cap">h1</span><span style="font-size:var(--fs-h1);font-weight:600">找到需要的安装包</span></div>
+      <div class="spec"><span class="cap">h2</span><span style="font-size:var(--fs-h2);font-weight:600">分组标题</span></div>
+      <div class="spec"><span class="cap">h3</span><span style="font-size:var(--fs-h3);font-weight:600">插件名称与列表标题</span></div>
+      <div class="spec"><span class="cap">body</span><span style="font-size:var(--fs-body)">正文 16px，行距 1.6，中文段落限宽 38rem。</span></div>
+      <div class="spec"><span class="cap">sm</span><span style="font-size:var(--fs-sm);color:var(--text-2)">次要说明 14px</span></div>
+      <div class="spec"><span class="cap">cap</span><span class="cap">辅助信息 13px</span></div>
+      <div class="spec"><span class="cap">mono</span><span class="mono">v6.6.0 · aarch64_cortex-a53 · 3.2 MiB</span></div>
+    </section>
+
+    <section class="kit-section">
+      <h2>圆角</h2>
+      <div class="spec"><span class="cap">12px 控件</span><span class="spec__box" style="border-radius:12px"></span></div>
+      <div class="spec"><span class="cap">14px 按钮</span><span class="spec__box" style="border-radius:14px"></span></div>
+      <div class="spec"><span class="cap">16px 分组</span><span class="spec__box" style="border-radius:16px"></span></div>
+      <div class="spec"><span class="cap">24px 承载面</span><span class="spec__box" style="border-radius:24px"></span></div>
+      <p class="kit-note">胶囊只用于短状态与计数，不用于按钮和容器。</p>
+    </section>
+
+    <section class="kit-section">
+      <h2>按钮</h2>
+      <div class="kit-row">
+        <button class="btn btn--signal" type="button">提交审核</button>
+        <button class="btn btn--raised" type="button">检查更新</button>
+        <button class="btn btn--quiet" type="button">取消</button>
+        <button class="btn btn--danger" type="button">删除插件</button>
+      </div>
+      <div class="kit-row">
+        <button class="btn btn--signal" type="button" disabled>已禁用</button>
+        <button class="btn btn--raised" type="button" data-demo-loading><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-lightning"></use></svg>测试配置</button>
+        <button class="btn btn--raised btn--icon" type="button" aria-label="收藏"><svg class="icon" aria-hidden="true"><use href="#ph-heart"></use></svg></button>
+        <button class="btn btn--signal" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</button>
+      </div>
+      <div class="kit-row">
+        <button class="btn btn--signal btn--primary-lg" type="button">页面主操作 52px</button>
+      </div>
+      <p class="kit-note">同一意图只用一套文案与一种样式。纯图标按钮带 aria-label，命中区不小于 44px。载入态立即改成具体工作文案。</p>
+    </section>
+
+    <section class="kit-section">
+      <h2>表单</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--sp-5)">
+        <div class="field"><label class="label" for="k1">默认</label><input class="input" id="k1" placeholder="请输入手机号"></div>
+        <div class="field"><label class="label" for="k2">错误</label><input class="input" id="k2" value="abc" aria-invalid="true" aria-describedby="k2e"><p class="err" id="k2e" role="alert">请输入内地 11 位手机号，其他地区请加国际区号。</p></div>
+        <div class="field"><label class="label" for="k3">禁用</label><input class="input" id="k3" value="不可编辑" disabled></div>
+        <div class="field"><label class="label" for="k4">选择</label><select class="select" id="k4"><option>最近更新</option><option>下载最多</option></select></div>
+      </div>
+      <div class="kit-row"><label class="check"><input type="checkbox" checked>我信任此来源</label><label class="check"><input type="checkbox">启用</label></div>
+      <p class="kit-note">标签始终可见，不用 placeholder 代替标签。校验在失焦后进行，错误说明发生了什么以及怎么恢复。</p>
+    </section>
+
+    <section class="kit-section">
+      <h2>徽章与状态</h2>
+      <div class="kit-row">
+        <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已上架</span>
+        <span class="badge badge--signal"><span class="dot" aria-hidden="true"></span>检查中</span>
+        <span class="badge badge--wait"><span class="dot" aria-hidden="true"></span>等待发布安装包</span>
+        <span class="badge badge--bad"><span class="dot" aria-hidden="true"></span>已拒绝</span>
+        <span class="badge"><span class="dot" aria-hidden="true"></span>已下架</span>
+      </div>
+      <p class="kit-note">状态永远同时有文字，颜色只是辅助。</p>
+    </section>
+
+    <section class="kit-section">
+      <h2>列表行</h2>
+      <div class="list">
+        <article class="pkg">
+          <div class="pkg__main">
+            <div class="pkg__title"><a class="pkg__name" href="detail.html">ddns-go</a><span class="pkg__repo">zhangdao/ddns-go</span></div>
+            <p class="pkg__desc">自动更新公网 DNS 记录，支持多家服务商与 IPv6。</p>
+            <div class="pkg__meta"><span class="mono">v6.6.0</span><span aria-hidden="true">·</span><span class="mono">aarch64_cortex-a53</span><span aria-hidden="true">·</span><span class="mono">3.2 MiB</span><span aria-hidden="true">·</span><span>5 天前更新</span></div>
+          </div>
+          <div class="pkg__stats"><div class="pkg__stat"><b>402</b><span>收藏</span></div><div class="pkg__stat"><b>8.6k</b><span>下载</span></div></div>
+          <div class="pkg__actions">
+            <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg></button>
+            <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="kit-section" data-state-group>
+      <h2>数据状态</h2>
+      <div class="kit-row" role="group" aria-label="状态预览">
+        <button class="btn btn--raised btn--sm" type="button" data-state-set="loaded" aria-pressed="true">正常</button>
+        <button class="btn btn--raised btn--sm" type="button" data-state-set="loading" aria-pressed="false">载入</button>
+        <button class="btn btn--raised btn--sm" type="button" data-state-set="empty" aria-pressed="false">空</button>
+        <button class="btn btn--raised btn--sm" type="button" data-state-set="error" aria-pressed="false">错误</button>
+      </div>
+
+      <div data-state="loaded">
+        <div class="list">
+          <article class="pkg"><div class="pkg__main"><div class="pkg__title"><a class="pkg__name" href="detail.html">argon-theme</a><span class="pkg__repo">theme-lab/argon-theme</span></div><p class="pkg__desc">LuCI 深色主题，含紧凑布局与自定义强调色。</p><div class="pkg__meta"><span class="mono">v2.4.1</span><span aria-hidden="true">·</span><span class="mono">all</span></div></div><div class="pkg__actions"><a class="btn btn--signal btn--sm" href="detail.html">下载</a></div></article>
+        </div>
+      </div>
+
+      <div data-state="loading" hidden aria-busy="true">
+        <div class="skel skel--row"></div><div class="skel skel--row"></div><div class="skel skel--row"></div>
+        <p class="cap">正在读取插件目录…</p>
+      </div>
+
+      <div data-state="empty" hidden>
+        <div class="state">
+          <span class="state__icon"><svg class="icon" aria-hidden="true"><use href="#ph-package"></use></svg></span>
+          <h3>目录里还没有插件</h3>
+          <p>提交公开 GitHub 仓库，正式 Release 中的 .ipk 通过自动审核后会出现在这里。</p>
+          <div class="state__actions"><a class="btn btn--signal" href="submit.html">提交插件</a></div>
+        </div>
+      </div>
+
+      <div data-state="error" hidden>
+        <div class="state state--error">
+          <span class="state__icon"><svg class="icon" aria-hidden="true"><use href="#ph-warning-circle"></use></svg></span>
+          <h3>读取失败</h3>
+          <p>服务暂时不可用。已保留当前筛选条件，重试不会丢失输入。</p>
+          <div class="state__actions"><button class="btn btn--raised" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-arrows-clockwise"></use></svg>重新加载</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="kit-section" style="border-bottom:0">
+      <h2>动效与无障碍</h2>
+      <ul class="kit-note" style="list-style:disc;padding-left:1.4em;display:flex;flex-direction:column;gap:6px">
+        <li>过渡 160ms / 220ms，缓动 cubic-bezier(0.2, 0.7, 0.2, 1)，只动画 transform 与 opacity。</li>
+        <li>焦点使用 <span class="mono">:focus-visible</span>，鼠标点击不出现焦点圈；焦点环对比度不低于 3:1。</li>
+        <li>正文与辅助文字对比度不低于 4.5:1，深色与浅色分别计算。</li>
+        <li>支持键盘操作、200% 文字缩放、强制颜色模式与 reduced motion。</li>
+        <li>图片给出尺寸；纯图标按钮带 aria-label；状态不只用颜色表达。</li>
+      </ul>
+    </section>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>张导插件商店原型 · 组件与状态</p>
+    <p><a href="index.html">返回原型目录</a></p>
+  </div>
+</footer>
+</body>
+</html>

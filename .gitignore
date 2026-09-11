@@ -12,3 +12,6 @@ credentials/
 backups/
 *.sqlite*
 vendor/astrbot-market/.git/
+config
+
+.DS_Store

@@ -1,240 +1,212 @@
 [
   {
-    "name": "浅色正文",
-    "foreground": "#0f1729",
-    "background": "#f5f7fa",
-    "contrast": 16.65,
+    "name": "深色正文/页面",
+    "foreground": "#f3f8fd",
+    "background": "#07101b",
+    "contrast": 17.89,
     "passed": true
   },
   {
-    "name": "浅色正文卡片",
-    "foreground": "#0f1729",
+    "name": "深色正文/表面",
+    "foreground": "#f3f8fd",
+    "background": "#0e1a29",
+    "contrast": 16.4,
+    "passed": true
+  },
+  {
+    "name": "深色次文字/表面",
+    "foreground": "#b7c6d5",
+    "background": "#0e1a29",
+    "contrast": 10.06,
+    "passed": true
+  },
+  {
+    "name": "深色弱化文字/表面",
+    "foreground": "#9cadbf",
+    "background": "#0e1a29",
+    "contrast": 7.63,
+    "passed": true
+  },
+  {
+    "name": "深色次文字/抬升面",
+    "foreground": "#b7c6d5",
+    "background": "#152c41",
+    "contrast": 8.21,
+    "passed": true
+  },
+  {
+    "name": "深色弱化文字/抬升面",
+    "foreground": "#9cadbf",
+    "background": "#152c41",
+    "contrast": 6.23,
+    "passed": true
+  },
+  {
+    "name": "深色链接/页面",
+    "foreground": "#5cdeff",
+    "background": "#07101b",
+    "contrast": 12.15,
+    "passed": true
+  },
+  {
+    "name": "深色链接/表面",
+    "foreground": "#5cdeff",
+    "background": "#0e1a29",
+    "contrast": 11.14,
+    "passed": true
+  },
+  {
+    "name": "深色主按钮文字",
+    "foreground": "#050e17",
+    "background": "#5cdeff",
+    "contrast": 12.34,
+    "passed": true
+  },
+  {
+    "name": "深色主按钮悬浮文字",
+    "foreground": "#050e17",
+    "background": "#84e8ff",
+    "contrast": 13.84,
+    "passed": true
+  },
+  {
+    "name": "深色成功/成功底",
+    "foreground": "#6bd3a3",
+    "background": "#073120",
+    "contrast": 7.81,
+    "passed": true
+  },
+  {
+    "name": "深色警告/警告底",
+    "foreground": "#f7c662",
+    "background": "#2b2210",
+    "contrast": 9.86,
+    "passed": true
+  },
+  {
+    "name": "深色失败/失败底",
+    "foreground": "#ff9689",
+    "background": "#451914",
+    "contrast": 7.11,
+    "passed": true
+  },
+  {
+    "name": "深色中性状态/抬升面",
+    "foreground": "#8d9aa7",
+    "background": "#152c41",
+    "contrast": 4.98,
+    "passed": true
+  },
+  {
+    "name": "深色选中文字/选中底",
+    "foreground": "#5cdeff",
+    "background": "#173243",
+    "contrast": 8.48,
+    "passed": true
+  },
+  {
+    "name": "浅色正文/页面",
+    "foreground": "#08131f",
+    "background": "#f4f7fa",
+    "contrast": 17.39,
+    "passed": true
+  },
+  {
+    "name": "浅色正文/表面",
+    "foreground": "#08131f",
     "background": "#ffffff",
-    "contrast": 17.87,
+    "contrast": 18.7,
     "passed": true
   },
   {
-    "name": "浅色辅助文字",
-    "foreground": "#46536b",
+    "name": "浅色次文字/表面",
+    "foreground": "#44576a",
     "background": "#ffffff",
-    "contrast": 7.75,
+    "contrast": 7.45,
     "passed": true
   },
   {
-    "name": "浅色占位文字",
-    "foreground": "#667085",
+    "name": "浅色弱化文字/表面",
+    "foreground": "#5f7183",
     "background": "#ffffff",
-    "contrast": 4.97,
+    "contrast": 5.03,
     "passed": true
   },
   {
-    "name": "浅色链接",
-    "foreground": "#2a4ee0",
+    "name": "浅色次文字/抬升面",
+    "foreground": "#44576a",
+    "background": "#f1f6fa",
+    "contrast": 6.85,
+    "passed": true
+  },
+  {
+    "name": "浅色弱化文字/抬升面",
+    "foreground": "#5f7183",
+    "background": "#f1f6fa",
+    "contrast": 4.62,
+    "passed": true
+  },
+  {
+    "name": "浅色链接/页面",
+    "foreground": "#0e7490",
+    "background": "#f4f7fa",
+    "contrast": 4.98,
+    "passed": true
+  },
+  {
+    "name": "浅色链接/表面",
+    "foreground": "#0e7490",
     "background": "#ffffff",
-    "contrast": 6.43,
+    "contrast": 5.36,
     "passed": true
   },
   {
-    "name": "浅色按钮文字",
+    "name": "浅色主按钮文字",
     "foreground": "#ffffff",
-    "background": "#2f5bff",
-    "contrast": 5.17,
+    "background": "#0e7490",
+    "contrast": 5.36,
     "passed": true
   },
   {
-    "name": "浅色按钮悬浮",
+    "name": "浅色主按钮悬浮文字",
     "foreground": "#ffffff",
-    "background": "#2247d9",
-    "contrast": 7.07,
+    "background": "#155e75",
+    "contrast": 7.27,
     "passed": true
   },
   {
-    "name": "浅色按钮按下",
-    "foreground": "#ffffff",
-    "background": "#1b3ab8",
-    "contrast": 8.96,
+    "name": "浅色成功/成功底",
+    "foreground": "#0b6b45",
+    "background": "#e6f4ee",
+    "contrast": 5.79,
     "passed": true
   },
   {
-    "name": "浅色链接悬浮",
-    "foreground": "#2247d9",
-    "background": "#ffffff",
-    "contrast": 7.07,
+    "name": "浅色警告/警告底",
+    "foreground": "#8a5a00",
+    "background": "#fdf3e0",
+    "contrast": 5.38,
     "passed": true
   },
   {
-    "name": "浅色主色徽章",
-    "foreground": "#2a4ee0",
-    "background": "#eef2ff",
-    "contrast": 5.75,
+    "name": "浅色失败/失败底",
+    "foreground": "#b3261e",
+    "background": "#fdeceb",
+    "contrast": 5.72,
     "passed": true
   },
   {
-    "name": "浅色成功徽章",
-    "foreground": "#067647",
-    "background": "#ecfdf3",
-    "contrast": 5.4,
+    "name": "浅色中性状态/抬升面",
+    "foreground": "#556576",
+    "background": "#f1f6fa",
+    "contrast": 5.5,
     "passed": true
   },
   {
-    "name": "浅色警告徽章",
-    "foreground": "#b54708",
-    "background": "#fffaeb",
-    "contrast": 5.2,
-    "passed": true
-  },
-  {
-    "name": "浅色危险徽章",
-    "foreground": "#b42318",
-    "background": "#fef3f2",
-    "contrast": 6.05,
-    "passed": true
-  },
-  {
-    "name": "浅色信息徽章",
-    "foreground": "#175cd3",
-    "background": "#eff8ff",
-    "contrast": 5.57,
-    "passed": true
-  },
-  {
-    "name": "浅色中性徽章",
-    "foreground": "#46536b",
-    "background": "#eef1f6",
-    "contrast": 6.84,
-    "passed": true
-  },
-  {
-    "name": "浅色反向文字",
-    "foreground": "#ffffff",
-    "background": "#0f1729",
-    "contrast": 17.87,
-    "passed": true
-  },
-  {
-    "name": "浅色悬浮底文字",
-    "foreground": "#0f1729",
-    "background": "#f1f4f9",
-    "contrast": 16.21,
-    "passed": true
-  },
-  {
-    "name": "深色正文",
-    "foreground": "#e8edf6",
-    "background": "#080b12",
-    "contrast": 16.75,
-    "passed": true
-  },
-  {
-    "name": "深色正文卡片",
-    "foreground": "#e8edf6",
-    "background": "#10151f",
-    "contrast": 15.56,
-    "passed": true
-  },
-  {
-    "name": "深色辅助文字",
-    "foreground": "#9aa7bd",
-    "background": "#10151f",
-    "contrast": 7.52,
-    "passed": true
-  },
-  {
-    "name": "深色占位文字",
-    "foreground": "#7c8aa3",
-    "background": "#10151f",
-    "contrast": 5.24,
-    "passed": true
-  },
-  {
-    "name": "深色链接",
-    "foreground": "#7c9bff",
-    "background": "#10151f",
-    "contrast": 6.95,
-    "passed": true
-  },
-  {
-    "name": "深色按钮文字",
-    "foreground": "#ffffff",
-    "background": "#3d63ff",
-    "contrast": 4.74,
-    "passed": true
-  },
-  {
-    "name": "深色按钮悬浮",
-    "foreground": "#ffffff",
-    "background": "#2f52e6",
-    "contrast": 6.05,
-    "passed": true
-  },
-  {
-    "name": "深色按钮按下",
-    "foreground": "#ffffff",
-    "background": "#2643c4",
-    "contrast": 7.83,
-    "passed": true
-  },
-  {
-    "name": "深色链接悬浮",
-    "foreground": "#9db3ff",
-    "background": "#10151f",
-    "contrast": 8.99,
-    "passed": true
-  },
-  {
-    "name": "深色主色徽章",
-    "foreground": "#7c9bff",
-    "background": "#141d3d",
-    "contrast": 6.28,
-    "passed": true
-  },
-  {
-    "name": "深色成功徽章",
-    "foreground": "#75e0a7",
-    "background": "#06281c",
-    "contrast": 9.77,
-    "passed": true
-  },
-  {
-    "name": "深色警告徽章",
-    "foreground": "#fec84b",
-    "background": "#2a1d06",
-    "contrast": 10.63,
-    "passed": true
-  },
-  {
-    "name": "深色危险徽章",
-    "foreground": "#fda29b",
-    "background": "#2c1310",
-    "contrast": 8.96,
-    "passed": true
-  },
-  {
-    "name": "深色信息徽章",
-    "foreground": "#84caff",
-    "background": "#101f35",
-    "contrast": 9.35,
-    "passed": true
-  },
-  {
-    "name": "深色中性徽章",
-    "foreground": "#9aa7bd",
-    "background": "#0c111a",
-    "contrast": 7.78,
-    "passed": true
-  },
-  {
-    "name": "深色反向文字",
-    "foreground": "#0b0f18",
-    "background": "#e8edf6",
-    "contrast": 16.31,
-    "passed": true
-  },
-  {
-    "name": "深色悬浮底文字",
-    "foreground": "#e8edf6",
-    "background": "#1a2130",
-    "contrast": 13.71,
+    "name": "浅色选中文字/选中底",
+    "foreground": "#0e7490",
+    "background": "#e0f1f7",
+    "contrast": 4.62,
     "passed": true
   }
 ]

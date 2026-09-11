@@ -18,11 +18,22 @@ const props = withDefaults(defineProps<{
   title?: string
 }>(), { variant: 'secondary', size: 'md', type: 'button', icon: undefined, iconRight: undefined, to: '', href: '', title: '' })
 
+/** 变体映射到设计系统的按钮层级：主操作用信号青，其余靠表面层级区分。 */
+const VARIANT_CLASS: Record<string, string> = {
+  primary: 'btn--signal',
+  secondary: 'btn--raised',
+  ghost: 'btn--quiet',
+  soft: 'btn--soft',
+  danger: 'btn--danger',
+  'danger-solid': 'btn--danger-solid',
+}
+
 const tag = computed(() => (props.to ? 'router-link' : props.href ? 'a' : 'button'))
 const classes = computed(() => [
   'btn',
-  `btn--${props.variant}`,
-  props.size !== 'md' && `btn--${props.size}`,
+  VARIANT_CLASS[props.variant] ?? 'btn--raised',
+  props.size === 'sm' && 'btn--sm',
+  props.size === 'lg' && 'btn--primary-lg',
   props.block && 'btn--block',
   props.round && 'btn--round',
   (props.icon || props.iconRight) && !props.block && 'btn--with-icon',
@@ -37,8 +48,8 @@ const attrs = computed(() => {
 <template>
   <component :is="tag" :class="classes" v-bind="attrs" :aria-busy="loading || undefined" :title="title">
     <span v-if="loading" class="btn__spinner" aria-hidden="true" />
-    <AppIcon v-else-if="icon" :name="icon" :size="size === 'sm' ? 15 : 17" />
+    <AppIcon v-else-if="icon" :name="icon" :size="size === 'sm' ? 17 : 19" />
     <slot />
-    <AppIcon v-if="iconRight && !loading" :name="iconRight" :size="size === 'sm' ? 15 : 17" />
+    <AppIcon v-if="iconRight && !loading" :name="iconRight" :size="size === 'sm' ? 17 : 19" />
   </component>
 </template>

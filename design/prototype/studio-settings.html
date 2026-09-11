@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio 设置 · 张导插件商店（原型）</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap wrap--wide top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <span class="badge badge--signal">管理员</span>
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap wrap--wide">
+    <div class="page-head"><h1>Studio</h1><p class="muted">AI 接口、下载源与账号安全。密钥只在服务端使用。</p></div>
+    <div class="studio" style="padding-top:0">
+      <aside class="sidebar">
+        <nav class="sidebar__nav" aria-label="Studio 功能">
+          <a href="studio.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-chart-bar"></use></svg>总览</a>
+          <a href="studio.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-package"></use></svg>插件管理</a>
+          <a href="studio-settings.html" aria-current="page"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-list-checks"></use></svg>审核任务</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-clock-counter-clockwise"></use></svg>操作日志</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-pulse"></use></svg>AI 设置</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-stack"></use></svg>下载源</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-lock-simple"></use></svg>账号安全</a>
+        </nav>
+        <div class="sidebar__foot">
+          <span class="cap">zhangdao · 管理员会话</span>
+          <button class="btn btn--quiet btn--sm" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-sign-out"></use></svg>退出管理员</button>
+        </div>
+      </aside>
+      <div class="panel">
+
+        <section>
+          <div class="panel__head">
+            <div>
+              <h2>AI 设置</h2>
+              <p>一个 OpenAI 兼容接口。缺少配置、连接失败或输出格式错误都不会让插件通过审核。</p>
+            </div>
+            <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已配置</span>
+          </div>
+
+          <div style="margin-top:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-6)">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--sp-5)">
+              <div class="field">
+                <label class="label" for="ai-url">接口地址</label>
+                <input class="input" id="ai-url" type="url" value="https://api.example.com/v1">
+                <p class="hint">只允许公共 HTTPS 主机；路径会自动补 /chat/completions。</p>
+              </div>
+              <div class="field">
+                <label class="label" for="ai-model">模型</label>
+                <input class="input" id="ai-model" type="text" value="example-review-model">
+              </div>
+              <div class="field">
+                <label class="label" for="ai-key">API Key</label>
+                <input class="input" id="ai-key" type="password" value="" placeholder="留空则保留已保存的密钥">
+                <p class="hint">密钥在服务端加密保存，读取设置时只返回掩码。</p>
+              </div>
+              <div class="field">
+                <label class="label" for="ai-timeout">请求超时（毫秒）</label>
+                <input class="input" id="ai-timeout" type="number" value="45000">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label" for="ai-rules">补充审核规则</label>
+              <textarea class="textarea" id="ai-rules" rows="5">结合插件用途判断联网、系统服务与防火墙相关行为；不要仅因出现 shell 或网络调用而拒绝。</textarea>
+              <p class="hint">规则会附加在固定系统提示之后，不能改变输出格式。</p>
+            </div>
+
+            <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;align-items:center">
+              <button class="btn btn--signal" type="button">保存设置</button>
+              <button class="btn btn--raised" type="button" data-demo-loading><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-lightning"></use></svg>测试已保存配置</button>
+              <span class="cap">测试会发送一次不发布任何插件的审核请求。</span>
+            </div>
+          </div>
+        </section>
+
+        <hr class="rule" style="margin-block:var(--sp-10)">
+
+        <section>
+          <div class="panel__head">
+            <div>
+              <h2>下载源</h2>
+              <p>默认只启用 GitHub 官方源。第三方源需先保存为停用、针对具体附件测试成功后才能启用。</p>
+            </div>
+            <button class="btn btn--raised" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-plus"></use></svg>添加下载源</button>
+          </div>
+
+          <div style="margin-top:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-5)">
+            <div class="group" style="background:var(--surface-raised)">
+              <div class="group__head">
+                <div style="display:flex;align-items:center;gap:var(--sp-3)">
+                  <h2 class="mono" style="font-size:var(--fs-body)">GitHub 官方</h2>
+                  <span class="badge badge--signal">官方源</span>
+                </div>
+                <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已启用</span>
+              </div>
+              <dl class="kv">
+                <dt>地址规则</dt><dd class="mono" style="word-break:break-all">https://api.github.com/repos/{owner}/{repo}/releases/assets/{assetId}</dd>
+                <dt>允许主机</dt><dd class="mono">api.github.com, github.com, release-assets.githubusercontent.com</dd>
+                <dt>优先级</dt><dd class="mono">0</dd>
+              </dl>
+            </div>
+
+            <div class="group" style="background:var(--surface-raised)">
+              <div class="group__head">
+                <div style="display:flex;align-items:center;gap:var(--sp-3)">
+                  <h2 class="mono" style="font-size:var(--fs-body)">mirror-lab</h2>
+                  <span class="badge badge--wait"><span class="dot" aria-hidden="true"></span>未测试</span>
+                </div>
+                <span class="badge"><span class="dot" aria-hidden="true"></span>已停用</span>
+              </div>
+              <dl class="kv">
+                <dt>地址规则</dt><dd class="mono" style="word-break:break-all">https://mirror.example.com/assets/{assetId}/{filename}</dd>
+                <dt>允许主机</dt><dd class="mono">mirror.example.com</dd>
+                <dt>优先级</dt><dd class="mono">10</dd>
+              </dl>
+              <div style="display:flex;gap:var(--sp-5);flex-wrap:wrap;align-items:center;margin-top:var(--sp-4)">
+                <label class="check"><input type="checkbox" checked>我信任此来源</label>
+                <label class="check"><input type="checkbox">启用</label>
+                <span style="margin-inline-start:auto"></span>
+                <button class="btn btn--raised btn--sm" type="button" data-demo-loading><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-lightning"></use></svg>测试</button>
+              </div>
+            </div>
+
+            <div class="group" style="background:var(--surface-raised)">
+              <div class="group__head"><h2 style="font-size:var(--fs-body)">测试目标</h2></div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-5)">
+                <div class="field">
+                  <label class="label" for="tp">已上架插件</label>
+                  <select class="select" id="tp"><option>zhangdao/ddns-go · v6.6.0</option><option>edge-lab/luci-app-mosdns · v5.3.2</option></select>
+                </div>
+                <div class="field">
+                  <label class="label" for="ta">安装包</label>
+                  <select class="select" id="ta"><option>ddns-go_6.6.0_aarch64_cortex-a53.ipk</option><option>ddns-go_6.6.0_x86_64.ipk</option></select>
+                </div>
+              </div>
+              <p class="cap" style="margin-top:var(--sp-3)">测试只确认该固定资产可读取且前缀匹配，不代表整包逐字节预验证。</p>
+            </div>
+          </div>
+        </section>
+
+        <hr class="rule" style="margin-block:var(--sp-10)">
+
+        <section style="max-width:32rem">
+          <div class="panel__head">
+            <div>
+              <h2>账号安全</h2>
+              <p>密码使用 PBKDF2-SHA256 重新散列；保存后该管理员的其它会话立即失效。</p>
+            </div>
+          </div>
+          <form style="margin-top:var(--sp-6);display:flex;flex-direction:column;gap:var(--sp-5)" action="#">
+            <div class="field"><label class="label" for="p1">当前密码</label><input class="input" id="p1" type="password" autocomplete="current-password"></div>
+            <div class="field"><label class="label" for="p2">新密码</label><input class="input" id="p2" type="password" autocomplete="new-password" aria-describedby="p2h"><p class="hint" id="p2h">至少 12 位，需同时包含字母与数字。</p></div>
+            <div class="field"><label class="label" for="p3">确认新密码</label><input class="input" id="p3" type="password" autocomplete="new-password" aria-invalid="true" aria-describedby="p3e"><p class="err" id="p3e" role="alert">两次输入的新密码不一致。</p></div>
+            <div><button class="btn btn--signal btn--primary-lg" type="submit">更新密码</button></div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap wrap--wide foot__in">
+    <p>AI Key、下载源与密码都只在服务端使用；配置变更会写入审计日志。</p>
+    <p><a href="index.html">返回原型目录</a></p>
+  </div>
+</footer>
+</body>
+</html>

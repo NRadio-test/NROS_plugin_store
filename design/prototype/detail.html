@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ddns-go · 张导插件商店（原型）</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html" aria-current="page"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+      <a class="btn btn--raised btn--sm" href="me.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-user"></use></svg><span class="account__label">138****0000</span></a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="面包屑">
+      <a href="market.html">插件市场</a>
+      <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-right"></use></svg>
+      <span class="mono">zhangdao</span>
+      <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-right"></use></svg>
+      <span>ddns-go</span>
+    </nav>
+
+    <div class="head" style="margin-top:var(--sp-5)">
+      <div class="head__id">
+        <div class="head__title">
+          <h1>ddns-go</h1>
+          <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已上架</span>
+        </div>
+        <p class="head__desc">自动更新公网 DNS 记录，支持多家服务商与 IPv6。</p>
+        <div class="head__meta">
+          <span>zhangdao/ddns-go</span><span aria-hidden="true">·</span>
+          <span>v6.6.0</span><span aria-hidden="true">·</span>
+          <span>收藏 402</span><span aria-hidden="true">·</span>
+          <span>下载 8.6k</span><span aria-hidden="true">·</span>
+          <span>2 个安装包</span>
+        </div>
+      </div>
+      <div class="pkg__actions">
+        <a class="btn btn--raised" href="https://github.com/zhangdao/ddns-go" rel="noopener noreferrer"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-github-logo"></use></svg>GitHub 仓库</a>
+        <button class="btn btn--raised btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg></button>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div>
+        <div class="tabs" role="tablist" aria-label="插件详情分区">
+          <button class="tab" role="tab" aria-selected="true" aria-controls="t-readme">说明文档</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="t-files">安装包与校验</button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="t-review">审核信息</button>
+        </div>
+
+        <section id="t-readme" role="tabpanel" style="padding-top:var(--sp-6)">
+          <p class="cap" style="margin-bottom:var(--sp-5)">作者原文快照 · README.md · commit <span class="mono">a13f5c2…</span></p>
+          <div class="readme">
+  <h2>功能</h2>
+  <ul>
+    <li>定时获取本机公网 IPv4 / IPv6 地址，并更新到对应的 DNS 服务商。</li>
+    <li>支持阿里云、腾讯云、Cloudflare、Dnspod 等服务商；可同时启用多个。</li>
+    <li>更新失败会保留上一次成功的记录，并在日志中给出失败原因。</li>
+  </ul>
+
+  <h2>安装</h2>
+  <p>在本机下载 Release 中的 <code>.ipk</code> 后通过 LuCI 上传安装，或在设备上执行：</p>
+  <pre><code>opkg install ./ddns-go_6.6.0_aarch64_cortex-a53.ipk
+/etc/init.d/ddns-go enable
+/etc/init.d/ddns-go start</code></pre>
+
+  <h2>配置</h2>
+  <p>默认监听 <code>0.0.0.0:9876</code>，配置文件位于 <code>/etc/config/ddns-go</code>。</p>
+  <table>
+    <thead><tr><th>字段</th><th>默认值</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>enable</td><td>0</td><td>是否启用服务</td></tr>
+      <tr><td>interval</td><td>300</td><td>检查间隔（秒）</td></tr>
+      <tr><td>provider</td><td>—</td><td>DNS 服务商标识</td></tr>
+    </tbody>
+  </table>
+
+  <h2>兼容性</h2>
+  <blockquote>需要 OpenWrt 21.02 及以上。低于该版本缺少依赖 <code>libustream-openssl</code>。</blockquote>
+</div>
+        </section>
+
+        <section id="t-files" role="tabpanel" hidden style="padding-top:var(--sp-5)">
+          <table class="table">
+            <thead><tr><th>文件</th><th>架构</th><th class="num">大小</th><th>SHA-256</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">ddns-go_6.6.0_aarch64_cortex-a53.ipk</td><td class="mono">aarch64_cortex-a53</td><td class="num">3.2 MiB</td><td class="hash">3f9c1d…a771</td></tr>
+              <tr><td class="mono">ddns-go_6.6.0_x86_64.ipk</td><td class="mono">x86_64</td><td class="num">3.6 MiB</td><td class="hash">9b02e4…5c18</td></tr>
+            </tbody>
+          </table>
+          <p class="cap" style="margin-top:var(--sp-4)">摘要在审核阶段完整计算。下载前会重新核验来源资产身份。</p>
+        </section>
+
+        <section id="t-review" role="tabpanel" hidden style="padding-top:var(--sp-5)">
+          <dl class="kv">
+            <dt>审核结论</dt><dd>通过自动静态审核</dd>
+            <dt>审核时间</dt><dd class="mono">2026-09-05 04:12</dd>
+            <dt>公开理由</dt><dd>静态检查未发现拒绝原因。</dd>
+            <dt>展示快照</dt><dd class="mono">a13f5c2…（README.md）</dd>
+            <dt>安装包源码</dt><dd class="mono">7d41b90…</dd>
+          </dl>
+          <div class="notice notice--wait" style="margin-top:var(--sp-5)">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-warning"></use></svg>
+            <span>自动审核是静态检查：不执行仓库构建命令，也不运行动态沙箱或病毒引擎。</span>
+          </div>
+        </section>
+      </div>
+
+      <aside class="side">
+        <div class="group">
+          <div class="group__head"><h2>下载</h2><span class="mono cap">v6.6.0</span></div>
+          <div class="asset">
+            <span class="asset__name">ddns-go_6.6.0_aarch64_cortex-a53.ipk</span>
+            <span class="cap">aarch64_cortex-a53 · 3.2 MiB</span>
+            <details class="more"><summary><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-hash"></use></svg>SHA-256</summary><span class="hash">3f9c1d2e…a771</span></details>
+            <button class="btn btn--signal btn--block" type="button" data-demo-loading style="margin-top:var(--sp-2)"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载此文件</button>
+          </div>
+          <div class="asset">
+            <span class="asset__name">ddns-go_6.6.0_x86_64.ipk</span>
+            <span class="cap">x86_64 · 3.6 MiB</span>
+            <details class="more"><summary><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-hash"></use></svg>SHA-256</summary><span class="hash">9b02e4…5c18</span></details>
+            <button class="btn btn--raised btn--block" type="button" style="margin-top:var(--sp-2)"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载此文件</button>
+          </div>
+          <p class="cap" style="margin-top:var(--sp-3)">请选择与设备架构相符的文件。</p>
+        </div>
+
+        <div class="group">
+          <div class="group__head"><h2>来源</h2></div>
+          <dl class="kv">
+            <dt>仓库</dt><dd><a class="mono" href="https://github.com/zhangdao/ddns-go" rel="noopener noreferrer">zhangdao/ddns-go</a></dd>
+            <dt>许可证</dt><dd>MIT</dd>
+            <dt>最近更新</dt><dd class="mono">2026-09-05</dd>
+          </dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>源码与安装包由作者发布于 GitHub。通过自动审核不保证无病毒，请自行确认设备与用途。</p>
+    <p><a href="market.html">返回插件市场</a> · <a href="submit.html">提交插件</a></p>
+  </div>
+</footer>
+</body>
+</html>

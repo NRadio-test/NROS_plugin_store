@@ -34,7 +34,7 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'harmless', exact: true })).toBeVisible();
     await expect(page.getByTestId('readme')).toHaveCount(0);
-    await expect(page.locator('.plugin-card').first()).toBeVisible();
+    await expect(page.locator('.pkg').first()).toBeVisible();
 
     const favorite = page.getByRole('button', { name: '收藏 fixture/harmless' });
     await favorite.click();
@@ -42,14 +42,14 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.reload();
     await expect(page.getByRole('button', { name: '取消收藏 fixture/harmless' })).toBeVisible();
 
-    // 整卡可点：点击卡片正文（非按钮区域）进入详情页
-    const card = page.locator('.plugin-card').first();
-    const box = (await card.boundingBox())!;
-    await card.click({ position: { x: box.width / 2, y: box.height * 0.55 } });
+    // 行内文字区可点：点击描述区域进入详情页
+    const row = page.locator('.pkg').first();
+    const box = (await row.boundingBox())!;
+    await row.click({ position: { x: Math.min(160, box.width / 3), y: box.height / 2 } });
     await expect(page).toHaveURL(new RegExp(`/plugins/${pluginId}$`));
     await page.goto('/');
 
-    await page.getByRole('button', { name: '下载 IPK', exact: true }).click();
+    await page.getByRole('button', { name: '下载 fixture/harmless' }).click();
     await expect(page).toHaveURL(new RegExp(`/plugins/${pluginId}#downloads`));
 
     const readme = page.getByTestId('readme');
@@ -133,35 +133,39 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
   });
 
   test('设计系统、主题与键盘可用性', async ({ page }) => {
+    // 深色为基准主题，与线上留言板一致；应用默认跟随系统偏好
+    await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/');
-    await expect(page.locator('header.site-header')).toBeVisible();
+    await expect(page.locator('header.top')).toBeVisible();
     await expect(page.locator('main#main')).toBeVisible();
-    await expect(page.locator('footer.site-footer')).toBeVisible();
+    await expect(page.locator('footer.foot')).toBeVisible();
 
     const design = await page.evaluate(() => {
       const root = getComputedStyle(document.documentElement);
       const body = getComputedStyle(document.body);
-      const search = document.querySelector('.search');
-      const button = document.querySelector('.btn--primary');
-      const icon = document.querySelector('.icon-btn');
+      const field = document.querySelector('.search');
+      const button = document.querySelector('.btn--signal');
+      const icon = document.querySelector('.top__end .btn--icon');
       return {
-        primary: root.getPropertyValue('--primary').trim(),
-        radius: root.getPropertyValue('--r-lg').trim(),
+        signal: root.getPropertyValue('--signal').trim(),
+        radius: root.getPropertyValue('--r-group').trim(),
+        controlRadius: root.getPropertyValue('--r-control').trim(),
         font: body.fontFamily,
         bodySize: body.fontSize,
-        searchRadius: search ? getComputedStyle(search).borderRadius : '',
+        fieldRadius: field ? getComputedStyle(field).borderRadius : '',
         buttonHeight: button ? Math.round(button.getBoundingClientRect().height) : 0,
         iconButtonSize: icon ? Math.round(icon.getBoundingClientRect().height) : 0,
-        headerHeight: Math.round(document.querySelector('.site-header')!.getBoundingClientRect().height),
+        headerHeight: Math.round(document.querySelector('header.top')!.getBoundingClientRect().height),
       };
     });
-    expect(design.primary).toMatch(/^#/);
+    expect(design.signal).toBe('#5cdeff');           // 与线上 message.fallaxaura.com 的 --color-accent 一致
     expect(design.radius).toBe('16px');
-    expect(design.bodySize).toBe('15px');
-    expect(design.font).toContain('PingFang SC');
-    expect(design.searchRadius).toBe('16px');
-    expect(design.buttonHeight).toBeGreaterThanOrEqual(32);
-    expect(design.iconButtonSize).toBeGreaterThanOrEqual(32);
+    expect(design.controlRadius).toBe('12px');
+    expect(design.bodySize).toBe('16px');
+    expect(design.font).toContain('HarmonyOS Sans SC');
+    expect(design.fieldRadius).toBe('12px');
+    expect(design.buttonHeight).toBeGreaterThanOrEqual(44);
+    expect(design.iconButtonSize).toBeGreaterThanOrEqual(44);
     expect(design.headerHeight).toBeGreaterThanOrEqual(56);
 
     // 搜索快捷键
@@ -169,8 +173,8 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.keyboard.press('/');
     await expect(page.locator('#plugin-search')).toBeFocused();
     await page.keyboard.type('harmless');
-    await expect(page.getByRole('heading', { name: '搜索结果' })).toBeVisible();
     await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('harmless');
+    await expect(page.getByText(/匹配「harmless」/)).toBeVisible();
     await page.keyboard.press('Escape');
 
     // 键盘焦点可见：聚焦元素自身或它的直接容器必须出现 outline 或主色焦点环
@@ -195,24 +199,34 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     });
     const ring = focus.find(item =>
       (item.outlineStyle !== 'none' && Number.parseFloat(item.outlineWidth) > 0)
-      || /rgba?\(47, 91, 255|rgba?\(61, 99, 255/.test(item.shadow));
+      || /rgba?\(114, 236, 255|rgba?\(14, 116, 144/.test(item.shadow));
     expect(ring, `聚焦元素缺少可见焦点指示：${JSON.stringify(focus)}`).toBeTruthy();
     record('焦点可见', `${ring!.tag} 焦点指示：outline ${ring!.outlineWidth} ${ring!.outlineStyle}，box-shadow ${ring!.shadow}`);
 
-    // 深色主题切换与持久化
+    // 主题切换、持久化与浅色派生
+    const readTokens = () => page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement);
+      return {
+        bg: styles.getPropertyValue('--bg').trim(),
+        text: styles.getPropertyValue('--text').trim(),
+        signal: styles.getPropertyValue('--signal').trim(),
+      };
+    });
+    expect((await readTokens()).bg).toBe('#07101b'); // 与线上留言板 --color-bg 一致
+
+    await page.getByRole('button', { name: '切换到浅色主题' }).click();
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
+    const light = await readTokens();
+    expect(light.signal).toBe('#0e7490');
+    expect(light.bg).toBe('#f4f7fa');
+
     await page.getByRole('button', { name: '切换到深色主题' }).click();
     await expect(page.locator('html')).toHaveClass(/dark/);
     await page.reload();
     await expect(page.locator('html')).toHaveClass(/dark/);
-    const darkContrast = await page.evaluate(() => {
-      const styles = getComputedStyle(document.documentElement);
-      return { background: styles.getPropertyValue('--bg-base').trim(), text: styles.getPropertyValue('--text-primary').trim() };
-    });
-    expect(darkContrast.background).toBe('#080b12');
-    await page.getByRole('button', { name: '切换到浅色主题' }).click();
-    await expect(page.locator('html')).not.toHaveClass(/dark/);
-    record('设计系统', `令牌生效：主色 ${design.primary}、圆角 ${design.radius}、正文 ${design.bodySize}、头部 ${design.headerHeight}px`);
-    record('主题', '深色模式切换、持久化与浅色还原通过');
+    expect((await readTokens()).bg).toBe('#07101b');
+    record('设计系统', `令牌生效：信号青 ${design.signal}、圆角 ${design.radius}、控件圆角 ${design.controlRadius}、正文 ${design.bodySize}、头部 ${design.headerHeight}px`);
+    record('主题', '深色为基准（#07101b / #5cdeff），浅色派生 #f4f7fa / #0e7490，切换持久化通过');
     record('键盘可用性', '/ 聚焦搜索、Tab 焦点环可见');
   });
 

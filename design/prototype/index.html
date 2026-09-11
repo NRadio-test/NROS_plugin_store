@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>张导插件商店 · UI 原型</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="shell__side">
+    <div>
+      <h1 style="font-size:var(--fs-h2)">张导插件商店 · UI 原型</h1>
+      <p class="cap" style="margin-top:6px">静态原型，示例数据，未接后端。用于确认视觉方向与交互语言，确认后再落到 src/。</p>
+    </div>
+
+    <div>
+      <p class="cap" style="margin-bottom:6px">页面</p>
+      <nav class="shell__list" id="screens">
+        <a href="#" data-screen="market.html" aria-current="true">插件市场</a>
+        <a href="#" data-screen="detail.html">插件详情</a>
+        <a href="#" data-screen="login.html">手机号进入</a>
+        <a href="#" data-screen="submit.html">提交插件</a>
+        <a href="#" data-screen="me.html">个人中心</a>
+        <a href="#" data-screen="studio.html">Studio · 总览与插件管理</a>
+        <a href="#" data-screen="studio-settings.html">Studio · AI / 下载源 / 账号</a>
+        <a href="#" data-screen="kit.html">组件与状态</a>
+      </nav>
+    </div>
+
+    <div>
+      <p class="cap" style="margin-bottom:6px">视口</p>
+      <div class="shell__list" id="viewports">
+        <a href="#" data-view="375" aria-current="false">375 × 700 手机</a>
+        <a href="#" data-view="768" aria-current="false">768 × 800 平板</a>
+        <a href="#" data-view="1280" aria-current="true">1280 × 800 桌面</a>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap" style="margin-bottom:6px">主题</p>
+      <div class="shell__list" id="themes">
+        <a href="#" data-theme-pick="dark" aria-current="true">深色（基准）</a>
+        <a href="#" data-theme-pick="light" aria-current="false">浅色（派生）</a>
+      </div>
+    </div>
+
+    <div>
+      <p class="cap" style="margin-bottom:6px">依据</p>
+      <ul class="cap" style="list-style:disc;padding-left:1.2em;display:flex;flex-direction:column;gap:4px;line-height:1.6">
+        <li>《「张导请回答」全局 UI 设计思路》§4 §6 §7 §8 §9 §10 §12 §13</li>
+        <li>ui-ux-kit：反模板规则、对比度计算、状态完整性</li>
+        <li>dshplugin.store：条目与路径的组织方式（不采用其视觉）</li>
+      </ul>
+    </div>
+
+    <p class="cap" style="margin-top:auto">
+      <a href="market.html" target="_blank" rel="noopener">在新标签打开当前页</a>
+    </p>
+  </aside>
+
+  <div class="shell__main">
+    <div class="frame frame--1280" id="frame">
+      <iframe id="view" src="market.html" title="原型预览"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var view = document.getElementById('view');
+  var frame = document.getElementById('frame');
+  var openLink = document.querySelector('[target="_blank"]');
+
+  function setCurrent(container, node) {
+    container.querySelectorAll('a').forEach(function (item) { item.setAttribute('aria-current', item === node ? 'true' : 'false'); });
+  }
+
+  document.getElementById('screens').addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-screen]');
+    if (!link) return;
+    event.preventDefault();
+    view.src = link.getAttribute('data-screen');
+    setCurrent(this, link);
+    if (openLink) openLink.href = link.getAttribute('data-screen');
+  });
+
+  document.getElementById('viewports').addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-view]');
+    if (!link) return;
+    event.preventDefault();
+    var width = link.getAttribute('data-view');
+    frame.className = 'frame frame--' + width;
+    view.style.height = width === '375' ? '700px' : width === '768' ? '800px' : '800px';
+    setCurrent(this, link);
+  });
+
+  document.getElementById('themes').addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-theme-pick]');
+    if (!link) return;
+    event.preventDefault();
+    setCurrent(this, link);
+  });
+})();
+</script>
+</body>
+</html>

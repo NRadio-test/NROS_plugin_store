@@ -5,7 +5,7 @@ import { api, errorMessage, loadSession, post, session, type Plugin, type Submis
 import { statusMeta } from '../lib/status'
 import { formatDateTime, formatNumber } from '../lib/format'
 import { toast } from '../lib/toast'
-import PluginCard from '../components/PluginCard.vue'
+import PluginRow from '../components/PluginRow.vue'
 import AsyncState from '../components/AsyncState.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppBadge from '../components/AppBadge.vue'
@@ -173,7 +173,7 @@ watch(() => session.user?.id, load, { immediate: true })
         </div>
 
         <div v-else class="me__grid">
-          <PluginCard v-for="plugin in favorites" :key="plugin.id" :plugin="plugin" />
+          <PluginRow v-for="plugin in favorites" :key="plugin.id" :plugin="plugin" />
         </div>
       </section>
     </AsyncState>

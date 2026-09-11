@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>个人中心 · 张导插件商店</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <div class="page-head" style="flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap">
+      <div class="user-chip">
+        <span class="user-chip__av" aria-hidden="true">138</span>
+        <div>
+          <h1 style="font-size:var(--fs-h2)">138****0000</h1>
+          <p class="cap">自报手机号识别，未校验归属</p>
+        </div>
+      </div>
+      <div class="pkg__actions">
+        <a class="btn btn--raised btn--sm" href="submit.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+        <button class="btn btn--quiet btn--sm" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-sign-out"></use></svg>退出登录</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="tabs" role="tablist" aria-label="个人中心分区">
+        <button class="tab" role="tab" aria-selected="true" aria-controls="p-sub">我的提交 <span class="dim mono">3</span></button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="p-fav">我的收藏 <span class="dim mono">2</span></button>
+      </div>
+
+      <section id="p-sub" role="tabpanel" style="padding-top:var(--sp-5)">
+        <div class="list">
+          <article class="pkg">
+            <div class="pkg__main">
+              <div class="pkg__title">
+                <a class="pkg__name" href="detail.html">ddns-go</a>
+                <span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已上架</span>
+              </div>
+              <p class="pkg__desc">静态检查未发现拒绝原因。</p>
+              <div class="pkg__meta"><span>2026-09-05 更新</span></div>
+            </div>
+            <div class="pkg__actions">
+              <button class="btn btn--raised btn--sm" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-arrows-clockwise"></use></svg>检查更新</button>
+            </div>
+          </article>
+          <article class="pkg">
+            <div class="pkg__main">
+              <div class="pkg__title">
+                <span class="pkg__name">ipk-doctor</span>
+                <span class="badge badge--wait"><span class="dot" aria-hidden="true"></span>等待发布安装包</span>
+              </div>
+              <p class="pkg__desc">仓库可访问，但正式 Release 中还没有 .ipk 附件。</p>
+              <div class="pkg__meta"><span>2026-09-04 更新</span></div>
+            </div>
+            <div class="pkg__actions">
+              <button class="btn btn--raised btn--sm" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-arrows-clockwise"></use></svg>检查更新</button>
+            </div>
+          </article>
+          <article class="pkg">
+            <div class="pkg__main">
+              <div class="pkg__title">
+                <span class="pkg__name">mqtt-bridge</span>
+                <span class="badge badge--bad"><span class="dot" aria-hidden="true"></span>已拒绝</span>
+              </div>
+              <p class="pkg__desc">Release 中的安装包与仓库源码无法建立对应关系。</p>
+              <div class="pkg__meta"><span>2026-08-28 更新</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="p-fav" role="tabpanel" hidden style="padding-top:var(--sp-5)">
+        <div class="list">
+          <article class="pkg">
+            <div class="pkg__main">
+              <div class="pkg__title"><a class="pkg__name" href="detail.html">luci-app-mosdns</a><span class="pkg__repo">edge-lab/luci-app-mosdns</span></div>
+              <p class="pkg__desc">DNS 分流与缓存，支持 DoH / DoT 上游与规则订阅。</p>
+              <div class="pkg__meta"><span class="mono">v5.3.2</span><span aria-hidden="true">·</span><span class="mono">all</span></div>
+            </div>
+            <div class="pkg__actions">
+              <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="true" aria-label="取消收藏"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart-fill"></use></svg></button>
+              <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+            </div>
+          </article>
+          <article class="pkg">
+            <div class="pkg__main">
+              <div class="pkg__title"><a class="pkg__name" href="detail.html">argon-theme</a><span class="pkg__repo">theme-lab/argon-theme</span></div>
+              <p class="pkg__desc">LuCI 深色主题，含紧凑布局与自定义强调色。</p>
+              <div class="pkg__meta"><span class="mono">v2.4.1</span><span aria-hidden="true">·</span><span class="mono">all</span></div>
+            </div>
+            <div class="pkg__actions">
+              <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="true" aria-label="取消收藏"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart-fill"></use></svg></button>
+              <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>源码与安装包由作者发布于 GitHub。通过自动审核不保证无病毒。</p>
+    <p><a href="market.html">插件市场</a> · <a href="kit.html">组件总览</a></p>
+  </div>
+</footer>
+</body>
+</html>

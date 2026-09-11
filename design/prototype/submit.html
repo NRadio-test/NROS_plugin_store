@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提交插件 · 张导插件商店</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html" aria-current="page"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <form class="single" method="post" action="#">
+      <div class="single__head">
+        <h1>提交插件</h1>
+        <p>提交公开 GitHub 仓库链接。商店不接收上传的安装包，源码与 Release 始终由你维护。</p>
+      </div>
+
+      <div class="field">
+        <label class="label" for="repo">GitHub 公开仓库链接</label>
+        <input class="input" id="repo" type="url" placeholder="https://github.com/owner/repository" aria-describedby="repo-hint" aria-invalid="false">
+        <p class="hint" id="repo-hint">只接受 github.com 的 HTTPS 公开仓库，不支持私有仓库、源码压缩包或网盘地址。</p>
+      </div>
+
+      <button class="btn btn--signal btn--primary-lg btn--block" type="submit">提交审核</button>
+
+      <hr class="rule">
+
+      <div>
+        <h2 style="margin-bottom:var(--sp-3)">提交后会发生什么</h2>
+        <ol class="step-list">
+          <li>读取仓库的 README、description、源码快照与最新正式 Release。</li>
+          <li>静态解析 Release 中的 .ipk，检查包内脚本与架构。</li>
+          <li>把以上材料送自动审核，结论为通过、拒绝或待补充。</li>
+          <li>通过后自动上架；之后每天两次检查仓库变化，新版本需重新审核。</li>
+        </ol>
+      </div>
+
+      <div class="notice">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-info"></use></svg>
+        <span>提交者与 GitHub 作者是两个身份，商店不会把提交者记为仓库所有者。审核进度可在<a href="me.html">个人中心</a>查看。</span>
+      </div>
+    </form>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>源码与安装包由作者发布于 GitHub。通过自动审核不保证无病毒。</p>
+    <p><a href="market.html">插件市场</a> · <a href="kit.html">组件总览</a></p>
+  </div>
+</footer>
+</body>
+</html>

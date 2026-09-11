@@ -1,10 +1,10 @@
 {
  "$schema":"node_modules/wrangler/config-schema.json",
- "name":"zhangdao-plugin-store", "main":"worker/index.ts", "compatibility_date":"2026-09-01",
+ "name":"nros-plugin-store", "main":"worker/index.ts", "compatibility_date":"2026-09-01",
  "compatibility_flags":["nodejs_compat"],
  "assets":{"directory":"./dist/client","binding":"ASSETS","not_found_handling":"single-page-application","run_worker_first":["/api/*","/robots.txt","/sitemap.xml"]},
  "vars":{"APP_ENV":"production","APP_ORIGIN":"https://plugin.zdwifi.com","MAX_IPK_BYTES":"33554432","DAILY_AI_BUDGET":"100"},
- "d1_databases":[{"binding":"DB","database_name":"zhangdao-plugin-store","database_id":"84a25fa6-4185-48f2-b184-b3eafa2df777","migrations_dir":"migrations"}],
+ "d1_databases":[{"binding":"DB","database_name":"plugin-store","database_id":"84a25fa6-4185-48f2-b184-b3eafa2df777","migrations_dir":"migrations"}],
  "queues":{"producers":[{"binding":"JOBS","queue":"plugin-review"}],"consumers":[{"queue":"plugin-review","max_batch_size":1,"max_batch_timeout":5,"max_retries":3,"dead_letter_queue":"plugin-review-dead","max_concurrency":2}]},
  "triggers":{"crons":["0 4,16 * * *"]}, "limits":{"cpu_ms":300000},"observability":{"enabled":false}
 }

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>插件市场 · 张导插件商店</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html">
+      <span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="brand__name">张导插件商店</span>
+    </a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html" aria-current="page"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg>
+      </button>
+      <a class="btn btn--raised btn--sm" href="me.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-user"></use></svg><span class="account__label">138****0000</span></a>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <div class="page-head">
+      <h1>插件市场</h1>
+      <p class="muted">收录通过自动静态审核的 IPK 安装包，源码与 Release 由作者维护在 GitHub。</p>
+      <p class="page-head__meta">
+        <span>共 <b class="num">126</b> 个插件</span><span aria-hidden="true">·</span>
+        <span>最近同步 今天 12:00</span>
+      </p>
+    </div>
+
+    <div class="toolbar">
+      <div class="search" style="flex:1;min-width:240px">
+        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-magnifying-glass"></use></svg>
+        <label class="sr" for="q">搜索插件名称或描述</label>
+        <input class="input" id="q" type="search" placeholder="搜索名称或描述" value="">
+      </div>
+      <div class="toolbar__end">
+        <label class="sr" for="sort">排序方式</label>
+        <select class="select" id="sort" style="width:auto">
+          <option>最近更新</option>
+          <option>收藏最多</option>
+          <option>下载最多</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="list" style="margin-top:var(--sp-5)">
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">luci-app-mosdns</a>
+            <span class="pkg__repo">edge-lab/luci-app-mosdns</span>
+          </div>
+          <p class="pkg__desc">DNS 分流与缓存，支持 DoH / DoT 上游与规则订阅。</p>
+          <div class="pkg__meta">
+            <span class="mono">v5.3.2</span><span aria-hidden="true">·</span>
+            <span class="mono">all</span><span aria-hidden="true">·</span>
+            <span class="mono">1.8 MiB</span><span aria-hidden="true">·</span>
+            <span>2 天前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>128</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>1.2k</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">ddns-go</a>
+            <span class="pkg__repo">zhangdao/ddns-go</span>
+          </div>
+          <p class="pkg__desc">自动更新公网 DNS 记录，支持多家服务商与 IPv6。</p>
+          <div class="pkg__meta">
+            <span class="mono">v6.6.0</span><span aria-hidden="true">·</span>
+            <span class="mono">aarch64_cortex-a53</span><span aria-hidden="true">·</span>
+            <span class="mono">3.2 MiB</span><span aria-hidden="true">·</span>
+            <span>5 天前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>402</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>8.6k</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">argon-theme</a>
+            <span class="pkg__repo">theme-lab/argon-theme</span>
+          </div>
+          <p class="pkg__desc">LuCI 深色主题，含紧凑布局与自定义强调色。</p>
+          <div class="pkg__meta">
+            <span class="mono">v2.4.1</span><span aria-hidden="true">·</span>
+            <span class="mono">all</span><span aria-hidden="true">·</span>
+            <span class="mono">640 KiB</span><span aria-hidden="true">·</span>
+            <span>1 周前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>96</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>3.1k</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">zerotier-ipk</a>
+            <span class="pkg__repo">net-lab/zerotier-ipk</span>
+          </div>
+          <p class="pkg__desc">组网客户端与配套管理脚本。</p>
+          <div class="pkg__meta">
+            <span class="mono">v1.14.0</span><span aria-hidden="true">·</span>
+            <span class="mono">mipsel_24kc</span><span aria-hidden="true">·</span>
+            <span class="mono">2.4 MiB</span><span aria-hidden="true">·</span>
+            <span>1 周前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>61</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>940</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">sqm-tune</a>
+            <span class="pkg__repo">router-tools/sqm-tune</span>
+          </div>
+          <p class="pkg__desc">延迟敏感的 SQM 参数预设，含自动测速。</p>
+          <div class="pkg__meta">
+            <span class="mono">v0.9.4</span><span aria-hidden="true">·</span>
+            <span class="mono">all</span><span aria-hidden="true">·</span>
+            <span class="mono">48 KiB</span><span aria-hidden="true">·</span>
+            <span>2 周前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>33</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>210</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">wg-easy</a>
+            <span class="pkg__repo">net-lab/wg-easy</span>
+          </div>
+          <p class="pkg__desc">WireGuard 配置生成与二维码输出。</p>
+          <div class="pkg__meta">
+            <span class="mono">v12.0.2</span><span aria-hidden="true">·</span>
+            <span class="mono">x86_64</span><span aria-hidden="true">·</span>
+            <span class="mono">5.6 MiB</span><span aria-hidden="true">·</span>
+            <span>3 周前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>74</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>1.5k</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">ipk-doctor</a>
+            <span class="pkg__repo">zhangdao/ipk-doctor</span>
+          </div>
+          <p class="pkg__desc">安装包依赖与架构自检，安装前提示缺件。</p>
+          <div class="pkg__meta">
+            <span class="mono">v0.3.0</span><span aria-hidden="true">·</span>
+            <span class="mono">all</span><span aria-hidden="true">·</span>
+            <span class="mono">120 KiB</span><span aria-hidden="true">·</span>
+            <span>1 个月前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>18</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>85</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+      <article class="pkg">
+        <div class="pkg__main">
+          <div class="pkg__title">
+            <a class="pkg__name" href="detail.html">mqtt-bridge</a>
+            <span class="pkg__repo">iot-lab/mqtt-bridge</span>
+          </div>
+          <p class="pkg__desc">串口到 MQTT 的桥接守护进程。</p>
+          <div class="pkg__meta">
+            <span class="mono">v2.1.0</span><span aria-hidden="true">·</span>
+            <span class="mono">arm_cortex-a7</span><span aria-hidden="true">·</span>
+            <span class="mono">900 KiB</span><span aria-hidden="true">·</span>
+            <span>1 个月前更新</span>
+          </div>
+        </div>
+        <div class="pkg__stats">
+          <div class="pkg__stat"><b>12</b><span>收藏</span></div>
+          <div class="pkg__stat"><b>60</b><span>下载</span></div>
+        </div>
+        <div class="pkg__actions">
+          <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" data-demo-favorite aria-pressed="false" aria-label="收藏">
+            <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-heart"></use></svg>
+          </button>
+          <a class="btn btn--signal btn--sm" href="detail.html"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-download-simple"></use></svg>下载</a>
+        </div>
+      </article>
+    </div>
+
+    <nav class="pager" aria-label="分页">
+      <button type="button" disabled aria-label="上一页"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-left"></use></svg></button>
+      <button type="button" aria-current="page">1</button>
+      <button type="button">2</button>
+      <button type="button">3</button>
+      <span class="dim" aria-hidden="true">···</span>
+      <button type="button">16</button>
+      <button type="button" aria-label="下一页"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-right"></use></svg></button>
+      <span class="count" style="margin-inline-start:var(--sp-3)">第 1 / 16 页</span>
+    </nav>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>源码与安装包由作者发布于 GitHub。通过自动审核不保证无病毒，请自行确认设备与用途。</p>
+    <p><a href="detail.html">插件详情</a> · <a href="submit.html">提交插件</a> · <a href="kit.html">组件总览</a></p>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio · 张导插件商店（原型）</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap wrap--wide top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <span class="badge badge--signal">管理员</span>
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap wrap--wide">
+    <div class="page-head"><h1>Studio</h1><p class="muted">审核、发布与配置。数字来自服务端聚合，操作都会写入审计日志。</p></div>
+    <div class="studio" style="padding-top:0">
+      <aside class="sidebar">
+        <nav class="sidebar__nav" aria-label="Studio 功能">
+          <a href="studio.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-chart-bar"></use></svg>总览</a>
+          <a href="studio.html" aria-current="page"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-package"></use></svg>插件管理</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-list-checks"></use></svg>审核任务</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-clock-counter-clockwise"></use></svg>操作日志</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-pulse"></use></svg>AI 设置</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-stack"></use></svg>下载源</a>
+          <a href="studio-settings.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-lock-simple"></use></svg>账号安全</a>
+        </nav>
+        <div class="sidebar__foot">
+          <span class="cap">zhangdao · 管理员会话</span>
+          <button class="btn btn--quiet btn--sm" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-sign-out"></use></svg>退出管理员</button>
+        </div>
+      </aside>
+      <div class="panel">
+
+        <section>
+          <div class="panel__head">
+            <div>
+              <h2>总览</h2>
+              <p>市场、审核与配置的当前状态。数字来自服务端聚合。</p>
+            </div>
+          </div>
+          <div class="counts" style="margin-top:var(--sp-4)">
+            <div class="counts__item"><b>126</b><span>收录插件</span></div>
+            <div class="counts__item"><b>118</b><span>已上架</span></div>
+            <div class="counts__item"><b>3</b><span>审核进行中</span></div>
+            <div class="counts__item"><b>4</b><span>等待材料</span></div>
+            <div class="counts__item"><b>1</b><span>已拒绝</span></div>
+            <div class="counts__item"><b>2</b><span>已停用</span></div>
+            <div class="counts__item"><b>1.2k</b><span>收藏</span></div>
+            <div class="counts__item"><b>38.4k</b><span>下载尝试</span></div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:var(--sp-6)">
+            <table class="table">
+              <caption class="sr">最近的审核任务</caption>
+              <thead><tr><th>状态</th><th>仓库</th><th>公开理由</th><th class="num">尝试</th><th>时间</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge badge--signal"><span class="dot" aria-hidden="true"></span>检查中</span></td><td>theme-lab/argon-theme</td><td class="cap">正在读取 GitHub 快照</td><td class="num">1</td><td class="cap mono">2 分钟前</td></tr>
+                <tr><td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已完成</span></td><td>zhangdao/ddns-go</td><td class="cap">静态检查未发现拒绝原因</td><td class="num">1</td><td class="cap mono">2 小时前</td></tr>
+                <tr><td><span class="badge badge--wait"><span class="dot" aria-hidden="true"></span>等待发布安装包</span></td><td>zhangdao/ipk-doctor</td><td class="cap">正式 Release 中还没有 .ipk</td><td class="num">2</td><td class="cap mono">5 小时前</td></tr>
+                <tr><td><span class="badge badge--bad"><span class="dot" aria-hidden="true"></span>检查失败</span></td><td>iot-lab/mqtt-bridge</td><td class="cap">GitHub 暂时无法访问，等待重试</td><td class="num">4</td><td class="cap mono">1 天前</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section style="margin-top:var(--sp-10)">
+          <div class="panel__head">
+            <div>
+              <h2>插件管理</h2>
+              <p>搜索已提交仓库，查看状态与公开理由，执行同步、重审、下架与显式恢复。</p>
+            </div>
+            <button class="btn btn--signal" type="button"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-plus"></use></svg>提交仓库</button>
+          </div>
+
+          <div class="toolbar" style="margin-top:var(--sp-4)">
+            <div class="search" style="flex:1;min-width:220px">
+              <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-magnifying-glass"></use></svg>
+              <label class="sr" for="sq">搜索仓库</label>
+              <input class="input" id="sq" type="search" placeholder="搜索仓库名称或描述">
+            </div>
+            <label class="sr" for="st">按状态筛选</label>
+            <select class="select" id="st" style="width:auto">
+              <option>全部状态</option><option>已上架</option><option>审核中</option><option>等待处理</option><option>已拒绝</option><option>已下架</option><option>已停用</option>
+            </select>
+            <div class="toolbar__end"><span class="count">共 126 项</span></div>
+          </div>
+
+          <div class="table-wrap" style="margin-top:var(--sp-4)">
+            <table class="table">
+              <thead>
+                <tr><th>仓库</th><th>状态</th><th>版本</th><th class="num">收藏 / 下载</th><th>最近检查</th><th style="text-align:right">操作</th></tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>
+                  <div class="pkg__main" style="gap:2px">
+                    <span style="font-weight:500">edge-lab/luci-app-mosdns</span>
+                    <span class="cap mono">ID 3f9c1d · rev 4</span>
+                  </div>
+                </td>
+                <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已上架</span></td>
+                <td class="mono">v5.3.2</td>
+                <td class="num">128 / 1.2k</td>
+                <td class="cap">2 小时前</td>
+                <td>
+                  <div class="table__actions">
+                    <button class="btn btn--quiet btn--sm" type="button">详情</button>
+                    <span class="menu-wrap">
+                      <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="edge-lab/luci-app-mosdns 的更多操作">
+                        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-faders"></use></svg>
+                      </button>
+                      
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="pkg__main" style="gap:2px">
+                    <span style="font-weight:500">zhangdao/ddns-go</span>
+                    <span class="cap mono">ID 7d41b9 · rev 9</span>
+                  </div>
+                </td>
+                <td><span class="badge badge--ok"><span class="dot" aria-hidden="true"></span>已上架</span></td>
+                <td class="mono">v6.6.0</td>
+                <td class="num">402 / 8.6k</td>
+                <td class="cap">2 小时前</td>
+                <td>
+                  <div class="table__actions">
+                    <button class="btn btn--quiet btn--sm" type="button">详情</button>
+                    <span class="menu-wrap">
+                      <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" aria-haspopup="menu" aria-expanded="true" aria-label="zhangdao/ddns-go 的更多操作">
+                        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-faders"></use></svg>
+                      </button>
+                      <div class="menu" role="menu">
+                        <button type="button" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-arrows-clockwise"></use></svg>重新审核</button>
+                        <button type="button" role="menuitem"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-stop-circle"></use></svg>下架</button>
+                        <button type="button" role="menuitem" class="danger"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-trash"></use></svg>删除</button>
+                      </div>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="pkg__main" style="gap:2px">
+                    <span style="font-weight:500">zhangdao/ipk-doctor</span>
+                    <span class="cap mono">ID b21e07 · rev 2</span>
+                  </div>
+                </td>
+                <td><span class="badge badge--wait"><span class="dot" aria-hidden="true"></span>等待发布安装包</span></td>
+                <td class="mono">—</td>
+                <td class="num">18 / 85</td>
+                <td class="cap">5 小时前</td>
+                <td>
+                  <div class="table__actions">
+                    <button class="btn btn--quiet btn--sm" type="button">详情</button>
+                    <span class="menu-wrap">
+                      <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="zhangdao/ipk-doctor 的更多操作">
+                        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-faders"></use></svg>
+                      </button>
+                      
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="pkg__main" style="gap:2px">
+                    <span style="font-weight:500">iot-lab/mqtt-bridge</span>
+                    <span class="cap mono">ID c88a41 · rev 6</span>
+                  </div>
+                </td>
+                <td><span class="badge badge--bad"><span class="dot" aria-hidden="true"></span>已拒绝</span></td>
+                <td class="mono">—</td>
+                <td class="num">12 / 60</td>
+                <td class="cap">1 天前</td>
+                <td>
+                  <div class="table__actions">
+                    <button class="btn btn--quiet btn--sm" type="button">详情</button>
+                    <span class="menu-wrap">
+                      <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="iot-lab/mqtt-bridge 的更多操作">
+                        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-faders"></use></svg>
+                      </button>
+                      
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="pkg__main" style="gap:2px">
+                    <span style="font-weight:500">net-lab/wg-easy</span>
+                    <span class="cap mono">ID 5a02e4 · rev 3</span>
+                  </div>
+                </td>
+                <td><span class="badge"><span class="dot" aria-hidden="true"></span>已下架</span></td>
+                <td class="mono">v12.0.2</td>
+                <td class="num">74 / 1.5k</td>
+                <td class="cap">3 天前</td>
+                <td>
+                  <div class="table__actions">
+                    <button class="btn btn--quiet btn--sm" type="button">详情</button>
+                    <span class="menu-wrap">
+                      <button class="btn btn--raised btn--sm btn--icon btn--hit" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="net-lab/wg-easy 的更多操作">
+                        <svg class="icon icon--sm" aria-hidden="true"><use href="#ph-faders"></use></svg>
+                      </button>
+                      
+                    </span>
+                  </div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <nav class="pager" aria-label="分页">
+            <button type="button" disabled aria-label="上一页"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-left"></use></svg></button>
+            <button type="button" aria-current="page">1</button>
+            <button type="button">2</button>
+            <button type="button">3</button>
+            <span class="count" style="margin-inline-start:var(--sp-3)">第 1 / 7 页</span>
+            <button type="button" aria-label="下一页"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-caret-right"></use></svg></button>
+          </nav>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap wrap--wide foot__in">
+    <p>管理员操作会写入审计日志。下架与删除不影响 GitHub 上的仓库本身。</p>
+    <p><a href="index.html">返回原型目录</a></p>
+  </div>
+</footer>
+</body>
+</html>

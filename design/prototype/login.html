@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>手机号进入 · 张导插件商店</title>
+<link rel="stylesheet" href="prototype.css">
+<script src="icons.js"></script>
+<script src="prototype.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+<header class="top">
+  <div class="wrap top__in">
+    <a class="brand" href="market.html"><span class="signal-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand__name">张导插件商店</span></a>
+    <nav class="nav" aria-label="主要导航">
+      <a href="market.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-compass"></use></svg><span class="nav__label">插件市场</span></a>
+      <a href="submit.html"><svg class="icon icon--nav" aria-hidden="true"><use href="#ph-upload-simple"></use></svg><span class="nav__label">提交插件</span></a>
+    </nav>
+    <div class="top__end">
+      <button class="btn btn--quiet btn--sm btn--icon" type="button" data-theme-toggle aria-label="切换深浅主题"><svg class="icon icon--sm" aria-hidden="true"><use href="#ph-moon"></use></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+  <div class="wrap">
+    <form class="single" method="post" action="#">
+      <div class="single__head">
+        <h1>手机号进入</h1>
+        <p>用张导小店绑定的手机号建立插件档案，用于收藏插件和查看投稿进度。</p>
+      </div>
+
+      <div class="field">
+        <label class="label" for="phone">手机号</label>
+        <input class="input" id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="请输入手机号" aria-describedby="phone-hint">
+        <p class="hint" id="phone-hint">内地手机号填 11 位；其他地区请加国际区号。</p>
+      </div>
+
+      <button class="btn btn--signal btn--primary-lg btn--block" type="submit">进入</button>
+
+      <p class="cap">这是自报手机号识别，不校验号码归属，也不代表已绑定小店会员。</p>
+    </form>
+  </div>
+</main>
+<footer class="foot">
+  <div class="wrap foot__in">
+    <p>源码与安装包由作者发布于 GitHub。通过自动审核不保证无病毒。</p>
+    <p><a href="market.html">插件市场</a> · <a href="kit.html">组件总览</a></p>
+  </div>
+</footer>
+</body>
+</html>

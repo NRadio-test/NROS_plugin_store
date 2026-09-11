@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-09-10T13:21:37.355Z",
+  "ranAt": "2026-09-11T04:53:34.443Z",
   "checks": [
     {
       "name": "公开闭环",
@@ -13,17 +13,17 @@
     },
     {
       "name": "焦点可见",
-      "detail": "DIV.search 焦点指示：outline 3px none，box-shadow rgba(47, 91, 255, 0.22) 0px 0px 0px 3px, rgba(16, 24, 40, 0.1) 0px 4px 12px -2px, rgba(16, 24, 40, 0.06) 0px 2px 6px -2px",
+      "detail": "DIV.search 焦点指示：outline 3px none，box-shadow rgba(114, 236, 255, 0.44) 0px 0px 0px 3px, rgba(0, 2, 7, 0.34) 0px 18px 50px 0px",
       "passed": true
     },
     {
       "name": "设计系统",
-      "detail": "令牌生效：主色 #2f5bff、圆角 16px、正文 15px、头部 69px",
+      "detail": "令牌生效：信号青 #5cdeff、圆角 16px、控件圆角 12px、正文 16px、头部 61px",
       "passed": true
     },
     {
       "name": "主题",
-      "detail": "深色模式切换、持久化与浅色还原通过",
+      "detail": "深色为基准（#07101b / #5cdeff），浅色派生 #f4f7fa / #0e7490，切换持久化通过",
       "passed": true
     },
     {
