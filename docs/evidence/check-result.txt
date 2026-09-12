@@ -19,28 +19,30 @@ Using secrets defined in .dev.vars
 Using secrets defined in .dev.vars
 Using secrets defined in .dev.vars
 Using secrets defined in .dev.vars
-(node:8470) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Using secrets defined in .dev.vars
+(node:33355) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
- ✓ tests/integration/market.test.ts (4 tests) 117ms
- ✓ tests/security/download.test.ts (10 tests) 189ms
- ✓ tests/security/auth.test.ts (6 tests) 251ms
- ✓ tests/integration/recovery.test.ts (5 tests) 261ms
- ✓ tests/integration/shared-auth.test.ts (7 tests) 313ms
- ✓ tests/integration/studio.test.ts (8 tests) 361ms
- ✓ tests/security/password.test.ts (3 tests) 411ms
- ✓ tests/integration/pipeline.test.ts (16 tests) 539ms
- ✓ tests/adapters/adapters.test.ts (39 tests) 733ms
+ ✓ tests/integration/market.test.ts (4 tests) 143ms
+ ✓ tests/security/download.test.ts (10 tests) 242ms
+ ✓ tests/security/auth.test.ts (6 tests) 286ms
+ ✓ tests/integration/recovery.test.ts (5 tests) 337ms
+ ✓ tests/integration/shared-auth.test.ts (7 tests) 356ms
+ ✓ tests/security/password.test.ts (3 tests) 422ms
+ ✓ tests/integration/studio.test.ts (8 tests) 468ms
+ ✓ tests/integration/uploads.test.ts (14 tests) 632ms
+ ✓ tests/integration/pipeline.test.ts (16 tests) 675ms
+ ✓ tests/adapters/adapters.test.ts (39 tests) 843ms
 
- Test Files  9 passed (9)
-      Tests  98 passed (98)
-   Start at  00:25:53
-   Duration  2.76s (transform 1.22s, setup 4.64s, import 462ms, tests 3.17s, environment 0ms)
+ Test Files  10 passed (10)
+      Tests  112 passed (112)
+   Start at  19:57:18
+   Duration  3.09s (transform 1.48s, setup 5.80s, import 622ms, tests 4.40s, environment 0ms)
 
 
 开发热更新启动回归
-(node:8485) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:33370) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-✔ Vue 在 buildStart 前收到文件变化时不崩溃 (0.647792ms)
+✔ Vue 在 buildStart 前收到文件变化时不崩溃 (0.627125ms)
 ℹ tests 1
 ℹ suites 0
 ℹ pass 1
@@ -48,11 +50,11 @@ Using secrets defined in .dev.vars
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 774.243541
+ℹ duration_ms 774.542417
 
 管理员导入工具测试
-✔ 管理员可信验证导入兼容现行 PBKDF2 且只允许最小账号字段 (34.638417ms)
-✔ 新设密拒绝弱默认值且恶意哈希参数不会执行昂贵派生 (11.075209ms)
+✔ 管理员可信验证导入兼容现行 PBKDF2 且只允许最小账号字段 (35.663375ms)
+✔ 新设密拒绝弱默认值且恶意哈希参数不会执行昂贵派生 (11.028125ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -60,7 +62,7 @@ Using secrets defined in .dev.vars
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 87.774917
+ℹ duration_ms 89.679292
 
 颜色对比度
 深色正文/页面 17.89:1 通过
@@ -101,74 +103,78 @@ Using secrets defined in .dev.vars
 34 组颜色对比度全部通过 4.5:1（令牌来源 src/styles/tokens.css）。
 
 生产构建
-(node:8491) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:33375) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 vite v8.2.2 building nros_plugin_store environment for production...
 transforming...
-✓ 42 modules transformed.
+✓ 43 modules transformed.
 rendering chunks...
 Using secrets defined in .dev.vars
 computing gzip size...
 dist/nros_plugin_store/.vite/manifest.json    0.15 kB │ gzip:  0.11 kB
 dist/nros_plugin_store/.dev.vars              0.19 kB
-dist/nros_plugin_store/wrangler.json          2.10 kB │ gzip:  1.07 kB
-dist/nros_plugin_store/index.js             162.04 kB │ gzip: 46.67 kB
+dist/nros_plugin_store/wrangler.json          2.16 kB │ gzip:  1.09 kB
+dist/nros_plugin_store/index.js             174.16 kB │ gzip: 50.17 kB
 
-✓ built in 23ms
+✓ built in 21ms
 vite v8.2.2 building client environment for production...
 transforming...
-✓ 125 modules transformed.
+✓ 131 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/client/.assetsignore                        0.02 kB
 dist/client/index.html                           0.76 kB │ gzip:  0.45 kB
 dist/client/assets/AppButton-BCnr6lN4.css        0.04 kB │ gzip:  0.06 kB
-dist/client/assets/AppField-B7mtTY1l.css         0.24 kB │ gzip:  0.19 kB
-dist/client/assets/PluginRow-DWzvAEch.css        0.44 kB │ gzip:  0.21 kB
-dist/client/assets/AISettings-t61ruFlX.css       0.60 kB │ gzip:  0.25 kB
-dist/client/assets/NotFoundView-CeDBtU1R.css     0.64 kB │ gzip:  0.32 kB
-dist/client/assets/AsyncState-duzCkIjK.css       0.90 kB │ gzip:  0.39 kB
-dist/client/assets/StudioSecurity-DUWgb5i3.css   1.25 kB │ gzip:  0.48 kB
-dist/client/assets/RepositoryForm-Bo-0Y_hO.css   1.29 kB │ gzip:  0.48 kB
-dist/client/assets/SourceSettings-CEW8gyxL.css   1.76 kB │ gzip:  0.53 kB
-dist/client/assets/StudioRecords-B0Z-T7kP.css    1.96 kB │ gzip:  0.61 kB
-dist/client/assets/StudioOverview-CocmJZWC.css   2.29 kB │ gzip:  0.66 kB
+dist/client/assets/AppField-CFXdwvmQ.css         0.24 kB │ gzip:  0.18 kB
+dist/client/assets/PluginRow-DwiCtrtJ.css        0.44 kB │ gzip:  0.21 kB
+dist/client/assets/AISettings-cX-a-pRS.css       0.57 kB │ gzip:  0.25 kB
+dist/client/assets/NotFoundView-Dxn-PS84.css     0.62 kB │ gzip:  0.31 kB
+dist/client/assets/UploadForm-l9zabMIV.css       0.78 kB │ gzip:  0.38 kB
+dist/client/assets/AsyncState-CTtmPgAC.css       0.90 kB │ gzip:  0.38 kB
+dist/client/assets/StudioSecurity-S6D32oIA.css   1.21 kB │ gzip:  0.47 kB
+dist/client/assets/SubmissionForm-DePngkDu.css   1.35 kB │ gzip:  0.49 kB
+dist/client/assets/AppModal-C_EIafz9.css         1.61 kB │ gzip:  0.56 kB
+dist/client/assets/SourceSettings-CXmxz9MR.css   1.71 kB │ gzip:  0.52 kB
+dist/client/assets/StudioRecords-B33q7cHy.css    1.90 kB │ gzip:  0.61 kB
+dist/client/assets/StudioOverview-DMtLrYtl.css   2.23 kB │ gzip:  0.64 kB
 dist/client/assets/MarketView--ucn1vi8.css       2.34 kB │ gzip:  0.75 kB
-dist/client/assets/LoginView-7zrz29wi.css        2.44 kB │ gzip:  0.73 kB
-dist/client/assets/MeView-C7z7xGS5.css           2.87 kB │ gzip:  0.83 kB
-dist/client/assets/SubmitView-C4_-X6C8.css       3.02 kB │ gzip:  0.85 kB
-dist/client/assets/StudioView-CIEdu9Rh.css       5.04 kB │ gzip:  1.22 kB
-dist/client/assets/StudioPlugins-BSN6iYwT.css    6.39 kB │ gzip:  1.47 kB
-dist/client/assets/DetailView-B77NRMkQ.css       6.89 kB │ gzip:  1.56 kB
-dist/client/assets/index-cdguffVK.css           33.63 kB │ gzip:  7.47 kB
+dist/client/assets/LoginView-CRmTiK1z.css        2.42 kB │ gzip:  0.70 kB
+dist/client/assets/MeView-BJqfbuo9.css           2.83 kB │ gzip:  0.81 kB
+dist/client/assets/SubmitView-CgdXfOkY.css       2.98 kB │ gzip:  0.84 kB
+dist/client/assets/StudioPlugins-C2voCmgK.css    4.60 kB │ gzip:  1.09 kB
+dist/client/assets/StudioView-BJRI_1C7.css       4.96 kB │ gzip:  1.19 kB
+dist/client/assets/DetailView-DNL99YAc.css       6.71 kB │ gzip:  1.51 kB
+dist/client/assets/index-Bl4jO76d.css           31.66 kB │ gzip:  7.02 kB
 dist/client/assets/tabs-B-YcsZ4j.js              0.37 kB │ gzip:  0.27 kB
-dist/client/assets/download-Dj1lh7lD.js          0.42 kB │ gzip:  0.36 kB
+dist/client/assets/download-czqlhGlE.js          0.42 kB │ gzip:  0.36 kB
 dist/client/assets/AppBadge-CVurRsjt.js          0.46 kB │ gzip:  0.31 kB
 dist/client/assets/MonogramAvatar-CRrtNHRf.js    0.53 kB │ gzip:  0.38 kB
-dist/client/assets/NotFoundView-B4wGcr99.js      0.68 kB │ gzip:  0.49 kB
+dist/client/assets/NotFoundView-MAeikKTv.js      0.68 kB │ gzip:  0.49 kB
 dist/client/assets/format-DSu84i4I.js            0.95 kB │ gzip:  0.53 kB
-dist/client/assets/StudioSecurity-fOLSx0wC.js    1.26 kB │ gzip:  0.77 kB
-dist/client/assets/AppField-DbQuQ0XF.js          1.38 kB │ gzip:  0.75 kB
+dist/client/assets/StudioSecurity-CDEKndyI.js    1.26 kB │ gzip:  0.77 kB
+dist/client/assets/AppField-CUnxnDg_.js          1.38 kB │ gzip:  0.74 kB
 dist/client/assets/status-lXJTcNml.js            1.97 kB │ gzip:  0.77 kB
 dist/client/assets/AppPagination-x3VV0X_Z.js     2.01 kB │ gzip:  1.01 kB
-dist/client/assets/LoginView-DrVpdM65.js         2.14 kB │ gzip:  1.28 kB
-dist/client/assets/RepositoryForm-ZBOU03M-.js    2.49 kB │ gzip:  1.46 kB
-dist/client/assets/SubmitView-CEttkwBZ.js        2.83 kB │ gzip:  1.50 kB
-dist/client/assets/AsyncState-BOGM6Lx_.js        3.04 kB │ gzip:  1.22 kB
-dist/client/assets/PluginRow-D-EjXWmR.js         3.09 kB │ gzip:  1.45 kB
-dist/client/assets/StudioRecords-DA1zKzAy.js     4.24 kB │ gzip:  2.04 kB
-dist/client/assets/MarketView-BIpTrr9R.js        5.57 kB │ gzip:  2.77 kB
-dist/client/assets/AISettings-B5mPoVnS.js        6.12 kB │ gzip:  2.56 kB
-dist/client/assets/StudioOverview-qi4rVSj3.js    6.50 kB │ gzip:  2.48 kB
-dist/client/assets/MeView-kzJXK83S.js            6.93 kB │ gzip:  2.77 kB
-dist/client/assets/StudioView-DYq6uMoq.js        7.52 kB │ gzip:  3.14 kB
-dist/client/assets/SourceSettings-Ck70GTdB.js    8.68 kB │ gzip:  3.50 kB
-dist/client/assets/StudioPlugins-DmridqyH.js    19.48 kB │ gzip:  6.60 kB
-dist/client/assets/index-grKz825D.js            50.77 kB │ gzip: 20.52 kB
-dist/client/assets/DetailView-D19qV0wx.js       84.67 kB │ gzip: 28.45 kB
+dist/client/assets/LoginView-DJShqilP.js         2.14 kB │ gzip:  1.27 kB
+dist/client/assets/AppModal-DatAvnI8.js          2.98 kB │ gzip:  1.38 kB
+dist/client/assets/AsyncState-Ceao1Rdh.js        3.04 kB │ gzip:  1.22 kB
+dist/client/assets/PluginRow-DqLMO6K8.js         3.14 kB │ gzip:  1.49 kB
+dist/client/assets/SubmitView-QTMV0VTU.js        3.57 kB │ gzip:  1.76 kB
+dist/client/assets/UploadForm-jhkVjMLJ.js        3.61 kB │ gzip:  1.84 kB
+dist/client/assets/SubmissionForm-CAYvs1hP.js    3.80 kB │ gzip:  1.95 kB
+dist/client/assets/StudioRecords-BdcOWf72.js     4.24 kB │ gzip:  2.04 kB
+dist/client/assets/MarketView-CFRtLsOq.js        5.57 kB │ gzip:  2.77 kB
+dist/client/assets/AISettings-YsT-4e5K.js        6.13 kB │ gzip:  2.56 kB
+dist/client/assets/StudioOverview-BRjnWhI3.js    6.50 kB │ gzip:  2.47 kB
+dist/client/assets/StudioView-CyjxXnEU.js        7.66 kB │ gzip:  3.20 kB
+dist/client/assets/MeView-CfV_pdez.js            7.71 kB │ gzip:  3.03 kB
+dist/client/assets/SourceSettings-CBp27AA3.js    8.68 kB │ gzip:  3.49 kB
+dist/client/assets/StudioPlugins-hj6aXSSy.js    16.89 kB │ gzip:  5.79 kB
+dist/client/assets/index-C-WysmwS.js            51.37 kB │ gzip: 20.74 kB
+dist/client/assets/DetailView-DtdRms84.js       85.04 kB │ gzip: 28.58 kB
 dist/client/assets/AppButton-BgY-A9Lc.js        95.43 kB │ gzip: 35.92 kB
 
-✓ built in 219ms
+✓ built in 215ms
 生产产物隔离检查通过：无本地密钥文件或测试入口。
 
 全部检查通过。浏览器端到端另运行 pnpm run test:e2e。

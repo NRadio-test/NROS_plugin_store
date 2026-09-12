@@ -40,10 +40,10 @@ watchPostEffect(() => {
 .field__head { display: flex; align-items: baseline; gap: 8px; }
 .field__flag {
   padding: 1px 7px;
-  border-radius: var(--r-full);
-  background: var(--bg-subtle);
-  color: var(--text-tertiary);
-  font-size: var(--text-micro);
+  border-radius: var(--r-pill);
+  background: var(--surface-raised);
+  color: var(--text-3);
+  font-size: var(--fs-cap);
   font-weight: 600;
 }
 </style>

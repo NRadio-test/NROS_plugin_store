@@ -176,9 +176,9 @@ onMounted(load)
 <style scoped>
 .ai { display: flex; flex-direction: column; gap: 16px; }
 .ai__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.ai__title { font-size: var(--text-h2); }
-.ai__desc { margin-top: 5px; max-width: 88ch; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
+.ai__title { font-size: var(--fs-h2); }
+.ai__desc { margin-top: 5px; max-width: 88ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
 .ai__form { display: flex; flex-direction: column; gap: 16px; }
 .ai__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.ai__note { font-size: var(--text-small); color: var(--text-tertiary); }
+.ai__note { font-size: var(--fs-sm); color: var(--text-3); }
 </style>

@@ -12,7 +12,7 @@ export function publicHttps(value: string): URL | null {
 }
 
 /** 只渲染已审核的 GitHub 展示快照，不执行仓库 HTML。图片限 GitHub 内容域名。 */
-export function renderReadme(markdown: string, fullName: string, commit: string, path: string): string {
+export function renderReadme(markdown: string, fullName: string, commit: string, path: string, uploaded = false): string {
   const repository = fullName.split('/').map(encodeURIComponent).join('/')
   const snapshotPath = path.split('/').map(encodeURIComponent).join('/')
   const encodedCommit = encodeURIComponent(commit)
@@ -26,7 +26,7 @@ export function renderReadme(markdown: string, fullName: string, commit: string,
     // 无可执行 fragment，站内标题定位不转到 GitHub。
     if (href.startsWith('#')) { anchor.removeAttribute('href'); continue }
     let resolved = ''
-    try { resolved = new URL(href, `https://github.com/${repository}/blob/${encodedCommit}/${snapshotPath}`).href } catch { /* 丢弃非法 URL */ }
+    try { resolved = uploaded ? new URL(href).href : new URL(href, `https://github.com/${repository}/blob/${encodedCommit}/${snapshotPath}`).href } catch { /* 丢弃非法 URL */ }
     const url = publicHttps(resolved)
     if (!url || !href) anchor.removeAttribute('href')
     else { anchor.href = url.href; anchor.target = '_blank'; anchor.rel = 'noopener noreferrer nofollow' }
@@ -34,7 +34,7 @@ export function renderReadme(markdown: string, fullName: string, commit: string,
   for (const img of document.querySelectorAll('img')) {
     const src = img.getAttribute('src') || ''
     let resolved = ''
-    try { resolved = new URL(src, `https://raw.githubusercontent.com/${repository}/${encodedCommit}/${snapshotPath}`).href } catch { /* 丢弃非法 URL */ }
+    try { resolved = uploaded ? new URL(src).href : new URL(src, `https://raw.githubusercontent.com/${repository}/${encodedCommit}/${snapshotPath}`).href } catch { /* 丢弃非法 URL */ }
     const url = publicHttps(resolved)
     if (!src || !url || !/(^|\.)githubusercontent\.com$/.test(url.hostname)) {
       img.replaceWith(document.createTextNode(`[图片未加载：${img.alt || '外部图片'}]`))

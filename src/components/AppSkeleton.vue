@@ -23,8 +23,8 @@ withDefaults(defineProps<{ variant?: 'text' | 'block' | 'card' | 'row'; width?: 
   flex-direction: column;
   gap: 12px;
   padding: 22px;
-  border: 1px solid var(--border-base);
-  border-radius: var(--r-lg);
-  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-group);
+  background: var(--surface);
 }
 </style>

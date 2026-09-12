@@ -1,87 +1,92 @@
 $ node scripts/e2e.mjs
-(node:8523) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:33228) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 vite v8.2.2 building nros_plugin_store environment for production...
 transforming...
-✓ 42 modules transformed.
+✓ 43 modules transformed.
 rendering chunks...
 Using secrets defined in .dev.vars
 computing gzip size...
 dist/nros_plugin_store/.vite/manifest.json    0.15 kB │ gzip:  0.11 kB
 dist/nros_plugin_store/.dev.vars              0.19 kB
-dist/nros_plugin_store/wrangler.json          2.10 kB │ gzip:  1.07 kB
-dist/nros_plugin_store/index.js             162.04 kB │ gzip: 46.67 kB
+dist/nros_plugin_store/wrangler.json          2.16 kB │ gzip:  1.09 kB
+dist/nros_plugin_store/index.js             174.16 kB │ gzip: 50.17 kB
 
-✓ built in 23ms
+✓ built in 22ms
 vite v8.2.2 building client environment for production...
 transforming...
-✓ 125 modules transformed.
+✓ 131 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/client/.assetsignore                        0.02 kB
 dist/client/index.html                           0.76 kB │ gzip:  0.45 kB
 dist/client/assets/AppButton-BCnr6lN4.css        0.04 kB │ gzip:  0.06 kB
-dist/client/assets/AppField-B7mtTY1l.css         0.24 kB │ gzip:  0.19 kB
-dist/client/assets/PluginRow-DWzvAEch.css        0.44 kB │ gzip:  0.21 kB
-dist/client/assets/AISettings-t61ruFlX.css       0.60 kB │ gzip:  0.25 kB
-dist/client/assets/NotFoundView-CeDBtU1R.css     0.64 kB │ gzip:  0.32 kB
-dist/client/assets/AsyncState-duzCkIjK.css       0.90 kB │ gzip:  0.39 kB
-dist/client/assets/StudioSecurity-DUWgb5i3.css   1.25 kB │ gzip:  0.48 kB
-dist/client/assets/RepositoryForm-Bo-0Y_hO.css   1.29 kB │ gzip:  0.48 kB
-dist/client/assets/SourceSettings-CEW8gyxL.css   1.76 kB │ gzip:  0.53 kB
-dist/client/assets/StudioRecords-B0Z-T7kP.css    1.96 kB │ gzip:  0.61 kB
-dist/client/assets/StudioOverview-CocmJZWC.css   2.29 kB │ gzip:  0.66 kB
+dist/client/assets/AppField-CFXdwvmQ.css         0.24 kB │ gzip:  0.18 kB
+dist/client/assets/PluginRow-DwiCtrtJ.css        0.44 kB │ gzip:  0.21 kB
+dist/client/assets/AISettings-cX-a-pRS.css       0.57 kB │ gzip:  0.25 kB
+dist/client/assets/NotFoundView-Dxn-PS84.css     0.62 kB │ gzip:  0.31 kB
+dist/client/assets/UploadForm-l9zabMIV.css       0.78 kB │ gzip:  0.38 kB
+dist/client/assets/AsyncState-CTtmPgAC.css       0.90 kB │ gzip:  0.38 kB
+dist/client/assets/StudioSecurity-S6D32oIA.css   1.21 kB │ gzip:  0.47 kB
+dist/client/assets/SubmissionForm-DePngkDu.css   1.35 kB │ gzip:  0.49 kB
+dist/client/assets/AppModal-C_EIafz9.css         1.61 kB │ gzip:  0.56 kB
+dist/client/assets/SourceSettings-CXmxz9MR.css   1.71 kB │ gzip:  0.52 kB
+dist/client/assets/StudioRecords-B33q7cHy.css    1.90 kB │ gzip:  0.61 kB
+dist/client/assets/StudioOverview-DMtLrYtl.css   2.23 kB │ gzip:  0.64 kB
 dist/client/assets/MarketView--ucn1vi8.css       2.34 kB │ gzip:  0.75 kB
-dist/client/assets/LoginView-7zrz29wi.css        2.44 kB │ gzip:  0.73 kB
-dist/client/assets/MeView-C7z7xGS5.css           2.87 kB │ gzip:  0.83 kB
-dist/client/assets/SubmitView-C4_-X6C8.css       3.02 kB │ gzip:  0.85 kB
-dist/client/assets/StudioView-CIEdu9Rh.css       5.04 kB │ gzip:  1.22 kB
-dist/client/assets/StudioPlugins-BSN6iYwT.css    6.39 kB │ gzip:  1.47 kB
-dist/client/assets/DetailView-B77NRMkQ.css       6.89 kB │ gzip:  1.56 kB
-dist/client/assets/index-cdguffVK.css           33.63 kB │ gzip:  7.47 kB
+dist/client/assets/LoginView-CRmTiK1z.css        2.42 kB │ gzip:  0.70 kB
+dist/client/assets/MeView-BJqfbuo9.css           2.83 kB │ gzip:  0.81 kB
+dist/client/assets/SubmitView-CgdXfOkY.css       2.98 kB │ gzip:  0.84 kB
+dist/client/assets/StudioPlugins-C2voCmgK.css    4.60 kB │ gzip:  1.09 kB
+dist/client/assets/StudioView-BJRI_1C7.css       4.96 kB │ gzip:  1.19 kB
+dist/client/assets/DetailView-DNL99YAc.css       6.71 kB │ gzip:  1.51 kB
+dist/client/assets/index-Bl4jO76d.css           31.66 kB │ gzip:  7.02 kB
 dist/client/assets/tabs-B-YcsZ4j.js              0.37 kB │ gzip:  0.27 kB
-dist/client/assets/download-Dj1lh7lD.js          0.42 kB │ gzip:  0.36 kB
+dist/client/assets/download-czqlhGlE.js          0.42 kB │ gzip:  0.36 kB
 dist/client/assets/AppBadge-CVurRsjt.js          0.46 kB │ gzip:  0.31 kB
 dist/client/assets/MonogramAvatar-CRrtNHRf.js    0.53 kB │ gzip:  0.38 kB
-dist/client/assets/NotFoundView-B4wGcr99.js      0.68 kB │ gzip:  0.49 kB
+dist/client/assets/NotFoundView-MAeikKTv.js      0.68 kB │ gzip:  0.49 kB
 dist/client/assets/format-DSu84i4I.js            0.95 kB │ gzip:  0.53 kB
-dist/client/assets/StudioSecurity-fOLSx0wC.js    1.26 kB │ gzip:  0.77 kB
-dist/client/assets/AppField-DbQuQ0XF.js          1.38 kB │ gzip:  0.75 kB
+dist/client/assets/StudioSecurity-CDEKndyI.js    1.26 kB │ gzip:  0.77 kB
+dist/client/assets/AppField-CUnxnDg_.js          1.38 kB │ gzip:  0.74 kB
 dist/client/assets/status-lXJTcNml.js            1.97 kB │ gzip:  0.77 kB
 dist/client/assets/AppPagination-x3VV0X_Z.js     2.01 kB │ gzip:  1.01 kB
-dist/client/assets/LoginView-DrVpdM65.js         2.14 kB │ gzip:  1.28 kB
-dist/client/assets/RepositoryForm-ZBOU03M-.js    2.49 kB │ gzip:  1.46 kB
-dist/client/assets/SubmitView-CEttkwBZ.js        2.83 kB │ gzip:  1.50 kB
-dist/client/assets/AsyncState-BOGM6Lx_.js        3.04 kB │ gzip:  1.22 kB
-dist/client/assets/PluginRow-D-EjXWmR.js         3.09 kB │ gzip:  1.45 kB
-dist/client/assets/StudioRecords-DA1zKzAy.js     4.24 kB │ gzip:  2.04 kB
-dist/client/assets/MarketView-BIpTrr9R.js        5.57 kB │ gzip:  2.77 kB
-dist/client/assets/AISettings-B5mPoVnS.js        6.12 kB │ gzip:  2.56 kB
-dist/client/assets/StudioOverview-qi4rVSj3.js    6.50 kB │ gzip:  2.48 kB
-dist/client/assets/MeView-kzJXK83S.js            6.93 kB │ gzip:  2.77 kB
-dist/client/assets/StudioView-DYq6uMoq.js        7.52 kB │ gzip:  3.14 kB
-dist/client/assets/SourceSettings-Ck70GTdB.js    8.68 kB │ gzip:  3.50 kB
-dist/client/assets/StudioPlugins-DmridqyH.js    19.48 kB │ gzip:  6.60 kB
-dist/client/assets/index-grKz825D.js            50.77 kB │ gzip: 20.52 kB
-dist/client/assets/DetailView-D19qV0wx.js       84.67 kB │ gzip: 28.45 kB
+dist/client/assets/LoginView-DJShqilP.js         2.14 kB │ gzip:  1.27 kB
+dist/client/assets/AppModal-DatAvnI8.js          2.98 kB │ gzip:  1.38 kB
+dist/client/assets/AsyncState-Ceao1Rdh.js        3.04 kB │ gzip:  1.22 kB
+dist/client/assets/PluginRow-DqLMO6K8.js         3.14 kB │ gzip:  1.49 kB
+dist/client/assets/SubmitView-QTMV0VTU.js        3.57 kB │ gzip:  1.76 kB
+dist/client/assets/UploadForm-jhkVjMLJ.js        3.61 kB │ gzip:  1.84 kB
+dist/client/assets/SubmissionForm-CAYvs1hP.js    3.80 kB │ gzip:  1.95 kB
+dist/client/assets/StudioRecords-BdcOWf72.js     4.24 kB │ gzip:  2.04 kB
+dist/client/assets/MarketView-CFRtLsOq.js        5.57 kB │ gzip:  2.77 kB
+dist/client/assets/AISettings-YsT-4e5K.js        6.13 kB │ gzip:  2.56 kB
+dist/client/assets/StudioOverview-BRjnWhI3.js    6.50 kB │ gzip:  2.47 kB
+dist/client/assets/StudioView-CyjxXnEU.js        7.66 kB │ gzip:  3.20 kB
+dist/client/assets/MeView-CfV_pdez.js            7.71 kB │ gzip:  3.03 kB
+dist/client/assets/SourceSettings-CBp27AA3.js    8.68 kB │ gzip:  3.49 kB
+dist/client/assets/StudioPlugins-hj6aXSSy.js    16.89 kB │ gzip:  5.79 kB
+dist/client/assets/index-C-WysmwS.js            51.37 kB │ gzip: 20.74 kB
+dist/client/assets/DetailView-DtdRms84.js       85.04 kB │ gzip: 28.58 kB
 dist/client/assets/AppButton-BgY-A9Lc.js        95.43 kB │ gzip: 35.92 kB
 
-✓ built in 218ms
+✓ built in 228ms
 生产产物隔离检查通过：无本地密钥文件或测试入口。
-[WebServer] (node:8532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:33236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
-[WebServer] (node:8532) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:33236) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
-Running 6 tests using 1 worker
+Running 7 tests using 1 worker
 
-(node:8535) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:33244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-  ✓  1 tests/e2e/store.spec.ts:10:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 用户提交后后台自动上架、真实README、多IPK下载与收藏 (4.8s)
-  ✓  2 tests/e2e/store.spec.ts:93:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › Studio 真实登录、配置测试、插件操作与显式恢复 (2.0s)
-  ✓  3 tests/e2e/store.spec.ts:136:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 设计系统、主题与键盘可用性 (1.9s)
-  ✓  4 tests/e2e/store.spec.ts:234:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 搜索框布局、持续输入与错误计数不误导 (3.1s)
-  ✓  5 tests/e2e/store.spec.ts:274:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 后台菜单不被表格裁切、原生弹窗焦点与详情标签页 (1.1s)
-  ✓  6 tests/e2e/store.spec.ts:319:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 手机、平板与桌面真实页面无水平溢出并留截图 (35.3s)
+  ✓  1 tests/e2e/store.spec.ts:11:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 用户提交后后台自动上架、真实README、多IPK下载与收藏 (4.7s)
+  ✓  2 tests/e2e/store.spec.ts:94:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › Studio 真实登录、配置测试、插件操作与显式恢复 (2.0s)
+  ✓  3 tests/e2e/store.spec.ts:137:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 设计系统、主题与键盘可用性 (2.0s)
+  ✓  4 tests/e2e/store.spec.ts:235:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 搜索框布局、持续输入与错误计数不误导 (2.9s)
+  ✓  5 tests/e2e/store.spec.ts:275:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 后台菜单不被表格裁切、原生弹窗焦点与详情标签页 (2.2s)
+  ✓  6 tests/e2e/store.spec.ts:323:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 手机、平板与桌面真实页面无水平溢出并留截图 (35.0s)
+  ✓  7 tests/e2e/store.spec.ts:397:3 › 真实浏览器 → Worker/D1/Queues → 隔离外部服务 › 直接上传表单、审核、教程安全渲染、下载及新版本更新 (2.5s)
 
-  6 passed (50.0s)
+  7 passed (53.0s)

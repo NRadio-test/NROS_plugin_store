@@ -13,7 +13,7 @@ import AppModal from './AppModal.vue'
 import AppDrawer from './AppDrawer.vue'
 import AppMenu from './AppMenu.vue'
 import { navigateTabs } from '../composables/tabs'
-import RepositoryForm from './RepositoryForm.vue'
+import SubmissionForm from './SubmissionForm.vue'
 
 type Action = 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
 
@@ -123,9 +123,9 @@ void load()
     <header class="sp__head">
       <div>
         <h2 class="sp__title">插件管理</h2>
-        <p class="sp__desc">搜索仓库，执行同步、重审、下架与恢复。</p>
+        <p class="sp__desc">搜索插件，执行同步、重审、下架与恢复。</p>
       </div>
-      <AppButton variant="primary" icon="plus" @click="submitOpen = true">提交 GitHub 仓库</AppButton>
+      <AppButton variant="primary" icon="plus" @click="submitOpen = true">提交插件</AppButton>
     </header>
 
     <div class="sp__toolbar">
@@ -186,7 +186,7 @@ void load()
                     <span class="sp__repo-meta">
                       <span class="mono">ID {{ shortId(plugin.id) }}</span>
                       <span aria-hidden="true">·</span>
-                      <span class="mono">repo {{ plugin.repository_id }}</span>
+                      <span class="mono">{{ plugin.source_kind === 'upload' ? '直接上传 IPK' : 'repo ' + plugin.repository_id }}</span>
                       <span aria-hidden="true">·</span>
                       <span>revision {{ plugin.revision }}</span>
                     </span>
@@ -210,7 +210,7 @@ void load()
                 <td>
                   <div class="table__actions">
                     <AppButton size="sm" variant="ghost" icon="external-link" @click="openDetail(plugin.id)">详情</AppButton>
-                    <AppButton size="sm" :loading="busy === plugin.id && pending?.action === 'sync'" @click="ask(plugin, 'sync')">同步</AppButton>
+                    <AppButton v-if="plugin.source_kind !== 'upload'" size="sm" :loading="busy === plugin.id && pending?.action === 'sync'" @click="ask(plugin, 'sync')">同步</AppButton>
                     <AppMenu :label="`${plugin.full_name} 的更多操作`">
                       <template #trigger><AppIcon name="sliders" :size="19" /></template>
                       <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新审核</button>
@@ -234,8 +234,8 @@ void load()
       </div>
     </AsyncState>
 
-    <AppModal v-model="submitOpen" title="提交 GitHub 仓库">
-      <RepositoryForm studio @submitted="submitOpen = false; load()" />
+    <AppModal v-model="submitOpen" title="提交插件">
+      <SubmissionForm studio @submitted="submitOpen = false; load()" />
     </AppModal>
 
     <AppModal
@@ -274,7 +274,7 @@ void load()
 
       <template v-else-if="detail">
         <div class="sp__drawer-facts">
-          <div><span>repository ID</span><span class="mono">{{ detail.plugin.repository_id }}</span></div>
+          <div><span>来源</span><span class="mono">{{ detail.plugin.source_kind === 'upload' ? '直接上传 IPK' : 'repository ID ' + detail.plugin.repository_id }}</span></div>
           <div><span>revision</span><span class="mono">{{ detail.plugin.revision }}</span></div>
           <div><span>提交者</span><span class="mono">{{ detail.plugin.submitter_id ? shortId(detail.plugin.submitter_id) : '管理员' }}</span></div>
           <div><span>创建时间</span><span>{{ formatDateTime(detail.plugin.created_at) }}</span></div>
@@ -374,8 +374,8 @@ void load()
 <style scoped>
 .sp { display: flex; flex-direction: column; gap: 16px; }
 .sp__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.sp__title { font-size: var(--text-h2); }
-.sp__desc { margin-top: 5px; max-width: 88ch; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
+.sp__title { font-size: var(--fs-h2); }
+.sp__desc { margin-top: 5px; max-width: 88ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
 .sp__toolbar { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr) auto; gap: 10px; align-items: center; }
 .sp__search { display: flex; align-items: center; gap: 10px; padding-inline: 12px; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); color: var(--text-3); }
 .sp__search:focus-within { border-color: var(--signal); }
@@ -388,50 +388,50 @@ void load()
 .sp__table :deep(td) { vertical-align: top; }
 .sp__actions-col { text-align: right; }
 .sp__repo { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
-.sp__repo-name { font-weight: 640; font-size: var(--text-body); }
-.sp__repo-meta { display: flex; align-items: center; gap: 6px; font-size: var(--text-micro); color: var(--text-tertiary); flex-wrap: wrap; }
-.sp__repo-reason { font-size: var(--text-small); color: var(--text-tertiary); max-width: 46ch; }
+.sp__repo-name { font-weight: 640; font-size: var(--fs-body); }
+.sp__repo-meta { display: flex; align-items: center; gap: 6px; font-size: var(--fs-cap); color: var(--text-3); flex-wrap: wrap; }
+.sp__repo-reason { font-size: var(--fs-sm); color: var(--text-3); max-width: 46ch; }
 .sp__status { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.sp__task { font-size: var(--text-micro); color: var(--text-tertiary); }
+.sp__task { font-size: var(--fs-cap); color: var(--text-3); }
 .sp__menu-wrap { position: relative; }
 .sp__menu { top: calc(100% + 6px); right: 0; }
 .sp__pager { margin-top: 14px; }
 .sp__confirm { display: flex; flex-direction: column; gap: 0; margin: 14px 0 4px; }
-.sp__confirm > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); align-items: center; }
-.sp__confirm dt { font-size: var(--text-small); color: var(--text-tertiary); }
+.sp__confirm > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.sp__confirm dt { font-size: var(--fs-sm); color: var(--text-3); }
 .sp__confirm dd { margin: 0; }
 .sp__drawer-sub { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
-.sp__drawer-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; padding: 14px; border: 1px solid var(--border-base); border-radius: var(--r-md); background: var(--bg-subtle); }
+.sp__drawer-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface-raised); }
 .sp__drawer-facts > div { display: flex; flex-direction: column; gap: 2px; }
-.sp__drawer-facts span:first-child { font-size: var(--text-micro); color: var(--text-tertiary); }
-.sp__drawer-facts span:last-child { font-size: var(--text-small); font-weight: 600; }
-.sp__drawer-reason { margin-top: 14px; font-size: var(--text-body); color: var(--text-secondary); line-height: 1.6; }
+.sp__drawer-facts span:first-child { font-size: var(--fs-cap); color: var(--text-3); }
+.sp__drawer-facts span:last-child { font-size: var(--fs-sm); font-weight: 600; }
+.sp__drawer-reason { margin-top: 14px; font-size: var(--fs-body); color: var(--text-2); line-height: 1.6; }
 .sp__drawer-tabs { margin-top: 18px; }
 .sp__drawer-section { padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
 .sp__kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; }
 .sp__kv > div { display: flex; flex-direction: column; gap: 3px; }
-.sp__kv span:first-child { font-size: var(--text-micro); color: var(--text-tertiary); }
-.sp__block-title { margin-top: 12px; font-size: var(--text-small); font-weight: 650; color: var(--text-secondary); }
-.sp__block-text { font-size: var(--text-small); color: var(--text-secondary); line-height: 1.6; }
+.sp__kv span:first-child { font-size: var(--fs-cap); color: var(--text-3); }
+.sp__block-title { margin-top: 12px; font-size: var(--fs-sm); font-weight: 650; color: var(--text-2); }
+.sp__block-text { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
 .sp__internal {
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid var(--border-base);
-  border-radius: var(--r-sm);
-  background: var(--bg-sunken);
-  color: var(--text-secondary);
-  font-size: var(--text-small);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: var(--bg-deep);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 300px;
   overflow: auto;
 }
-.sp__asset-sub { display: block; font-size: var(--text-micro); color: var(--text-tertiary); }
-.sp__task-card { padding: 14px; border: 1px solid var(--border-base); border-radius: var(--r-md); background: var(--bg-card); }
+.sp__asset-sub { display: block; font-size: var(--fs-cap); color: var(--text-3); }
+.sp__task-card { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); }
 .sp__task-card details { margin-top: 8px; }
-.sp__task-card summary { font-size: var(--text-small); color: var(--primary-text); }
-.sp__audit { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border-subtle); border-radius: var(--r-sm); background: var(--bg-card); font-size: var(--text-small); }
+.sp__task-card summary { font-size: var(--fs-sm); color: var(--signal-text); }
+.sp__audit { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); font-size: var(--fs-sm); }
 
 @media (max-width: 1000px) {
   .sp__toolbar { grid-template-columns: 1fr; }

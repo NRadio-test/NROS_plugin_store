@@ -40,15 +40,15 @@ import AppButton from './AppButton.vue'
 <style scoped>
 .sec { display: flex; flex-direction: column; gap: 16px; }
 .sec__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.sec__title { font-size: var(--text-h2); }
-.sec__desc { margin-top: 5px; max-width: 80ch; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
-.sec__who { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--border-base); border-radius: var(--r-full); background: var(--bg-card); font-size: var(--text-small); font-weight: 600; }
+.sec__title { font-size: var(--fs-h2); }
+.sec__desc { margin-top: 5px; max-width: 80ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
+.sec__who { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--surface); font-size: var(--fs-sm); font-weight: 600; }
 .sec__grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
 .sec__aside { display: flex; flex-direction: column; gap: 14px; }
 .sec__note { padding: 18px; }
 .sec__note-title { display: flex; align-items: center; gap: 8px; font-weight: 640; margin-bottom: 10px; }
-.sec__note ul { list-style: disc; display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
-.sec__note li::marker { color: var(--primary); }
+.sec__note ul { list-style: disc; display: flex; flex-direction: column; gap: 8px; padding-left: 18px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
+.sec__note li::marker { color: var(--signal); }
 
 @media (max-width: 1000px) { .sec__grid { grid-template-columns: 1fr; } }
 </style>

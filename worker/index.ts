@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { AppError, type Env, type DownloadSource } from './contracts';
 import { assertOrigin, createSession, getSession, logoutSession, normalizePhone, verifyPassword, hmac, rateLimit, sharedAdmin, activeAdmin } from './security';
 import { id, now, query, audit, setting, setSetting, purgeRemovedMaterials } from './db';
-import { submit, refresh, processTask, recover, scan, getApproved } from './pipeline';
+import { submit, refresh, processTask, recover, scan, getApproved, enqueue } from './pipeline';
+import { receiveUpload, deleteUploads, cleanupUploads } from './uploads';
 import { loadAI, saveAI } from './settings';
 import { testAI } from './ai';
 import { readBounded } from './network';
@@ -46,7 +47,7 @@ app.post('/api/studio/login', async (c) => { await limit(c, 'admin-login', 5, 60
     throw new AppError(400, '账号或密码格式错误'); const admin = await sharedAdmin(c.env, 'username', b.username); const dummy = 'pbkdf2-sha256$100000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; if (!await verifyPassword(b.password, admin?.password_hash ?? dummy) || !admin)
     throw new AppError(401, '账号或密码不正确'); if (!await activeAdmin(admin)) throw new AppError(403, '请先前往留言箱完成密码修改，再登录商店', 'password_change_required'); const s = await createSession(c.env, 'admin', admin.id, admin); c.header('Set-Cookie', s.cookie); await audit(c.env, admin.id, 'login', admin.id); return c.json({ admin: { id: admin.id, username: admin.username } }); });
 app.post('/api/studio/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'admin')); return c.json({ ok: true }); });
-const publicSelect = `SELECT p.id,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id`;
+const publicSelect = `SELECT p.id,p.source_kind,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id`;
 /** 市场排序白名单：非法 sort 一律回落 updated，绝不把用户输入拼进 SQL。 */
 const marketSorts: Record<string, string> = { updated: 'p.updated_at DESC,p.id', downloads: 'p.download_count DESC,p.updated_at DESC,p.id', favorites: 'favorite_count DESC,p.updated_at DESC,p.id' };
 app.get('/api/plugins', async (c) => { const term = (c.req.query('q') ?? '').slice(0, 200), page = Math.max(1, Math.min(10000, Math.floor(Number(c.req.query('page'))) || 1)); const requested = c.req.query('sort') ?? ''; const sort = Object.hasOwn(marketSorts, requested) ? requested : 'updated'; const where = " WHERE p.status='published' AND p.blocked=0 AND (p.full_name LIKE ? ESCAPE '\\' OR p.description LIKE ? ESCAPE '\\')"; const like = '%' + term.replace(/[\\%_]/g, '\\$&') + '%'; const items = await query(c.env, publicSelect + where + ' ORDER BY ' + marketSorts[sort] + ' LIMIT 12 OFFSET ?', like, like, (page - 1) * 12).all(); const total = await query(c.env, 'SELECT COUNT(*) total FROM plugins p' + where + ' AND EXISTS(SELECT 1 FROM snapshots s WHERE s.id=p.approved_snapshot_id)', like, like).first<{
@@ -73,11 +74,19 @@ else
     await query(c.env, 'DELETE FROM favorites WHERE user_id=? AND plugin_id=?', uid, c.req.param('id')).run(); const count = await query(c.env, 'SELECT COUNT(*) total FROM favorites WHERE plugin_id=?', c.req.param('id')).first<{
     total: number;
 }>(); return c.json({ favorite_count: count?.total ?? 0, favorited: b.active }); });
+async function upload(c: any, uid: string | null, pid?: string) {
+    const result = await receiveUpload(c.env, c.req.raw, uid, pid);
+    if (result.taskId) await enqueue(c.env, result.taskId);
+    return c.json(result, 202);
+}
+app.post('/api/submit/upload', async c => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); return upload(c, uid); });
+app.post('/api/plugins/:id/upload', async c => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); return upload(c, uid, c.req.param('id')); });
+app.post('/api/studio/submit/upload', async c => { const result = await receiveUpload(c.env, c.req.raw, null); if (result.taskId) await enqueue(c.env, result.taskId); await audit(c.env, c.get('adminId'), 'upload', result.pluginId); return c.json(result, 202); });
 app.post('/api/submit', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); const b = await body(c); if (typeof b.url !== 'string')
     throw new AppError(400, '请填写 GitHub 仓库链接'); return c.json(await submit(c.env, b.url, uid), 202); });
 app.post('/api/plugins/:id/refresh', async (c) => { const uid = await requireUser(c); const p = await query(c.env, 'SELECT id FROM plugins WHERE id=? AND submitter_id=?', c.req.param('id'), uid).first(); if (!p)
-    throw new AppError(403, '只能刷新自己的原仓库提交'); await rateLimit(c.env, `refresh:${c.req.param('id')}`, 1, 600); return c.json(await refresh(c.env, c.req.param('id')), 202); });
-app.get('/api/me', async (c) => { const uid = await requireUser(c); const submissions = await query(c.env, "SELECT p.id,p.full_name,p.status,p.public_reason,(SELECT status FROM tasks t WHERE t.plugin_id=p.id ORDER BY revision DESC LIMIT 1) task_status FROM plugins p WHERE submitter_id=? ORDER BY created_at DESC", uid).all(); const favorites = await query(c.env, publicSelect + " JOIN favorites own ON own.plugin_id=p.id WHERE own.user_id=? AND p.status='published' AND p.blocked=0 ORDER BY own.created_at DESC", uid).all(); return c.json({ submissions: submissions.results, favorites: favorites.results.map(p => ({ ...p, favorited: true })) }); });
+    throw new AppError(403, '只能重新检查自己的提交'); await rateLimit(c.env, `refresh:${c.req.param('id')}`, 1, 600); return c.json(await refresh(c.env, c.req.param('id')), 202); });
+app.get('/api/me', async (c) => { const uid = await requireUser(c); const submissions = await query(c.env, "SELECT p.id,p.source_kind,p.full_name,p.status,p.public_reason,json_extract(u.data,'$.name') upload_name,json_extract(u.data,'$.description') upload_description,json_extract(u.data,'$.tutorial') upload_tutorial,(SELECT status FROM tasks t WHERE t.plugin_id=p.id ORDER BY revision DESC LIMIT 1) task_status FROM plugins p LEFT JOIN uploads u ON u.id=p.upload_id WHERE submitter_id=? ORDER BY p.created_at DESC", uid).all(); const favorites = await query(c.env, publicSelect + " JOIN favorites own ON own.plugin_id=p.id WHERE own.user_id=? AND p.status='published' AND p.blocked=0 ORDER BY own.created_at DESC", uid).all(); return c.json({ submissions: submissions.results, favorites: favorites.results.map(p => ({ ...p, favorited: true })) }); });
 app.get('/api/studio/plugins', async (c) => c.json(await listPlugins(c.env, { q: c.req.query('q'), status: c.req.query('status'), page: c.req.query('page'), pageSize: c.req.query('pageSize') })));
 app.get('/api/studio/plugins/:id', async (c) => c.json(await pluginDetail(c.env, c.req.param('id'))));
 app.get('/api/studio/overview', async (c) => c.json(await overview(c.env)));
@@ -91,6 +100,7 @@ app.post('/api/studio/plugins/:id/:action', async (c) => { const action = c.req.
     const b = await body(c);
     const reason = typeof b.reason === 'string' && b.reason.trim() ? b.reason.trim().slice(0, 240) : '管理员已下架';
     await c.env.DB.batch([query(c.env, "UPDATE plugins SET blocked=1,status='removed',revision=revision+1,public_reason=?,updated_at=? WHERE id=?", reason, now(), pid), ...purgeRemovedMaterials(c.env, pid)]);
+    if (action === 'delete') await deleteUploads(c.env, pid);
 }
 else {
     if (action === 'restore')
@@ -141,7 +151,7 @@ export default { fetch: app.fetch, async queue(batch: MessageBatch<{
         catch {
             message.retry({ delaySeconds: 30 });
         }
-    } }, async scheduled(_event: ScheduledController, env: Env) { await recover(env); await scan(env); await env.DB.batch([query(env, 'DELETE FROM sessions WHERE expires_at<?', now()), query(env, 'DELETE FROM limits WHERE expires_at<?', now()), query(env, 'DELETE FROM download_attempts WHERE created_at<?', now() - 86400000), query(env, 'DELETE FROM http_cache WHERE updated_at<?', now() - 604800000)]); } } satisfies ExportedHandler<Env, {
+    } }, async scheduled(_event: ScheduledController, env: Env) { await recover(env); await scan(env); await cleanupUploads(env); await env.DB.batch([query(env, 'DELETE FROM sessions WHERE expires_at<?', now()), query(env, 'DELETE FROM limits WHERE expires_at<?', now()), query(env, 'DELETE FROM download_attempts WHERE created_at<?', now() - 86400000), query(env, 'DELETE FROM http_cache WHERE updated_at<?', now() - 604800000)]); } } satisfies ExportedHandler<Env, {
     taskId?: string;
     scanCursor?: string;
 }>;

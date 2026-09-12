@@ -5,7 +5,7 @@ const year = new Date().getFullYear()
 <template>
   <footer class="foot">
     <div class="wrap foot__in">
-      <p class="foot__notice">源码与安装包由作者发布于 GitHub；通过自动审核不保证无病毒。</p>
+      <p class="foot__notice">安装包来自作者提交；通过自动审核不保证无病毒。</p>
       <p class="foot__links">
         <RouterLink to="/submit">提交插件</RouterLink>
         <RouterLink to="/me">个人中心</RouterLink>

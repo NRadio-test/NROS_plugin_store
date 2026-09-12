@@ -5,6 +5,7 @@ import { statusMeta } from './status'
 export interface Plugin {
   id: string
   full_name: string
+  source_kind?: 'github' | 'upload'
   description: string | null
   version: string | null
   favorite_count: number
@@ -48,9 +49,13 @@ export interface Session {
 export interface Submission {
   id: string
   full_name: string
+  source_kind?: 'github' | 'upload'
   status: string
   public_reason: string
   task_status: string | null
+  upload_name?: string
+  upload_description?: string
+  upload_tutorial?: string
   updated_at?: number
 }
 
@@ -120,7 +125,7 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   const response = await fetch(path, {
     credentials: 'same-origin',
     ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+    headers: { ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
   })
   const value = await response.json().catch(() => ({})) as { error?: string; code?: string }
   if (!response.ok) throw new ApiError(value.error || `请求失败（${response.status}）`, response.status, value.code)

@@ -4,7 +4,7 @@
 
 本次只实现与测试本地项目；没有创建 GitHub 远程仓库、推送、生产部署、生产迁移、DNS 修改或付费服务。Cloudflare 账户、D1/Queues 资源 ID、真实 GitHub Token、AI 提供商及当前管理员验证数据仍由部署者提供。以下涉及 `--remote`、创建资源或 `deploy` 的命令仅供之后获得授权时执行。
 
-正式建议使用 Workers Paid + Static Assets + D1 + Queues；套餐与配额以上线时官方文档为准。不存在 VPS、Redis、R2 安装包镜像。Workers Paid 不保证大陆网络改善，也不等于具有中国大陆节点。
+正式建议使用 Workers Paid + Static Assets + D1 + Queues；套餐与配额以上线时官方文档为准。不引入 VPS 或 Redis；新增直传文件使用商店独立私有 R2，不镜像 GitHub Release。Workers Paid 不保证大陆网络改善，也不等于具有中国大陆节点。
 
 ## 1. 本地准备
 
@@ -83,7 +83,7 @@ pnpm exec wrangler d1 execute DB --local --file backups/before-migration.sql
 
 商店不写共享库，不复制密码验证记录、留言、会话或密钥。改密与账号恢复在 [留言箱 Studio](https://msg.zdwifi.com/studio) 完成，`pnpm admin set/import` 在共享绑定存在时停用。D1 绑定本身并非只读权限，本项目通过只读查询封装和隔离测试约束运行时代码。
 
-管理员会话仍存商店 `sessions`，沿用独立 host-only Cookie。`subject_id` 对管理员使用带版本的 JSON 标识，包含共享账号 ID 与使用商店主密钥生成的验证记录 HMAC；普通用户格式不变。旧本地账号会话无法转换成共享权限。每次读取会话核验共享账号和 HMAC，留言箱改密、删除账号或设置改密标记后，下次请求拒绝旧会话。无需新增迁移；不要对 `ADMIN_AUTH_DB` 执行商店迁移。
+管理员会话仍存商店 `sessions`，沿用独立 host-only Cookie。`subject_id` 对管理员使用带版本的 JSON 标识，包含共享账号 ID 与使用商店主密钥生成的验证记录 HMAC；普通用户格式不变。旧本地账号会话无法转换成共享权限。每次读取会话核验共享账号和 HMAC，留言箱改密、删除账号或设置改密标记后，下次请求拒绝旧会话。管理员认证适配无需新增迁移；不要对 `ADMIN_AUTH_DB` 执行商店迁移。
 
 本地 Wrangler 绑定是独立本地库，不自动读取生产留言箱。`pnpm run check` 与 `pnpm run test:e2e` 使用两个独立临时数据库，只在测试库创建最小账号表与随机盐测试记录。当前只验证本地实现，没有验证生产数据库结构或线上登录。
 
@@ -101,7 +101,7 @@ AI设置填写兼容Chat Completions的Base URL、模型、API Key、超时、�
 
 第三方源添加后先保持停用、明确勾选信任、保存，输入已批准插件ID和附件ID测试；成功证明绑定当前完整配置，之后才可启用。修改配置后重新测试。任意公众不能指定来源URL。源优先级数值小的先尝试；HTTPS、公共DNS、重定向逐跳与主机白名单均检查；AI URL同样不能访问内网。
 
-每次下载重新核对官方仓库ID、正式Release、固定asset ID/文件名/大小/更新时间/摘要和tag源码commit。被替换或消失的附件停用。Worker流式发送附件，支持HEAD和单Range，失败不伪装成IPK；不缓存安装包、不落盘、不存D1 Blob/R2。
+每次下载重新核对官方仓库ID、正式Release、固定asset ID/文件名/大小/更新时间/摘要和tag源码commit。被替换或消失的附件停用。Worker流式发送附件，支持HEAD和单Range，失败不伪装成IPK；GitHub 转发不缓存安装包、不落盘、不存 D1 Blob/R2；直传下载使用独立私有 R2。
 
 `X-Reviewed-SHA256`为审核时实际计算的摘要，用户可下载后校验。源测试只校验短前缀与响应元数据；纯流式发送无法在发出任何字节前算完整文件哈希，不声明任意第三方镜像已逐字节预验证。DNS预检查与实际连接解析由不同层完成，仍依赖Workers网络层对解析/私网的限制；谨慎仅允许受信公共下载主机。
 
@@ -131,3 +131,16 @@ pnpm deploy
 本次没有大陆测速数据。上线后在真实大陆移动/联通/电信家庭/移动网络分别检查：首页与详情首屏、GitHub README图片、HEAD与完整IPK下载、单Range续传、32MiB附近文件、失败回退。记录日期、运营商、地区、文件字节/哈希、首字节与完整下载时间、失败状态，避免把VPN/海外代理结果当大陆结果。仅使用无害公开测试包；下载次数表示成功开始的尝试，不表示安装人数或完整下载。
 
 参考：[Cloudflare Queues本地开发](https://developers.cloudflare.com/queues/configuration/local-development/)、[Workers测试集成](https://developers.cloudflare.com/workers/testing/vitest-integration/)。
+
+## IPK 直传上线准备
+
+以下是之后由部署者执行的远程步骤，本轮未执行：
+
+1. 创建私有 R2 桶 `plugin-store-uploads`（如采用其他名称，同时修改 wrangler.jsonc 的 bucket_name）。保留 `UPLOADS` 绑定；不要启用 r2.dev 公共访问或公开桶域名。先确认账户已启用 R2 及其费用/配额。
+2. 备份商店 DB，应用商店迁移 `0002_uploads.sql`（`pnpm db:migrate:remote` 的目标仍是 **DB**）。新增列有默认值，旧的 GitHub 数据保持有效；不要在 **ADMIN_AUTH_DB** 执行迁移。
+3. 部署包含直传适配的新 Worker 和前端。缺少绑定时直传返回明确配置错误，旧 GitHub 功能不依赖 R2；新代码需先具备新增表/列。
+4. 使用无害 IPK 真实验证上传、审核、普通下载/Range、新版本替换及下架后禁止下载。确认 R2 无公开访问，访客无法取得待审核包。真实 AI 结果不能用本地 fixture 代替。
+
+本地 `pnpm setup:local` 或 `pnpm db:migrate:local` 应用所有商店迁移；开发使用 Wrangler 的本地模拟 R2，配置没有 remote:true。测试使用临时 D1/R2，完全隔离远程数据。
+
+D1 备份仅包含元数据，恢复直传需同时恢复对应 R2 对象；对象缺失/改变会阻止审核和下载。当前候选及已批准包保留；旧候选和孤立对象满一天由 Cron 分批回收，管理员“删除”清理该插件全部直传文件。“下架”保留最新私有包以便显式恢复重审。存储限额当前每识别档案 128 MiB，管理员投稿合并计算；限制值和清理策略见 DECISIONS.md。

@@ -258,19 +258,19 @@ onMounted(load)
 <style scoped>
 .src { display: flex; flex-direction: column; gap: 16px; }
 .src__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.src__title { font-size: var(--text-h2); }
-.src__desc { margin-top: 5px; max-width: 92ch; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.65; }
+.src__title { font-size: var(--fs-h2); }
+.src__desc { margin-top: 5px; max-width: 92ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
 .src__target { margin-bottom: 16px; }
-.src__empty { display: flex; align-items: center; gap: 8px; color: var(--text-tertiary); font-size: var(--text-small); }
+.src__empty { display: flex; align-items: center; gap: 8px; color: var(--text-3); font-size: var(--fs-sm); }
 .src__list { display: flex; flex-direction: column; gap: 14px; }
-.src__card-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); }
+.src__card-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding: 16px 20px; border-bottom: 1px solid var(--line); }
 .src__card-ident { display: flex; align-items: center; gap: 12px; }
-.src__card-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-sm); background: var(--bg-subtle); color: var(--text-secondary); }
-.src__card-icon--official { background: var(--primary-surface); color: var(--primary-text); }
-.src__card-name { font-size: var(--text-body); font-weight: 650; }
-.src__card-sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: var(--text-micro); color: var(--text-tertiary); flex-wrap: wrap; }
+.src__card-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: var(--r-control); background: var(--surface-raised); color: var(--text-2); }
+.src__card-icon--official { background: var(--signal-surface); color: var(--signal-text); }
+.src__card-name { font-size: var(--fs-body); font-weight: 650; }
+.src__card-sub { display: flex; align-items: center; gap: 6px; margin-top: 2px; font-size: var(--fs-cap); color: var(--text-3); flex-wrap: wrap; }
 .src__card-badges { display: flex; gap: 8px; flex-wrap: wrap; }
-.src__card-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.src__card-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
 
 @media (max-width: 767px) {
   .src__card-actions { gap: 12px; }

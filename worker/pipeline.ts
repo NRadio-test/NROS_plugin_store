@@ -1,11 +1,13 @@
 import { AppError, type Env, type Snapshot } from './contracts';
 import { getRepository, getSnapshot, normalizeRepoUrl, verifySnapshot } from './github';
+import { uploadSnapshot, verifyUpload } from './uploads';
 import { review } from './ai';
 import { loadAI } from './settings';
 import { id, now, query, setting, purgeRemovedMaterials } from './db';
 interface Plugin {
     id: string;
     repository_id: number;
+    source_kind: 'github' | 'upload';
     full_name: string;
     revision: number;
     blocked: number;
@@ -79,7 +81,7 @@ export async function processTask(env: Env, taskId: string) {
         return;
     }
     try {
-        const snapshot = await getSnapshot(env, p.repository_id);
+        const snapshot = p.source_kind === 'upload' ? await uploadSnapshot(env, p.id) : await getSnapshot(env, p.repository_id);
         await query(env, 'UPDATE plugins SET missing_count=0,missing_since=NULL WHERE id=? AND revision=?', p.id, p.revision).run();
         const configVersion = await setting<string>(env, 'reviewVersion') ?? 'v1';
         const version = task.force_review ? configVersion + ':force:' + task.id : configVersion;
@@ -107,7 +109,7 @@ export async function processTask(env: Env, taskId: string) {
             }
             result = await review(config, snapshot.materials);
         }
-        if (!(await verifySnapshot(env, snapshot))) {
+        if (!(await (snapshot.sourceKind === 'upload' ? verifyUpload(env, snapshot) : verifySnapshot(env, snapshot)))) {
             await finish(env, task, token, 'incomplete', '审核期间来源已变化，请重新检查');
             return;
         }

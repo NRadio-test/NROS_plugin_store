@@ -65,6 +65,7 @@
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   --page-max: 74rem;
+  --page-max-wide: 84rem;
   --form-max: 42.5rem;
   --read-max: 38rem;
   --sidebar: 17rem;
@@ -110,82 +111,9 @@
 }
 
 
-/* ---------- 兼容别名 ----------
-   旧组件（Studio 各面板与部分基础组件）仍引用下列名字，
-   迁移完成后统一删除，避免两套命名长期并存。 */
+/* 布局令牌 */
 :root {
-  --bg-base: var(--bg);
-  --bg-subtle: var(--surface-raised);
-  --bg-card: var(--surface);
-  --bg-raised: var(--surface-raised);
-  --bg-hover: var(--surface-hover);
-  --bg-sunken: var(--bg-deep);
-  --bg-inverse: var(--text);
-  --border-base: var(--line);
-  --border-strong: var(--line-strong);
-  --border-subtle: var(--line);
-  --text-primary: var(--text);
-  --text-secondary: var(--text-2);
-  --text-tertiary: var(--text-3);
-  --text-inverse: var(--bg);
-  --primary: var(--signal);
-  --primary-hover: var(--signal-hover);
-  --primary-active: var(--signal-hover);
-  --primary-fill-hover: var(--signal-hover);
-  --primary-fill-active: var(--signal-hover);
-  --primary-text: var(--signal-text);
-  --primary-surface: var(--signal-surface);
-  --primary-border: var(--line-strong);
-  --on-primary: var(--on-signal);
-  --accent: var(--signal);
-  --accent-surface: var(--signal-surface);
-  --success-text: var(--success);
-  --danger-text: var(--danger);
-  --warning-text: var(--warning);
-  --info-text: var(--text-2);
-  --info-surface: var(--surface-raised);
-  --info-border: var(--line);
-  --success-border: var(--line-strong);
-  --warning-border: var(--line-strong);
-  --danger-border: var(--line-strong);
-  --success-solid: var(--success);
-  --warning-solid: var(--warning);
-  --danger-solid: var(--danger);
-  --r-xs: 8px;
-  --r-sm: var(--r-control);
-  --r-md: var(--r-control);
-  --r-lg: var(--r-group);
-  --r-xl: var(--r-page);
-  --r-full: var(--r-pill);
-  --shadow-xs: none;
-  --shadow-sm: none;
-  --shadow-md: var(--shadow-shell);
-  --shadow-lg: var(--shadow-shell);
-  --shadow-xl: var(--shadow-dialog);
-  --ring: 0 0 0 3px var(--focus-ring);
-  --ring-danger: 0 0 0 3px var(--danger-surface);
-  --overlay: var(--backdrop);
-  --glass-bg: var(--surface);
-  --glass-border: var(--line);
-  --glass-blur: none;
-  --container: var(--page-max);
-  --container-wide: 84rem;
   --header-h: 60px;
-  --text-display: var(--fs-h1);
-  --text-h1: var(--fs-h1);
-  --text-h2: var(--fs-h2);
-  --text-h3: var(--fs-h3);
-  --text-body: var(--fs-body);
-  --text-read: var(--fs-body);
-  --text-small: var(--fs-sm);
-  --text-micro: var(--fs-cap);
-  --dur-1: var(--dur-fast);
-  --dur-2: var(--dur-fast);
-  --dur-3: var(--dur);
-  --dur-4: var(--dur);
-  --ease-out: var(--ease);
-  --ease-in-out: var(--ease);
-  --font-body: var(--font-sans);
+  --shadow-xs: none; /* 平面设计：控件不投影 */
 }
-
 @media (max-width: 767px) { :root { --header-h: 112px; } }

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Env } from '../../worker/contracts';
 import { INTERNAL_SENTINEL, publish, request, seedAdmin, seedPlugin, seedTask, testEnv } from './harness';
 
-const STUDIO_FIELDS = ['id', 'full_name', 'repository_id', 'description', 'status', 'blocked', 'revision', 'version', 'favorite_count', 'download_count', 'public_reason', 'created_at', 'updated_at', 'checked_at', 'approved_snapshot_id', 'submitter_id', 'task_status', 'task_attempts', 'last_task_at'].sort();
+const STUDIO_FIELDS = ['source_kind', 'id', 'full_name', 'repository_id', 'description', 'status', 'blocked', 'revision', 'version', 'favorite_count', 'download_count', 'public_reason', 'created_at', 'updated_at', 'checked_at', 'approved_snapshot_id', 'submitter_id', 'task_status', 'task_attempts', 'last_task_at'].sort();
 const DEFAULT_AI_BASE_URL = 'https://api.openai.com/v1';
 
 interface ListBody { items: Record<string, any>[]; total: number; page: number; pageSize: number }

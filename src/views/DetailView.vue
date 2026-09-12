@@ -25,10 +25,11 @@ const error = ref('')
 const busy = ref('')
 const tab = ref<TabKey>('readme')
 
+const uploaded = computed(() => detail.value?.plugin.source_kind === 'upload')
 const owner = computed(() => detail.value?.plugin.full_name.split('/')[0] || '')
 const name = computed(() => detail.value?.plugin.full_name.split('/').at(-1) || '')
 const readmeHtml = computed(() =>
-  detail.value?.readme ? renderReadme(detail.value.readme, detail.value.plugin.full_name, detail.value.readmeCommit, detail.value.readmePath) : '',
+  detail.value?.readme ? renderReadme(detail.value.readme, detail.value.plugin.full_name, detail.value.readmeCommit, detail.value.readmePath, uploaded.value) : '',
 )
 const TABS: Array<{ key: TabKey; label: string; icon: 'book' | 'package' | 'shield-check' }> = [
   { key: 'readme', label: '说明文档', icon: 'book' },
@@ -97,7 +98,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
           <nav class="breadcrumb detail__crumbs" aria-label="面包屑">
             <RouterLink to="/"><AppIcon name="compass" :size="14" />插件市场</RouterLink>
             <AppIcon name="chevron-right" :size="13" />
-            <span>{{ owner }}</span>
+            <span>{{ uploaded ? '直接上传' : owner }}</span>
             <AppIcon name="chevron-right" :size="13" />
             <span class="breadcrumb__current">{{ name }}</span>
           </nav>
@@ -108,14 +109,14 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               <div class="detail-hero__text">
                 <h1>{{ name }}</h1>
                 <p class="detail-hero__owner">
-                  <AppIcon name="git-branch" :size="14" />{{ detail.plugin.full_name }}
+                  <AppIcon :name="uploaded ? 'upload' : 'git-branch'" :size="14" />{{ uploaded ? '直接上传 IPK' : detail.plugin.full_name }}
                 </p>
                 <p class="detail-hero__desc">{{ detail.plugin.description || '暂无描述' }}</p>
               </div>
             </div>
 
             <div class="detail-hero__actions">
-              <AppButton :href="`https://github.com/${detail.plugin.full_name}`" icon="github" icon-right="external-link">GitHub 仓库</AppButton>
+              <AppButton v-if="!uploaded" :href="`https://github.com/${detail.plugin.full_name}`" icon="github" icon-right="external-link">GitHub 仓库</AppButton>
               <AppButton
                 :variant="detail.plugin.favorited ? 'soft' : 'secondary'"
                 :icon="detail.plugin.favorited ? 'heart-filled' : 'heart'"
@@ -169,13 +170,13 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               <section v-if="tab === 'readme'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
                 <header class="detail__panel-head">
                   <div>
-                    <p class="detail__panel-title">仓库 README</p>
-                    <p class="detail__panel-sub">
+                    <p class="detail__panel-title">{{ uploaded ? '使用教程' : '仓库 README' }}</p>
+                    <p v-if="!uploaded" class="detail__panel-sub">
                       <AppIcon name="file-text" :size="13" />{{ detail.readmePath || '未找到 README' }}
                       <span class="detail__panel-dot" aria-hidden="true">·</span>commit {{ shortHash(detail.readmeCommit) }}
                     </p>
                   </div>
-                  <div class="row gap-2">
+                  <div v-if="!uploaded" class="row gap-2">
                     <CopyButton v-if="detail.readmeCommit" :value="detail.readmeCommit" label="已复制 README commit" />
                     <AppButton
                       :href="`https://github.com/${detail.plugin.full_name}/blob/${detail.readmeCommit}/${detail.readmePath}`"
@@ -189,7 +190,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </header>
                 <div v-if="readmeHtml" class="readme detail__readme" data-testid="readme" v-html="readmeHtml" />
                 <p v-else class="detail__missing">
-                  <AppIcon name="alert-circle" :size="16" />仓库没有 README。
+                  <AppIcon name="alert-circle" :size="16" />{{ uploaded ? '暂无使用教程。' : '仓库没有 README。' }}
                 </p>
                 <p class="detail__footnote">
                   作者原文快照，外部站点的图片不会加载。
@@ -257,11 +258,11 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                     <span class="detail__review-label">审核时间</span>
                     <span>{{ detail.reviewedAt ? formatDateTime(detail.reviewedAt) : '—' }}</span>
                   </div>
-                  <div class="detail__review-row">
+                  <div v-if="!uploaded" class="detail__review-row">
                     <span class="detail__review-label">README commit</span>
                     <span class="row gap-1"><code class="small">{{ shortHash(detail.readmeCommit) }}</code><CopyButton :value="detail.readmeCommit" label="已复制 commit" :size="15" /></span>
                   </div>
-                  <div class="detail__review-row">
+                  <div v-if="!uploaded" class="detail__review-row">
                     <span class="detail__review-label">安装包源码 commit</span>
                     <span class="row gap-1"><code class="small">{{ shortHash(detail.sourceCommit) }}</code><CopyButton :value="detail.sourceCommit" label="已复制 commit" :size="15" /></span>
                   </div>
@@ -368,15 +369,15 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   gap: 22px 28px;
   align-items: start;
   padding: 26px;
-  border-radius: var(--r-xl);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--r-page);
+  background: var(--surface);
+  box-shadow: var(--shadow-shell);
 }
 .detail-hero__ident { display: flex; gap: 16px; min-width: 0; }
 .detail-hero__text { min-width: 0; }
 .detail-hero__text h1 { overflow-wrap: anywhere; font-size: var(--fs-h1); letter-spacing: -0.032em; }
-.detail-hero__owner { overflow-wrap: anywhere; word-break: break-word; display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: var(--text-small); color: var(--text-tertiary); font-family: var(--font-mono); }
-.detail-hero__desc { margin-top: 12px; max-width: 68ch; color: var(--text-secondary); line-height: 1.7; }
+.detail-hero__owner { overflow-wrap: anywhere; word-break: break-word; display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: var(--fs-sm); color: var(--text-3); font-family: var(--font-mono); }
+.detail-hero__desc { margin-top: 12px; max-width: 68ch; color: var(--text-2); line-height: 1.7; }
 .detail-hero__actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .detail-hero__stats {
   grid-column: 1 / -1;
@@ -385,7 +386,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   gap: 18px;
   margin: 4px 0 0;
   padding-top: 20px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--line);
 }
 .detail-hero__stats dd { margin: 0; }
 .stat__value--text { font-size: var(--fs-body); font-weight: 620; }
@@ -394,40 +395,40 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .detail-main { min-width: 0; }
 .detail__tabs { margin-bottom: 16px; flex-wrap: wrap; }
 .detail__panel { padding: 24px; }
-.detail__panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle); }
-.detail__panel-title { font-size: var(--text-h3); font-weight: 650; }
-.detail__panel-sub { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: var(--text-small); color: var(--text-tertiary); flex-wrap: wrap; }
+.detail__panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
+.detail__panel-title { font-size: var(--fs-h3); font-weight: 650; }
+.detail__panel-sub { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: var(--fs-sm); color: var(--text-3); flex-wrap: wrap; }
 .detail__panel-dot { opacity: 0.6; padding-inline: 2px; }
 .detail__readme { max-width: 78ch; }
-.detail__missing { display: flex; align-items: center; gap: 8px; padding: 18px; border: 1px dashed var(--border-base); border-radius: var(--r-md); color: var(--text-tertiary); }
-.detail__footnote { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.detail__missing { display: flex; align-items: center; gap: 8px; padding: 18px; border: 1px dashed var(--line); border-radius: var(--r-control); color: var(--text-3); }
+.detail__footnote { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
 .detail__review { display: flex; flex-direction: column; gap: 0; }
-.detail__review-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--text-body); align-items: center; }
+.detail__review-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-body); align-items: center; }
 .detail__review-row:last-child { border-bottom: 0; }
-.detail__review-label { font-size: var(--text-small); color: var(--text-tertiary); }
-.detail__review code { padding: 2px 6px; border-radius: var(--r-xs); background: var(--bg-subtle); border: 1px solid var(--border-subtle); }
+.detail__review-label { font-size: var(--fs-sm); color: var(--text-3); }
+.detail__review code { padding: 2px 6px; border-radius: var(--r-control); background: var(--surface-raised); border: 1px solid var(--line); }
 .detail__notice { margin-top: 18px; align-items: flex-start; }
 
 .detail-aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-h) + 18px); }
 .download-card { padding: 20px; scroll-margin-top: calc(var(--header-h) + 20px); }
 .download-card__head { display: flex; align-items: center; gap: 12px; }
-.download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--r-md); background: var(--primary-surface); color: var(--primary-text); }
-.download-card__title { font-size: var(--text-small); font-weight: 600; color: var(--text-tertiary); }
+.download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--r-control); background: var(--signal-surface); color: var(--signal-text); }
+.download-card__title { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
 .download-card__version { font-size: var(--fs-h2); font-weight: 680; letter-spacing: -0.025em; }
-.download-card__note { margin-top: 12px; font-size: var(--text-small); color: var(--text-secondary); line-height: 1.6; }
-.asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 14px; border: 1px solid var(--border-base); border-radius: var(--r-md); background: var(--bg-subtle); }
-.asset__name { font-family: var(--font-mono); font-size: var(--text-small); font-weight: 600; word-break: break-all; }
-.asset__meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: var(--text-micro); color: var(--text-tertiary); }
-.asset__hash { font-size: var(--text-micro); color: var(--text-tertiary); }
+.download-card__note { margin-top: 12px; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
+.asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface-raised); }
+.asset__name { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600; word-break: break-all; }
+.asset__meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: var(--fs-cap); color: var(--text-3); }
+.asset__hash { font-size: var(--fs-cap); color: var(--text-3); }
 .asset__hash summary { cursor: pointer; padding-block: 2px; min-height: 44px; display: flex; align-items: center; }
-.asset__hash code { display: block; word-break: break-all; color: var(--text-secondary); }
-.download-card__extra { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 8px; }
-.download-card__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--text-small); }
+.asset__hash code { display: block; word-break: break-all; color: var(--text-2); }
+.download-card__extra { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.download-card__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--fs-sm); }
 
 .detail__side-card { padding: 18px; }
-.detail__side-title { display: flex; align-items: center; gap: 8px; font-size: var(--text-body); font-weight: 640; }
-.detail__side-list { list-style: disc; margin-top: 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
-.detail__side-list li::marker { color: var(--primary); }
+.detail__side-title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-body); font-weight: 640; }
+.detail__side-list { list-style: disc; margin-top: 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
+.detail__side-list li::marker { color: var(--signal); }
 
 .detail-mobile-bar { display: none; }
 
@@ -455,8 +456,8 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
     gap: 12px;
     padding: 12px var(--safe-x) calc(12px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--line);
-    background: var(--glass-bg);
-    box-shadow: var(--shadow-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow-shell);
   }
   .detail-mobile-bar__info { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
 }

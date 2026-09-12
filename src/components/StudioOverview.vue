@@ -162,21 +162,21 @@ const tiles = () => {
 .ov__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .ov__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
 .ov__config { display: flex; flex-direction: column; gap: 4px; }
-.ov__config-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+.ov__config-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .ov__config-row:last-child { border-bottom: 0; }
-.ov__config-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--r-sm); flex: none; background: var(--bg-subtle); color: var(--text-secondary); }
-.ov__config-icon--ok { background: var(--success-surface); color: var(--success-text); }
-.ov__config-icon--warn { background: var(--warning-surface); color: var(--warning-text); }
+.ov__config-icon { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--r-control); flex: none; background: var(--surface-raised); color: var(--text-2); }
+.ov__config-icon--ok { background: var(--success-surface); color: var(--success); }
+.ov__config-icon--warn { background: var(--warning-surface); color: var(--warning); }
 .ov__config-text { flex: 1; min-width: 0; }
-.ov__config-title { font-size: var(--text-body); font-weight: 620; }
-.ov__config-sub { margin-top: 2px; font-size: var(--text-small); color: var(--text-tertiary); overflow-wrap: anywhere; }
+.ov__config-title { font-size: var(--fs-body); font-weight: 620; }
+.ov__config-sub { margin-top: 2px; font-size: var(--fs-sm); color: var(--text-3); overflow-wrap: anywhere; }
 .ov__stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .ov__tasks { display: flex; flex-direction: column; }
-.ov__task { display: grid; grid-template-columns: 118px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 14px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--border-subtle); font-size: var(--text-small); }
+.ov__task { display: grid; grid-template-columns: 118px minmax(0, 1fr) minmax(0, 1.4fr) auto; gap: 14px; align-items: center; padding: 12px 20px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .ov__task:last-child { border-bottom: 0; }
-.ov__task-name { font-weight: 620; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ov__task-reason { color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ov__task-time { color: var(--text-tertiary); white-space: nowrap; }
+.ov__task-name { font-weight: 620; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov__task-reason { color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov__task-time { color: var(--text-3); white-space: nowrap; }
 .ov__actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 
 @media (max-width: 1000px) {

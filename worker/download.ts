@@ -115,12 +115,19 @@ export async function forwardDownload(request: Request, env: Env, pluginId: stri
  catch (error) { if (error instanceof AppError && error.status === 416) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${selected.asset.size}`, 'Cache-Control': 'no-store' } }); throw error; }
  const identity = await hmac(env.PHONE_HMAC_KEY, `download:${request.headers.get('CF-Connecting-IP') || 'local'}:${(request.headers.get('User-Agent') || '').slice(0,256)}`);
  await rateLimit(env, 'download:' + identity, 120, 60);
+ let upstream: Response | undefined;
+ if (selected.snapshot.sourceKind === 'upload') {
+  if (!env.UPLOADS || !selected.asset.objectKey || !selected.asset.objectEtag) throw new AppError(503, '直传文件存储不可用');
+  const object = request.method === 'HEAD' ? await env.UPLOADS.head(selected.asset.objectKey) : await env.UPLOADS.get(selected.asset.objectKey, { onlyIf: { etagMatches: selected.asset.objectEtag }, ...(range ? { range: { offset: range.start, length: range.end - range.start + 1 } } : {}) });
+  if (!object || object.size !== selected.asset.size || object.etag !== selected.asset.objectEtag || (request.method !== 'HEAD' && !('body' in object))) throw new AppError(409, '已审核安装包缺失或发生变化，请重新上传审核', 'changed_asset');
+  upstream = new Response('body' in object ? (object as R2ObjectBody).body : null);
+ } else {
  const fullName = await verifyOfficial(env, selected);
  const configured = await sources(env);
- let upstream: Response | undefined;
  for (const source of configured) {
   try { upstream = await obtain(env, source, selected, fullName, request, range); break; }
   catch { if (request.signal.aborted) throw new AppError(499, '下载请求已取消'); }
+ }
  }
  if (!upstream) throw new AppError(502, '没有可用下载源，请稍后重试', 'no_download_source');
  const expected = range ? range.end - range.start + 1 : selected.asset.size;
@@ -173,6 +180,7 @@ export async function forwardDownload(request: Request, env: Env, pluginId: stri
 export async function testSource(env: Env, source: DownloadSource, pluginId: string, assetId: number | string) {
  validateSource(source);
  const selected = await approved(env, pluginId, Number(assetId));
+ if (selected.snapshot.sourceKind === 'upload') throw new AppError(400, '直传安装包使用商店存储，无需测试 GitHub 下载源');
  const fullName = await verifyOfficial(env, selected);
  const range = { start: 0, end: Math.min(4095, selected.asset.size - 1) };
  const response = await obtain(env, source, selected, fullName, new Request('https://plugin.zdwifi.com/source-test'), range);

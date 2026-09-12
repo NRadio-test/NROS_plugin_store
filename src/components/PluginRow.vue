@@ -64,7 +64,7 @@ async function download() {
     <div class="pkg__main">
       <div class="pkg__title">
         <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`">{{ name }}</RouterLink></h2>
-        <span class="pkg__repo">{{ owner }}/{{ name }}</span>
+        <span class="pkg__repo">{{ plugin.source_kind === 'upload' ? '直接上传 IPK' : owner + '/' + name }}</span>
       </div>
       <p class="pkg__desc">{{ plugin.description || '暂无描述' }}</p>
       <div class="pkg__meta">

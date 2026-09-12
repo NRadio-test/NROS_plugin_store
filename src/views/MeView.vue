@@ -5,6 +5,8 @@ import { api, errorMessage, loadSession, post, session, type Plugin, type Submis
 import { statusMeta } from '../lib/status'
 import { formatDateTime, formatNumber } from '../lib/format'
 import { toast } from '../lib/toast'
+import UploadForm from '../components/UploadForm.vue'
+import AppModal from '../components/AppModal.vue'
 import PluginRow from '../components/PluginRow.vue'
 import AsyncState from '../components/AsyncState.vue'
 import AppIcon from '../components/AppIcon.vue'
@@ -20,6 +22,7 @@ const router = useRouter()
 const loading = ref(true)
 const error = ref('')
 const busy = ref('')
+const updating = ref<Submission | null>(null)
 const tab = ref<TabKey>('submissions')
 const submissions = ref<Submission[]>([])
 const favorites = ref<Plugin[]>([])
@@ -123,8 +126,8 @@ watch(() => session.user?.id, load, { immediate: true })
         <div v-if="!submissions.length" class="empty">
           <span class="empty__icon"><AppIcon name="upload" :size="22" /></span>
           <h3 class="empty__title">还没有提交</h3>
-          <p class="empty__text">提交公开 GitHub 仓库试试。</p>
-          <AppButton to="/submit" variant="primary" icon="plus" style="margin-top: 10px">提交第一个仓库</AppButton>
+          <p class="empty__text">提交 GitHub 仓库或直接上传 IPK。</p>
+          <AppButton to="/submit" variant="primary" icon="plus" style="margin-top: 10px">提交第一个插件</AppButton>
         </div>
 
         <div v-else class="me__list">
@@ -141,6 +144,7 @@ watch(() => session.user?.id, load, { immediate: true })
               <p v-if="item.updated_at" class="submission-row__time"><AppIcon name="clock" :size="13" />最近更新 {{ formatDateTime(item.updated_at) }}</p>
             </div>
             <div class="submission-row__actions">
+              <AppButton v-if="item.source_kind === 'upload'" size="sm" icon="upload" :disabled="REMOVED.includes(item.status)" @click="updating = item">上传新版本</AppButton>
               <AppButton
                 size="sm"
                 icon="refresh"
@@ -148,7 +152,7 @@ watch(() => session.user?.id, load, { immediate: true })
                 :loading="busy === item.id"
                 @click="refresh(item.id, item.full_name)"
               >
-                检查更新
+                {{ item.source_kind === 'upload' ? '重新检查' : '检查更新' }}
               </AppButton>
             </div>
           </article>
@@ -183,6 +187,9 @@ watch(() => session.user?.id, load, { immediate: true })
       <h1 class="empty__title">登录后查看个人中心</h1>
       <AppButton to="/login?next=/me" variant="primary" icon="user" style="margin-top: 10px">手机号进入</AppButton>
     </div>
+    <AppModal :model-value="!!updating" title="上传新版本" @update:model-value="updating = $event ? updating : null">
+      <UploadForm v-if="updating" :key="updating.id" :plugin-id="updating.id" :initial="{ name: updating.upload_name || updating.full_name, description: updating.upload_description, tutorial: updating.upload_tutorial }" @submitted="updating = null; load()" />
+    </AppModal>
   </div>
 </template>
 
@@ -194,13 +201,13 @@ watch(() => session.user?.id, load, { immediate: true })
   gap: 18px 20px;
   align-items: center;
   padding: 26px;
-  border-radius: var(--r-xl);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--r-page);
+  background: var(--surface);
+  box-shadow: var(--shadow-shell);
 }
 .me__profile-text { min-width: 0; }
 .me__profile-name { margin-top: 6px; font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.me__profile-note { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; max-width: 62ch; }
+.me__profile-note { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; max-width: 62ch; }
 .me__profile-note svg { margin-top: 3px; }
 .me__profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .me__profile-stats {
@@ -210,7 +217,7 @@ watch(() => session.user?.id, load, { immediate: true })
   gap: 18px;
   margin: 0;
   padding-top: 18px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--line);
 }
 .me__profile-stats dd { margin: 0; }
 .me__tabs { margin-bottom: -6px; }
@@ -221,17 +228,17 @@ watch(() => session.user?.id, load, { immediate: true })
   align-items: center;
   gap: 18px;
   padding: 18px 20px;
-  border-radius: var(--r-lg);
-  background: var(--bg-card);
+  border-radius: var(--r-group);
+  background: var(--surface);
   box-shadow: var(--shadow-xs);
-  transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
 }
 .submission-row:hover { background: var(--surface-raised); }
 .submission-row__main { flex: 1; min-width: 0; }
 .submission-row__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.submission-row__name { overflow-wrap: anywhere; font-size: var(--text-h3); font-weight: 640; letter-spacing: -0.015em; color: var(--text-primary); }
-.submission-row__reason { margin-top: 7px; font-size: var(--text-body); color: var(--text-secondary); line-height: 1.6; }
-.submission-row__time { display: flex; align-items: center; gap: 5px; margin-top: 7px; font-size: var(--text-small); color: var(--text-tertiary); }
+.submission-row__name { overflow-wrap: anywhere; font-size: var(--fs-h3); font-weight: 640; letter-spacing: -0.015em; color: var(--text); }
+.submission-row__reason { margin-top: 7px; font-size: var(--fs-body); color: var(--text-2); line-height: 1.6; }
+.submission-row__time { display: flex; align-items: center; gap: 5px; margin-top: 7px; font-size: var(--fs-sm); color: var(--text-3); }
 .submission-row__actions { flex: none; }
 .me__grid { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
 .me__gate { margin-top: 40px; }

@@ -113,3 +113,11 @@ AppIcon 使用项目已有的24×24线性 SVG 路径，默认19px，辅助图标
 ## 14. 更新与证据
 
 视觉规则改变时同步本文件与令牌；增加或改变交互时更新对应回归。`docs/evidence/contrast.json` 保存计算结果，`docs/evidence/frontend-qa.json` 保存浏览器检查记录，`docs/evidence/e2e-*.png` 和 `ui-*.png` 保存代表性截图。局部几何与遮挡问题必须看实际渲染；没有测量的性能或外部集成不写为通过。
+
+### 2026-09-12 直传表单扩展
+
+Surface profile：App / Product UI。沿用现有深蓝/青色工具界面、全部颜色字阶令牌、AppField/AppButton/AppModal 与键盘标签页约定，不增加新的视觉主题。用户提供的当前网站即本次设计参考。
+
+SubmissionForm 统一 GitHub / 直接上传两种投稿方式；UploadForm 顺序为名称、简介、使用教程、IPK 文件、提交按钮。填完前三项才启用文件选择；异步上传禁用表单，失败保留资料，成功可查看个人中心。切换来源标签不丢失输入。个人中心用现有模态框更新版本；详情不展示虚假的 GitHub 链接、仓库路径或 commit。
+
+反向审查：最容易误导的旧表现是把直传名称拼成 owner/repo、并把教程仍标为仓库 README，已通过来源分支更正。无新增颜色、装饰图片、动画库或导航层；新布局复用现有表单层级，保持一项主要提交动作。浏览器验收与图片见 upload-form-*.png、upload-detail-375.png、upload-update-375.png。

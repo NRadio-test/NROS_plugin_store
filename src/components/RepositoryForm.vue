@@ -92,15 +92,15 @@ async function submit() {
 <style scoped>
 .repo-form { display: flex; flex-direction: column; gap: 18px; }
 .repo-form__input { position: relative; display: flex; align-items: center; }
-.repo-form__prefix { position: absolute; left: 14px; color: var(--text-tertiary); display: inline-flex; }
+.repo-form__prefix { position: absolute; left: 14px; color: var(--text-3); display: inline-flex; }
 .repo-form__field { padding-left: 42px; }
 .repo-form__preview { color: var(--signal-text); font-family: var(--font-mono); font-size: var(--fs-sm); overflow-wrap: anywhere; }
 .repo-form__actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.repo-form__note { flex: 1; min-width: 220px; font-size: var(--text-small); color: var(--text-tertiary); line-height: 1.6; }
+.repo-form__note { flex: 1; min-width: 220px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
 .repo-form__result { align-items: flex-start; }
 .repo-form__result-line { margin-top: 4px; }
-.repo-form__task { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--text-small); }
-.repo-form__task span { color: var(--text-tertiary); }
-.repo-form__task code { padding: 2px 7px; border-radius: var(--r-xs); background: var(--bg-card); border: 1px solid var(--border-base); font-size: var(--text-micro); }
+.repo-form__task { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--fs-sm); }
+.repo-form__task span { color: var(--text-3); }
+.repo-form__task code { padding: 2px 7px; border-radius: var(--r-control); background: var(--surface); border: 1px solid var(--line); font-size: var(--fs-cap); }
 @media (max-width: 560px) { .repo-form__actions .btn { width: 100%; } .repo-form__task { flex-wrap: wrap; overflow-wrap: anywhere; } }
 </style>

@@ -1,3 +1,4 @@
+import { makeIPK } from '../adapters/fixtures';
 import { test, expect } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -306,6 +307,9 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await expect(dialog).not.toBeVisible();
     await expect(page.getByRole('button', { name: '详情', exact: true }).first()).toBeFocused();
     await page.goto(`/plugins/${pluginId}`);
+    // 路由切换后 afterEach 会用 rAF 聚焦主区域，先等它完成再聚焦标签，避免抢焦点
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(250);
     const tabs = page.getByRole('tab');
     await tabs.first().focus();
     await page.keyboard.press('ArrowRight');
@@ -388,6 +392,62 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
       await page.screenshot({ path: `docs/evidence/ui-${label}-375.png`, fullPage: true });
     }
     record('响应式', '4 种宽度 × 6 条路由无水平溢出；Studio 七个面板均有桌面和手机截图');
+  });
+
+  test('直接上传表单、审核、教程安全渲染、下载及新版本更新', async ({ page, request }) => {
+    await request.get('/__test/mode/allow');
+    await page.goto('/login?next=/submit');
+    await page.getByLabel('张导小店绑定手机号').fill('13700137000');
+    await page.getByRole('button', { name: '进入', exact: true }).click();
+    await page.getByRole('tab', { name: '直接上传 IPK', exact: true }).click();
+    await expect(page.getByLabel('IPK 安装包', { exact: true })).toBeDisabled();
+    await page.getByLabel('插件名称', { exact: true }).fill('直传浏览器样例');
+    await page.getByLabel('插件简介', { exact: true }).fill('无需 GitHub 的无害测试插件');
+    await page.getByLabel('使用教程', { exact: true }).fill('# 安装方法\n安装后运行 harmless-demo\n<script>window.__uploadExecuted=true</script>\n[坏链接](javascript:alert(1))\n[相对链接](guide.md)');
+    const bytes = Buffer.from(await makeIPK());
+    await page.getByLabel('IPK 安装包', { exact: true }).setInputFiles({ name: 'browser-upload.ipk', mimeType: 'application/octet-stream', buffer: bytes });
+    await page.getByRole('tab', { name: 'GitHub 仓库', exact: true }).click();
+    await page.getByRole('tab', { name: '直接上传 IPK', exact: true }).click();
+    await expect(page.getByLabel('插件名称', { exact: true })).toHaveValue('直传浏览器样例');
+    for (const close of await page.getByRole('button', { name: '关闭提示', exact: true }).all()) await close.click();
+    await expect(page.getByRole('button', { name: '关闭提示', exact: true })).toHaveCount(0);
+    for (const width of [375, 768, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.screenshot({ path: `docs/evidence/upload-form-${width}.png`, fullPage: true });
+    }
+    await page.getByRole('button', { name: '切换到深色主题' }).click();
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: 'docs/evidence/upload-form-dark-375.png', fullPage: true });
+    await page.getByRole('button', { name: '上传并提交审核', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: '投稿已保存，自动审核将在后台进行' })).toBeVisible();
+    let id = '';
+    await expect.poll(async () => {
+      const d = await (await request.get('/api/plugins?q=' + encodeURIComponent('直传浏览器样例'))).json();
+      id = d.items[0]?.id || ''; return d.total;
+    }, { timeout: 30000 }).toBe(1);
+    await page.goto(`/plugins/${id}`);
+    await expect(page.getByRole('link', { name: 'GitHub 仓库' })).toHaveCount(0);
+    await expect(page.getByTestId('readme')).toContainText('安装方法');
+    await expect(page.getByTestId('readme').locator('script,[onerror],a[href^="javascript:"],a[href*="github.com"]')).toHaveCount(0);
+    expect(await page.evaluate(() => (window as unknown as {__uploadExecuted?:boolean}).__uploadExecuted)).toBeUndefined();
+    const downloadWait = page.waitForEvent('download');
+    await page.locator('[data-asset-id="1"]').click();
+    const download = await downloadWait;
+    expect(download.suggestedFilename()).toBe('browser-upload.ipk');
+    expect(await readFile((await download.path())!)).toEqual(bytes);
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.screenshot({ path: 'docs/evidence/upload-detail-375.png', fullPage: true });
+    await page.goto('/me');
+    await page.getByRole('button', { name: '上传新版本', exact: true }).click();
+    await expect(page.getByLabel('插件名称', { exact: true })).toHaveValue('直传浏览器样例');
+    await page.getByLabel('使用教程', { exact: true }).fill('# 更新后的使用教程');
+    await page.getByLabel('IPK 安装包', { exact: true }).setInputFiles({ name:'browser-upload.ipk', mimeType:'application/octet-stream', buffer:bytes });
+    await page.screenshot({ path: 'docs/evidence/upload-update-375.png', fullPage: true });
+    await page.getByRole('button', { name:'上传并提交审核', exact:true }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect.poll(async () => (await (await request.get(`/api/plugins/${id}`)).json()).readme, { timeout:30000 }).toBe('# 更新后的使用教程');
+    record('IPK 直传', '四种宽度表单、必填校验、保留切换资料、隔离 R2/审核/下载、教程 XSS 防护及版本更新');
   });
 
   test.afterAll(async () => {

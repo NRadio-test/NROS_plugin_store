@@ -1,6 +1,6 @@
 // 仅隔离测试使用。生产 Worker 不导入此文件，不含 fixture 开关。
 import { createRequire } from 'node:module';
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir, readdir } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { pbkdf2Sync, randomBytes } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
@@ -26,14 +26,16 @@ if(url.hostname==='ai.vendor.com'){aiCalls++;if(mode==='timeout')return new Resp
 if(url.hostname==='api.github.com'&&/^\/repos\/fixture\/harmless\/releases\/assets\/200[12]$/.test(url.pathname)){const bytes=url.pathname.endsWith('2002')?second:fixture.ipk;const range=request.headers.get('range');let selected=bytes,status=200;const headers={'content-type':'application/octet-stream'};if(range){const m=/^bytes=(\d+)-(\d+)$/.exec(range);if(!m)return new Response(null,{status:416});selected=bytes.slice(Number(m[1]),Number(m[2])+1);status=206;headers['content-range']=`bytes ${m[1]}-${m[2]}/${bytes.length}`;}headers['content-length']=String(selected.length);return new Response(request.method==='HEAD'?null:selected,{status,headers});}
 return fixture.fetcher(request.url,init);};
 const master='e2e-isolated-master-key-not-used-in-production';
-const mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:'.wrangler/e2e/worker.mjs',compatibilityDate:'2026-09-01',compatibilityFlags:['nodejs_compat'],bindings:{APP_ENV:'test',APP_ORIGIN:'http://127.0.0.1:8789',MASTER_KEY:master,PHONE_HMAC_KEY:'e2e-isolated-phone-key-not-used-in-production',GITHUB_TOKEN:'e2e-fake-github-token',MAX_IPK_BYTES:'33554432',DAILY_AI_BUDGET:'100'},d1Databases:{DB:'test-only-database',ADMIN_AUTH_DB:'test-only-admin-auth'},queueProducers:{JOBS:'test-review'},queueConsumers:{'test-review':{maxBatchSize:1,maxBatchTimeout:0.05,maxRetries:3,retryDelay:1}},outboundService:outbound,serviceBindings:{ASSETS:async request=>{const u=new URL(request.url);let filename=decodeURIComponent(u.pathname).replace(/^\//,'');if(!filename||!filename.startsWith('assets/'))filename='index.html';if(filename.includes('..'))return new Response(null,{status:404});try{const file=await readFile(path.join('dist/client',filename));return new Response(file,{headers:{'content-type':filename.endsWith('.js')?'application/javascript':filename.endsWith('.css')?'text/css':'text/html; charset=utf-8'}});}catch{return new Response(null,{status:404});}}}}));
+const mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:'.wrangler/e2e/worker.mjs',compatibilityDate:'2026-09-01',compatibilityFlags:['nodejs_compat'],bindings:{APP_ENV:'test',APP_ORIGIN:'http://127.0.0.1:8789',MASTER_KEY:master,PHONE_HMAC_KEY:'e2e-isolated-phone-key-not-used-in-production',GITHUB_TOKEN:'e2e-fake-github-token',MAX_IPK_BYTES:'33554432',DAILY_AI_BUDGET:'100'},r2Buckets:{UPLOADS:'test-only-uploads'},d1Databases:{DB:'test-only-database',ADMIN_AUTH_DB:'test-only-admin-auth'},queueProducers:{JOBS:'test-review'},queueConsumers:{'test-review':{maxBatchSize:1,maxBatchTimeout:0.05,maxRetries:3,retryDelay:1}},outboundService:outbound,serviceBindings:{ASSETS:async request=>{const u=new URL(request.url);let filename=decodeURIComponent(u.pathname).replace(/^\//,'');if(!filename||!filename.startsWith('assets/'))filename='index.html';if(filename.includes('..'))return new Response(null,{status:404});try{const file=await readFile(path.join('dist/client',filename));return new Response(file,{headers:{'content-type':filename.endsWith('.js')?'application/javascript':filename.endsWith('.css')?'text/css':'text/html; charset=utf-8'}});}catch{return new Response(null,{status:404});}}}}));
 await mf.ready;
 const db=await mf.getD1Database('DB');
 // SQL migration is executed only against the ephemeral test namespace.
-const migration=await readFile('migrations/0001_initial.sql','utf8');
+for(const filename of (await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort()){
+const migration=await readFile('migrations/'+filename,'utf8');
 const statements=migration.split(/;\s*(?:\n|$)/).filter(s=>s.trim());
 // The final trigger includes internal semicolons, keep it as one statement.
 for(const sql of statements)await db.prepare(sql).run();
+}
 const salt=randomBytes(16),password='E2e-Only!Fixture-2468';
 const passwordHash=`pbkdf2-sha256$100000$${salt.toString('base64url')}$${pbkdf2Sync(password,salt,100000,32,'sha256').toString('base64url')}`;
 const authDb=await mf.getD1Database('ADMIN_AUTH_DB');
