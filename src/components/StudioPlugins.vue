@@ -16,7 +16,7 @@ import { navigateTabs } from '../composables/tabs'
 import SubmissionForm from './SubmissionForm.vue'
 import UploadForm from './UploadForm.vue'
 
-type Action = 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
+type Action = 'manual-publish' | 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
 
 const FILTERS = [
   { key: 'all', label: '全部' },
@@ -29,6 +29,7 @@ const FILTERS = [
 ]
 
 const ACTION_META: Record<Action, { label: string; title: string; confirm: string; danger: boolean; hint: string }> = {
+  'manual-publish': { label: '手动上架', title: '手动上架当前版本', confirm: '确认手动上架', danger: false, hint: '跳过 AI 审核和查毒，直接公开当前版本并开放下载。页面将标明手动上架；新版本仍需单独审核或手动上架。' },
   sync: { label: '同步', title: '同步原仓库', confirm: '开始同步', danger: false, hint: '重新读取 GitHub 快照。' },
   retry: { label: '重新审核', title: '重新审核', confirm: '重新审核', danger: false, hint: '重新读取材料并送审。' },
   unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，不可自动恢复。' },
@@ -83,7 +84,7 @@ async function confirmAction() {
   const { plugin, action } = pending.value
   busy.value = plugin.id
   try {
-    await post(`/api/studio/plugins/${plugin.id}/${action}`, { reason: reason.value })
+    await post(`/api/studio/plugins/${plugin.id}/${action}`, { reason: reason.value, ...(action === 'manual-publish' ? { confirmed: true, revision: plugin.revision } : {}) })
     toast.success(`${ACTION_META[action].label}已受理`, plugin.full_name)
     pending.value = null
     await load()
@@ -213,6 +214,7 @@ void load()
                   <div class="table__actions">
                     <AppButton size="sm" variant="ghost" icon="external-link" @click="openDetail(plugin.id)">详情</AppButton>
                     <AppButton v-if="plugin.source_kind !== 'upload'" size="sm" :loading="busy === plugin.id && pending?.action === 'sync'" @click="ask(plugin, 'sync')">同步</AppButton>
+                    <AppButton size="sm" :disabled="!!busy" @click="ask(plugin, 'manual-publish')">手动上架</AppButton>
                     <AppMenu :label="`${plugin.full_name} 的更多操作`">
                       <template #trigger><AppIcon name="sliders" :size="19" /></template>
                       <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新审核</button>

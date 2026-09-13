@@ -36,6 +36,7 @@ export interface Detail {
   license: string | null
   assets: Asset[]
   reviewLabel: string
+  publicationMode?: 'manual' | 'automatic'
   reviewedAt?: number | null
   reviewPublicReason?: string
   publishedAt?: number | null

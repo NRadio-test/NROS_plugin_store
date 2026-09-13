@@ -89,16 +89,16 @@ function decodeBase64(content: unknown, maxBytes: number): Uint8Array {
   try { const raw = atob(content.replace(/\s/gu, '')); if (raw.length > maxBytes) throw new Error('budget'); return Uint8Array.from(raw, c => c.charCodeAt(0)); }
   catch { throw new AppError(422, 'GitHub 文件内容缺失、损坏或超限', 'incomplete'); }
 }
-async function readReadme(env: GitEnv, repo: Repository, fetcher: FetchLike, useCache = true): Promise<{ readme: string; readmeCommit: string; readmePath: string }> {
+async function readReadme(env: GitEnv, repo: Repository, fetcher: FetchLike, useCache = true, allowMissing = false): Promise<{ readme: string; readmeCommit: string; readmePath: string }> {
   const branch = await api<{ sha: string }>(env, `/repos/${repo.full_name}/commits/${encodeURIComponent(repo.default_branch)}`, fetcher, useCache);
   const readmeCommit = commit(branch.sha);
   let result: { content: string; encoding: string; path: string; size: number };
   try { result = await api<typeof result>(env, `/repos/${repo.full_name}/readme?ref=${readmeCommit}`, fetcher, useCache); }
-  catch (error) { if (error instanceof AppError && error.code === 'github_missing') throw new AppError(422, '仓库缺少真实 README，请作者补充', 'incomplete'); throw error; }
+  catch (error) { if (error instanceof AppError && error.code === 'github_missing') { if (allowMissing) return { readme: '', readmeCommit, readmePath: '' }; throw new AppError(422, '仓库缺少真实 README，请作者补充', 'incomplete'); } throw error; }
   if (result.encoding !== 'base64' || !result.path || result.size > 128 * 1024 || result.path.startsWith('/') || result.path.split('/').includes('..')) throw new AppError(422, 'README 超限或路径不受支持', 'incomplete');
   let readme: string;
   try { readme = textDecoder.decode(decodeBase64(result.content, 128 * 1024)); } catch { throw new AppError(422, 'README 不是可读取 UTF-8 文本', 'incomplete'); }
-  if (!readme.trim()) throw new AppError(422, '仓库 README 为空，请作者补充', 'incomplete');
+  if (!allowMissing && !readme.trim()) throw new AppError(422, '仓库 README 为空，请作者补充', 'incomplete');
   return { readme, readmeCommit, readmePath: result.path };
 }
 async function releaseAssets(env: GitEnv, repo: Repository, releaseId: number, fetcher: FetchLike, useCache = true): Promise<GitAsset[]> {
@@ -122,7 +122,7 @@ export async function readOfficialAsset(env: GitEnv, fullName: string, assetId: 
   return readBounded(response, maxBytes);
 }
 
-export async function getSnapshot(env: GitEnv, repoId: number, fetcher: FetchLike = fetch): Promise<Snapshot> {
+export async function getSnapshot(env: GitEnv, repoId: number, fetcher: FetchLike = fetch, manual = false): Promise<Snapshot> {
   const repo = await byId(env, repoId, fetcher);
   try {
   let release: Release;
@@ -130,9 +130,9 @@ export async function getSnapshot(env: GitEnv, repoId: number, fetcher: FetchLik
   catch (error) { if (error instanceof AppError && error.code === 'github_missing') throw new AppError(422, '等待作者发布正式 Release 和 IPK', 'waiting_package'); throw error; }
   if (!validId(release.id) || release.draft !== false || release.prerelease !== false) throw new AppError(422, '等待作者发布正式 Release', 'waiting_package');
   const sourceCommit = await resolveTag(env, repo, release.tag_name, fetcher);
-  const display = await readReadme(env, repo, fetcher);
-  if (!repo.description?.trim()) throw new AppError(422, '仓库缺少 GitHub description，请作者补充', 'incomplete');
-  const tree = await api<{ truncated: boolean; tree: { path: string; type: string; mode: string; sha: string; size?: number }[] }>(env, `/repos/${repo.full_name}/git/trees/${sourceCommit}?recursive=1`, fetcher);
+  const display = await readReadme(env, repo, fetcher, true, manual);
+  if (!manual && !repo.description?.trim()) throw new AppError(422, '仓库缺少 GitHub description，请作者补充', 'incomplete');
+  const tree = manual ? { truncated: false, tree: [] } : await api<{ truncated: boolean; tree: { path: string; type: string; mode: string; sha: string; size?: number }[] }>(env, `/repos/${repo.full_name}/git/trees/${sourceCommit}?recursive=1`, fetcher);
   if (tree.truncated !== false || !Array.isArray(tree.tree) || tree.tree.length > SOURCE_LIMITS.treeEntries) throw new AppError(422, 'Release 源码清单不完整或超过预算', 'incomplete');
   const coverage: string[] = [];
   const source: { path: string; sha: string; text: string }[] = [];
@@ -157,7 +157,7 @@ export async function getSnapshot(env: GitEnv, repoId: number, fetcher: FetchLik
     source.push({ path: entry.path, sha: entry.sha, text: content });
     if (sourcePattern.test(entry.path) || content.startsWith('#!')) realSourceCount++;
   }
-  if (!realSourceCount) throw new AppError(422, '未取得 Release 对应的可读源码或构建材料', 'incomplete');
+  if (!manual && !realSourceCount) throw new AppError(422, '未取得 Release 对应的可读源码或构建材料', 'incomplete');
   coverage.unshift(`Release 源码 commit ${sourceCommit}；读取 ${source.length} 个文本文件、${bytesRead} 字节，未执行源码/构建命令`);
   const rawAssets = await releaseAssets(env, repo, release.id, fetcher);
   const maxBytes = Number(env.MAX_IPK_BYTES || 32 * 1024 * 1024);
@@ -170,14 +170,14 @@ export async function getSnapshot(env: GitEnv, repoId: number, fetcher: FetchLik
     if (bytes.length !== asset.size) throw new AppError(422, 'IPK 实际大小与审核清单不符', 'incomplete');
     const digest = await sha256(bytes);
     if (asset.digest && asset.digest.toLowerCase() !== `sha256:${digest}`) throw new AppError(422, 'IPK SHA-256 与 GitHub 官方摘要不符', 'incomplete');
-    const parsed = await parseIPK(bytes, { maxCompressed: maxBytes });
-    if (parsed.binaryFiles.length && !source.some(file => /(?:^|\/)(?:Makefile|CMakeLists\.txt|Cargo\.toml|go\.mod|package\.json|meson\.build|build\.gradle|configure|.*\.mk|.*\.cmake)$/iu.test(file.path))) throw new AppError(422, 'IPK 含二进制，但 Release 缺少对应构建配置，无法建立必要源码关联', 'incomplete');
+    const parsed = await parseIPK(bytes, { maxCompressed: maxBytes }, false, manual);
+    if (!manual && parsed.binaryFiles.length && !source.some(file => /(?:^|\/)(?:Makefile|CMakeLists\.txt|Cargo\.toml|go\.mod|package\.json|meson\.build|build\.gradle|configure|.*\.mk|.*\.cmake)$/iu.test(file.path))) throw new AppError(422, 'IPK 含二进制，但 Release 缺少对应构建配置，无法建立必要源码关联', 'incomplete');
     assets.push({ id: asset.id, name: asset.name, size: asset.size, url: asset.browser_download_url, digest: asset.digest?.toLowerCase() ?? null, updatedAt: asset.updated_at, sha256: digest, packageName: parsed.packageName, architecture: parsed.architecture });
     coverage.push(...parsed.coverage.map(c => `${asset.name}: ${c}`));
     packages.push({ name: asset.name, materials: parsed.materials });
   }
   const license = repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null;
-  const identity = { repositoryId: repo.id, fullName: repo.full_name, description: repo.description, license, ...display, releaseId: release.id, tag: release.tag_name, sourceCommit, assets };
+  const identity = { repositoryId: repo.id, fullName: repo.full_name, description: repo.description ?? '', license, ...display, releaseId: release.id, tag: release.tag_name, sourceCommit, assets };
   const materials = JSON.stringify({ ...identity, source, packages, coverage, licenseNote: license ?? 'GitHub 未识别许可证；public 不等于自动授予开源授权，需结合仓库许可文件判断。' });
   if (materials.length > 2 * 1024 * 1024) throw new AppError(422, '累计审核材料超出持久化预算', 'incomplete');
   return { ...identity, materials, coverage, fingerprint: await sha256(JSON.stringify(identity)) };
@@ -194,7 +194,7 @@ export async function verifySnapshot(env: GitEnv, snapshot: Snapshot, fetcher: F
     if (repo.full_name !== snapshot.fullName || (repo.description ?? '') !== snapshot.description || (repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null) !== snapshot.license) return false;
     const release = await api<Release>(env, `/repos/${repo.full_name}/releases/${snapshot.releaseId}`, fetcher, false);
     if (release.id !== snapshot.releaseId || release.draft !== false || release.prerelease !== false || release.tag_name !== snapshot.tag || await resolveTag(env, repo, snapshot.tag, fetcher, false) !== snapshot.sourceCommit) return false;
-    const display = await readReadme(env, repo, fetcher, false);
+    const display = await readReadme(env, repo, fetcher, false, snapshot.publicationMode === 'manual');
     if (display.readmeCommit !== snapshot.readmeCommit || display.readmePath !== snapshot.readmePath || display.readme !== snapshot.readme) return false;
     const assets = await releaseAssets(env, repo, release.id, fetcher, false);
     if (assets.length !== snapshot.assets.length) return false;

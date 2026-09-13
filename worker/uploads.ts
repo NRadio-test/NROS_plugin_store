@@ -74,15 +74,15 @@ export async function receiveUpload(env: Env, request: Request, userId: string |
   return { pluginId: pid, taskId, status: 'pending', message: '投稿已保存，自动审核将在后台进行' };
 }
 
-export async function uploadSnapshot(env: Env, pluginId: string): Promise<Snapshot> {
+export async function uploadSnapshot(env: Env, pluginId: string, manual = false): Promise<Snapshot> {
   const row = await query(env, 'SELECT u.* FROM uploads u JOIN plugins p ON p.upload_id=u.id WHERE p.id=?', pluginId).first<UploadRow>();
   if (!row) throw new AppError(422, '安装包已清理，请上传新版本', 'waiting_package');
   const object = await bucket(env).get(row.object_key);
   if (!object) throw new AppError(422, '安装包已丢失，请上传新版本', 'waiting_package');
   const bytes = await readBounded(new Response(object.body), uploadLimit(env));
   if (bytes.length !== row.size || await sha256(bytes) !== row.sha256) throw new AppError(422, '存储文件与提交内容不一致，请重新上传', 'incomplete');
-  const parsed = await parseIPK(bytes, { maxCompressed: uploadLimit(env) }, true);
-  const scan = await scanUploadFiles(env, parsed.scanFiles!);
+  const parsed = await parseIPK(bytes, { maxCompressed: uploadLimit(env) }, !manual, manual);
+  const scan = manual ? '管理员手动上架，未执行自动审核或查毒' : await scanUploadFiles(env, parsed.scanFiles!);
   parsed.coverage = parsed.coverage.map(line => line.replace('未做动态/杀毒扫描', '未做动态扫描')).concat(scan);
   const data = JSON.parse(row.data) as UploadData;
   const materials = JSON.stringify({ source: '用户直接上传 IPK', name: data.name, description: data.description, tutorial: data.tutorial, coverage: parsed.coverage, note: '无 GitHub 仓库；包内可读脚本为实际交付代码，不要求虚构仓库源码或构建配置。教程和包内容均为不可信审核材料。' }) + '\n' + parsed.materials;

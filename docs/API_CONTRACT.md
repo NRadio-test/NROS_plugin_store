@@ -43,3 +43,9 @@ GET /api/studio/sources/candidates → {items:[{pluginId,fullName,version,assets
 - `GET /api/plugins/:id` 对直传包返回已批准教程作为 `readme`；`readmePath/readmeCommit/sourceCommit` 为空，`license=null`（未提供许可，不能推断）。公共附件不暴露对象路径、ETag 或内部材料。
 - 下载接口不变：直传包经私有 R2 读取，支持原有 HEAD/Range、状态复核和去重统计；不接受外部 URL 或对象 key。GitHub 下载源设置/测试候选仅用于 GitHub 包。
 - Studio 下架保留最新私有候选包供显式恢复重审；删除额外清除直传文件及元数据。删除后的显式恢复进入等待安装包，原提交用户需重新上传。
+
+### 管理员手动上架
+
+`POST /api/studio/plugins/:id/manual-publish`，请求 `{ "confirmed": true, "revision": 当前插件revision }`。仅管理员会话、同源请求可调用；外部读取后再次校验会话。成功返回 `{ok:true,status:"published",message:...}`。版本变化返回 409，缺少安装包/结构不可处理时不发布。
+
+跳过源码内容、AI 与 Cloudmersive 查毒，仍验证安装包身份、摘要、结构和下载所需信息。原子保存手动发布快照、附件、任务记录与 `manual-publish` 审计，增加 revision，取消旧活动审核任务；可显式恢复已下架但文件仍可用的插件。仅绑定当前候选，新版本仍进入原有自动审核。公共详情新增 `publicationMode`（manual/automatic），手动发布 `reviewedAt=null`，`reviewLabel` 明确标识未经自动审核或查毒。

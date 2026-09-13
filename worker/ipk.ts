@@ -116,7 +116,7 @@ async function expand(bytes: Uint8Array, gzip: boolean, budget: Budget): Promise
   return result;
 }
 
-export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimits> = {}, includeScanFiles = false): Promise<ParsedIPK> {
+export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimits> = {}, includeScanFiles = false, metadataOnly = false): Promise<ParsedIPK> {
   const limits = { ...DEFAULT_ARCHIVE_LIMITS, ...overrides };
   if (bytes.length > limits.maxCompressed) incomplete('IPK 超过安装包大小上限');
   const budget: Budget = { limits, files: 0, text: 0, expanded: 0 };
@@ -147,6 +147,7 @@ export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimi
     for (const entry of entries) {
       const path = `${section}/${entry.path}`;
       files.push({ path, size: entry.bytes.length, kind: entry.kind });
+      if (metadataOnly) continue;
       material.push(JSON.stringify({ path, kind: entry.kind, size: entry.bytes.length, link: entry.link }));
       if (entry.kind !== 'file') continue;
       if (includeScanFiles) scanFiles.push({ path, bytes: entry.bytes });
@@ -165,5 +166,5 @@ export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimi
       }
     }
   }
-  return { ...(includeScanFiles ? { scanFiles } : {}), packageName: values.package, architecture: values.architecture, version: values.version, materials: material.join('\n'), binaryFiles, files, coverage: [`IPK 封装：${bytes[0] === 31 ? 'tar.gz' : 'ar'}；control/data 支持 tar 或 tar.gz`, `全部 ${files.length} 个条目；累计解包 ${budget.expanded} 字节；文本 ${budget.text} 字节；二进制 ${binaryFiles.length} 个（未做动态/杀毒扫描）`, 'PAX/GNU 长名称、xz/zstd、包内嵌套归档和危险链接进入未完成，不静默跳过'] };
+  return { ...(includeScanFiles ? { scanFiles } : {}), packageName: values.package, architecture: values.architecture, version: values.version, materials: material.join('\n'), binaryFiles, files, coverage: metadataOnly ? ['仅解析 IPK 结构和包信息，未执行内容审核或查毒'] : [`IPK 封装：${bytes[0] === 31 ? 'tar.gz' : 'ar'}；control/data 支持 tar 或 tar.gz`, `全部 ${files.length} 个条目；累计解包 ${budget.expanded} 字节；文本 ${budget.text} 字节；二进制 ${binaryFiles.length} 个（未做动态/杀毒扫描）`, 'PAX/GNU 长名称、xz/zstd、包内嵌套归档和危险链接进入未完成，不静默跳过'] };
 }

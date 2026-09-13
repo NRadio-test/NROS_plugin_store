@@ -30,6 +30,7 @@ const ACTION_LABELS: Record<string, string> = {
   login: '管理员登录', logout: '退出登录', submit: '提交仓库', sync: '同步仓库', retry: '重新审核',
   unlist: '下架插件', delete: '删除插件', restore: '显式恢复', 'ai-settings': '更新 AI 设置',
   'ai-test': '测试 AI 接口', 'download-sources': '更新下载源', 'source-test': '测试下载源',
+  'manual-publish': '手动上架',
   'password-change': '修改管理员密码',
 }
 

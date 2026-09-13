@@ -255,8 +255,8 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                     <span>{{ detail.reviewPublicReason || '未发现拒绝原因。' }}</span>
                   </div>
                   <div class="detail__review-row">
-                    <span class="detail__review-label">审核时间</span>
-                    <span>{{ detail.reviewedAt ? formatDateTime(detail.reviewedAt) : '—' }}</span>
+                    <span class="detail__review-label">{{ detail.publicationMode === 'manual' ? '上架时间' : '审核时间' }}</span>
+                    <span>{{ (detail.publicationMode === 'manual' ? detail.publishedAt : detail.reviewedAt) ? formatDateTime((detail.publicationMode === 'manual' ? detail.publishedAt : detail.reviewedAt)!) : '—' }}</span>
                   </div>
                   <div v-if="!uploaded" class="detail__review-row">
                     <span class="detail__review-label">README commit</span>
@@ -269,7 +269,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </div>
                 <div class="notice notice--warning detail__notice">
                   <AppIcon name="alert" :size="16" />
-                  <span>自动审核为静态检查，不保证无病毒。</span>
+                  <span>{{ detail.publicationMode === 'manual' ? '此版本由管理员直接上架，未经过自动审核或查毒。' : '自动审核为静态检查，不保证无病毒。' }}</span>
                 </div>
               </section>
             </div>

@@ -4,6 +4,7 @@ import { assertOrigin, createSession, getSession, logoutSession, normalizePhone,
 import { id, now, query, audit, setting, setSetting, purgeRemovedMaterials } from './db';
 import { submit, refresh, processTask, recover, scan, getApproved, enqueue } from './pipeline';
 import { receiveUpload, deleteUploads, cleanupUploads } from './uploads';
+import { manualPublish } from './manual-publication';
 import { loadAI, saveAI } from './settings';
 import { testAI } from './ai';
 import { readBounded } from './network';
@@ -63,7 +64,7 @@ app.get('/api/plugins/:id', async (c) => { const snapshot = await getApproved(c.
 const review = await query(c.env, 'SELECT created_at,public_reason FROM snapshots WHERE id=(SELECT approved_snapshot_id FROM plugins WHERE id=?)', c.req.param('id')).first<{
     created_at: number;
     public_reason: string;
-}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...plugin, favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), reviewLabel: '通过自动审核，不保证无病毒', reviewedAt: review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
+}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...plugin, favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode === 'manual' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
 app.on(['GET', 'HEAD'], '/api/plugins/:id/download/:assetId', async (c) => { await limit(c, 'download', 60); if (!/^\d+$/.test(c.req.param('assetId')))
     throw new AppError(400, '附件编号无效'); return forwardDownload(c.req.raw, c.env, c.req.param('id'), Number(c.req.param('assetId'))); });
 app.put('/api/plugins/:id/favorite', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `favorite:${uid}`, 60, 60); const b = await body(c); if (typeof b.active !== 'boolean')
@@ -96,6 +97,15 @@ app.get('/api/studio/overview', async (c) => c.json(await overview(c.env)));
 app.post('/api/studio/password', () => { throw new AppError(403, '请前往留言箱修改管理员密码', 'password_managed_externally'); });
 app.post('/api/studio/submit', async (c) => { const b = await body(c); if (typeof b.url !== 'string')
     throw new AppError(400, '请填写链接'); const result = await submit(c.env, b.url, null); await audit(c.env, c.get('adminId'), 'submit', result.pluginId ?? ''); return c.json(result, 202); });
+app.post('/api/studio/plugins/:id/manual-publish', async c => {
+    const b = await body(c);
+    if (b.confirmed !== true || !Number.isSafeInteger(b.revision)) throw new AppError(400, '请确认手动上架当前版本');
+    return c.json(await manualPublish(c.env, c.req.param('id'), b.revision, async () => {
+        const session = await getSession(c.req.raw, c.env, 'admin');
+        if (!session) throw new AppError(401, '管理员会话已失效，请重新登录');
+        return session.subjectId;
+    }));
+});
 app.post('/api/studio/plugins/:id/:action', async (c) => { const action = c.req.param('action'), pid = c.req.param('id'); if (!['sync', 'retry', 'unlist', 'delete', 'restore'].includes(action))
     throw new AppError(404, '操作不存在'); if (!await query(c.env, 'SELECT id FROM plugins WHERE id=?', pid).first())
     throw new AppError(404, '插件不存在'); let result: unknown = { ok: true }; if (['unlist', 'delete'].includes(action)) {
