@@ -62,7 +62,7 @@ const steps = [
       <aside class="submit__aside">
         <div v-if="mode === 'upload'" class="card submit__aside-card">
           <p class="submit__aside-title">直传要求</p>
-          <ul><li>名称、简介和完整使用教程</li><li>单个不超过 32 MiB 的 IPK</li></ul>
+          <ul><li>名称、简介和使用教程</li><li>单个不超过 32 MiB 的 IPK</li></ul>
         </div>
         <template v-else>
           <div class="card submit__aside-card">

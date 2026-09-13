@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { api, errorMessage } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppField from './AppField.vue'
@@ -8,6 +8,7 @@ import { formatSize } from '../lib/format'
 
 const props = defineProps<{ studio?: boolean; pluginId?: string; initial?: { name?: string; description?: string; tutorial?: string } }>()
 const emit = defineEmits<{ submitted: [] }>()
+const fieldId = useId()
 const name = ref(props.initial?.name ?? '')
 const description = ref(props.initial?.description ?? '')
 const tutorial = ref(props.initial?.tutorial ?? '')
@@ -40,21 +41,21 @@ async function submit() {
 <template>
   <form class="upload-form" :aria-busy="busy" @submit.prevent="submit">
     <fieldset :disabled="busy">
-      <AppField label="插件名称" for-id="upload-name" required>
-        <input id="upload-name" v-model="name" class="input" required maxlength="80" autocomplete="off" />
+      <AppField label="插件名称" :for-id="fieldId + '-name'" required>
+        <input :id="fieldId + '-name'" v-model="name" class="input" required maxlength="80" autocomplete="off" />
       </AppField>
-      <AppField label="插件简介" for-id="upload-description" required hint="简要说明用途。">
-        <textarea id="upload-description" v-model="description" class="textarea" required maxlength="500" rows="3" />
+      <AppField label="插件简介" :for-id="fieldId + '-description'" required hint="简要说明用途。">
+        <textarea :id="fieldId + '-description'" v-model="description" class="textarea" required maxlength="500" rows="3" />
       </AppField>
-      <AppField label="使用教程" for-id="upload-tutorial" required hint="支持 Markdown。">
-        <textarea id="upload-tutorial" v-model="tutorial" class="textarea" required maxlength="20000" rows="8" />
+      <AppField label="使用教程" :for-id="fieldId + '-tutorial'" required hint="支持 Markdown。">
+        <textarea :id="fieldId + '-tutorial'" v-model="tutorial" class="textarea" required maxlength="20000" rows="8" />
       </AppField>
-      <AppField label="IPK 安装包" for-id="upload-file" required :hint="ready ? '最大 32 MiB，版本与架构从包内读取。' : '先填写上面的资料。'">
-        <input id="upload-file" ref="fileInput" class="input upload-form__file" type="file" accept=".ipk" :disabled="!ready" required @change="select" />
+      <AppField label="IPK 安装包" :for-id="fieldId + '-file'" required :hint="ready ? '最大 32 MiB，版本与架构从包内读取。' : '先填写上面的资料。'">
+        <input :id="fieldId + '-file'" ref="fileInput" class="input upload-form__file" type="file" accept=".ipk" :disabled="!ready" required @change="select" />
         <p v-if="file" class="upload-form__filename">{{ file.name }} · {{ formatSize(file.size) }}</p>
       </AppField>
     </fieldset>
-    <p class="upload-form__hint">含无法核验来源的二进制时，需要通过 GitHub 补充源码与构建配置。</p>
+    <p class="upload-form__hint">安装包内的文件会发送至 Cloudmersive 查毒，无需提供 GitHub 源码。</p>
     <p v-if="error" class="notice notice--danger" role="alert">{{ error }}</p>
     <p v-if="message" class="notice notice--success" role="status">{{ message }} <RouterLink v-if="!studio && !pluginId" to="/me">查看我的提交 →</RouterLink></p>
     <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : '上传并提交审核' }}</AppButton>

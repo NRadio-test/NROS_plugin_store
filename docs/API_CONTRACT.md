@@ -35,9 +35,11 @@ GET /api/studio/sources/candidates → {items:[{pluginId,fullName,version,assets
 - `POST /api/submit/upload`：普通用户会话投稿。
 - `POST /api/plugins/:id/upload`：原提交用户上传新版本；只允许未被管理员停用的直传插件。
 - `POST /api/studio/submit/upload`：管理员投稿，仍经过审核并记审计。
+- `POST /api/studio/plugins/:id/upload`：管理员给已有直传插件上传新版本；管理员权限由 Studio 中间件校验，以 userId=null 跳过提交者归属检查，记 `upload-update` 审计。
 - 上传请求为 `multipart/form-data`，四个必填字段：`name`（1–80 字符，无路径分隔符或控制字符）、`description`（1–500）、`tutorial`（1–20000，Markdown）、`file`（单个非空 `.ipk`）。拒绝重复或未知字段。默认文件上限 32 MiB，`MAX_IPK_BYTES` 可降低，直传硬上限 32 MiB；每个识别档案累计存储限额 128 MiB，管理员投稿合并计算。
 - 返回 202 `{pluginId,taskId,status,message}`；相同提交者、相同文件及资料不再创建任务，`taskId=null,status=duplicate`，不改变提交归属或解除下架。并发冲突/额度不足返回 409；文件过大返回 413（请求封装超预算为受控错误）；无存储绑定返回 503/upload_unconfigured。
 - `GET /api/me` 的 submissions 增加 `source_kind` 和仅本人可见的 `upload_name/upload_description/upload_tutorial`，用于新版本表单预填。不返回对象路径或其他人的待审核教程。
+- `GET /api/studio/plugins/:id` 增加 `upload`（仅直传插件非空）：`{name,description,tutorial}`，供 Studio 更新版本时回填表单。
 - `GET /api/plugins/:id` 对直传包返回已批准教程作为 `readme`；`readmePath/readmeCommit/sourceCommit` 为空，`license=null`（未提供许可，不能推断）。公共附件不暴露对象路径、ETag 或内部材料。
 - 下载接口不变：直传包经私有 R2 读取，支持原有 HEAD/Range、状态复核和去重统计；不接受外部 URL 或对象 key。GitHub 下载源设置/测试候选仅用于 GitHub 包。
 - Studio 下架保留最新私有候选包供显式恢复重审；删除额外清除直传文件及元数据。删除后的显式恢复进入等待安装包，原提交用户需重新上传。

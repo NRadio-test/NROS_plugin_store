@@ -82,6 +82,8 @@ async function upload(c: any, uid: string | null, pid?: string) {
 app.post('/api/submit/upload', async c => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); return upload(c, uid); });
 app.post('/api/plugins/:id/upload', async c => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); return upload(c, uid, c.req.param('id')); });
 app.post('/api/studio/submit/upload', async c => { const result = await receiveUpload(c.env, c.req.raw, null); if (result.taskId) await enqueue(c.env, result.taskId); await audit(c.env, c.get('adminId'), 'upload', result.pluginId); return c.json(result, 202); });
+// 管理员更新自己提交的直传插件：管理员权限已由中间件校验，这里以 userId=null 跳过提交者归属检查。
+app.post('/api/studio/plugins/:id/upload', async c => { const result = await receiveUpload(c.env, c.req.raw, null, c.req.param('id')); if (result.taskId) await enqueue(c.env, result.taskId); await audit(c.env, c.get('adminId'), 'upload-update', result.pluginId); return c.json(result, 202); });
 app.post('/api/submit', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `submit:${uid}`, 5, 3600); await limit(c, 'submit', 10, 3600); const b = await body(c); if (typeof b.url !== 'string')
     throw new AppError(400, '请填写 GitHub 仓库链接'); return c.json(await submit(c.env, b.url, uid), 202); });
 app.post('/api/plugins/:id/refresh', async (c) => { const uid = await requireUser(c); const p = await query(c.env, 'SELECT id FROM plugins WHERE id=? AND submitter_id=?', c.req.param('id'), uid).first(); if (!p)

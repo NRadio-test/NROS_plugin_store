@@ -193,7 +193,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                   <AppIcon name="alert-circle" :size="16" />{{ uploaded ? '暂无使用教程。' : '仓库没有 README。' }}
                 </p>
                 <p class="detail__footnote">
-                  作者原文快照，外部站点的图片不会加载。
+                  {{ uploaded ? '提交者填写的内容，外部站点的图片不会加载。' : '作者原文快照，外部站点的图片不会加载。' }}
                 </p>
               </section>
 

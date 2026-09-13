@@ -92,6 +92,8 @@ export interface StudioPluginDetail {
   assets: StudioAsset[]
   tasks: StudioTask[]
   audits: { id: string; action: string; target: string; created_at: number; admin_id: string | null }[]
+  /** 直传插件才有：用于更新版本时回填表单。 */
+  upload: { name: string | null; description: string | null; tutorial: string | null } | null
 }
 
 export interface StudioOverview {

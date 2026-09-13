@@ -1,6 +1,7 @@
 export interface Env {
  UPLOADS?: R2Bucket; DB: D1Database; ADMIN_AUTH_DB: D1Database; JOBS: Queue<{taskId?:string; scanCursor?:string}>; ASSETS: Fetcher;
  APP_ENV: string; APP_ORIGIN: string; MASTER_KEY: string; PHONE_HMAC_KEY: string; GITHUB_TOKEN?: string;
+ CLOUDMERSIVE_API_KEY?: string; CLOUDMERSIVE_MAX_SCAN_BYTES?: string;
  MAX_IPK_BYTES: string; DAILY_AI_BUDGET: string;
 }
 export type Verdict = 'allow'|'reject'|'uncertain';

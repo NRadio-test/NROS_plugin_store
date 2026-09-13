@@ -15,7 +15,7 @@ export const AI_CONFIG = { baseUrl: 'https://ai.vendor.com/v1', model: 'fixture-
 let repositoryId = 9_000_000;
 
 /** 每个用例独立的 Env：队列用内存实现，网络仍由 tests/setup.ts 隔离。 */
-export const testEnv = () => ({ ...bindings, JOBS: { send: vi.fn(async () => undefined) } } as unknown as Env);
+export const testEnv = () => ({ ...bindings, CLOUDMERSIVE_API_KEY: 'isolated-scan-key', JOBS: { send: vi.fn(async () => undefined) } } as unknown as Env);
 
 export function request(e: Env, path: string, method = 'GET', body?: unknown, cookie?: string, headers: Record<string, string> = {}) {
  return worker.fetch(new Request(origin + path, {
@@ -30,6 +30,7 @@ export async function installFixture(verdict: 'allow' | 'reject' | 'uncertain' =
  const fixture = await makeGitHubFixture();
  const aiCalls: Record<string, unknown>[] = [];
  vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+  if (String(input) === 'https://api.cloudmersive.com/virus/scan/file/advanced') return Response.json({ CleanResult: true, FoundViruses: [] });
   if (String(input).startsWith('https://ai.vendor.com/')) {
    aiCalls.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
    return Response.json({ choices: [{ finish_reason: 'stop', message: { content: JSON.stringify({ verdict, publicReason: '隔离测试：静态材料符合预期', internalReason: INTERNAL_SENTINEL }) } }] });

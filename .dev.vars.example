@@ -4,3 +4,8 @@ APP_ORIGIN=http://127.0.0.1:5173
 MASTER_KEY=
 PHONE_HMAC_KEY=
 GITHUB_TOKEN=
+
+# Cloudmersive 查毒：仅服务端使用，切勿提交真实密钥。
+CLOUDMERSIVE_API_KEY=
+# 标准 TAR 扫描请求上限；免费套餐先按 3.5 MB 限制。
+CLOUDMERSIVE_MAX_SCAN_BYTES=3500000

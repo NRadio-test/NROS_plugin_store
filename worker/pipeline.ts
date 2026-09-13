@@ -152,6 +152,10 @@ export async function processTask(env: Env, taskId: string) {
             await finish(env, task, token, confirmed ? 'removed' : 'incomplete', confirmed ? '仓库已无法公开访问' : '仓库暂时不可访问，等待复查');
             return;
         }
+        if (e.code === 'malware_detected' || e.code === 'antivirus_unconfigured') {
+            await finish(env, task, token, e.code === 'malware_detected' ? 'rejected' : 'waiting_config', e.message);
+            return;
+        }
         if (['waiting_package', 'incomplete', 'asset_missing'].includes(e.code)) {
             await query(env, 'UPDATE plugins SET missing_count=0,missing_since=NULL WHERE id=? AND revision=?', p.id, p.revision).run();
             await finish(env, task, token, e.code, e.message);
@@ -167,7 +171,11 @@ export async function recover(env: Env) { await query(env, "UPDATE tasks SET sta
     id: string;
 }>(); for (const row of rows.results)
     await enqueue(env, row.id); }
-export async function scan(env: Env, cursor = '') { const rows = await query(env, 'SELECT id FROM plugins WHERE blocked=0 AND id>? ORDER BY id LIMIT 25', cursor).all<{
+/** 定时扫描：GitHub 投稿需要跟进上游变化；已上架的直传包没有上游，
+ *  重新排队只会把 R2 对象整包读回来再解析一遍，因此跳过。
+ *  未上架的直传包仍会扫描，保留 AI 配置补全后的自动重试。
+ *  直传对象缺失由下载时的 etag/size 校验兜底，作者也可以用「重新检查」主动复核。 */
+export async function scan(env: Env, cursor = '') { const rows = await query(env, "SELECT id FROM plugins WHERE blocked=0 AND NOT (source_kind='upload' AND status='published') AND id>? ORDER BY id LIMIT 25", cursor).all<{
     id: string;
 }>(); for (const row of rows.results)
     await refresh(env, row.id); if (rows.results.length === 25)

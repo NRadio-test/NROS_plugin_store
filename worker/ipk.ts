@@ -5,7 +5,8 @@ export interface ArchiveLimits { maxCompressed: number; maxExpanded: number; max
 export const DEFAULT_ARCHIVE_LIMITS: ArchiveLimits = { maxCompressed: 32 * 1024 * 1024, maxExpanded: 32 * 1024 * 1024, maxFiles: 2000, maxDepth: 16, maxText: 512 * 1024, maxTextFile: 128 * 1024 };
 interface Entry { path: string; bytes: Uint8Array; kind: 'file' | 'directory' | 'symlink' | 'hardlink'; link?: string }
 interface Budget { expanded: number; files: number; text: number; limits: ArchiveLimits }
-export interface ParsedIPK { packageName: string; architecture: string; version: string; materials: string; coverage: string[]; binaryFiles: string[]; files: { path: string; size: number; kind: string }[] }
+export interface ScanFile { path: string; bytes: Uint8Array }
+export interface ParsedIPK { scanFiles?: ScanFile[]; packageName: string; architecture: string; version: string; materials: string; coverage: string[]; binaryFiles: string[]; files: { path: string; size: number; kind: string }[] }
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false });
 const ascii = new TextDecoder();
 function incomplete(reason: string): never { throw new AppError(422, reason, 'incomplete'); }
@@ -115,7 +116,7 @@ async function expand(bytes: Uint8Array, gzip: boolean, budget: Budget): Promise
   return result;
 }
 
-export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimits> = {}): Promise<ParsedIPK> {
+export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimits> = {}, includeScanFiles = false): Promise<ParsedIPK> {
   const limits = { ...DEFAULT_ARCHIVE_LIMITS, ...overrides };
   if (bytes.length > limits.maxCompressed) incomplete('IPK 超过安装包大小上限');
   const budget: Budget = { limits, files: 0, text: 0, expanded: 0 };
@@ -138,6 +139,7 @@ export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimi
   try { controlText = decoder.decode(controlFile.bytes); } catch { incomplete('IPK control 信息不是 UTF-8 文本'); }
   const values = Object.fromEntries(controlText.split(/\r?\n/u).filter(l => /^[A-Za-z][A-Za-z0-9-]*:/u.test(l)).map(l => [l.slice(0, l.indexOf(':')).toLowerCase(), l.slice(l.indexOf(':') + 1).trim()]));
   if (!values.package || !values.architecture || !values.version || !/^[a-z0-9][a-z0-9+.-]*$/u.test(values.package) || values.architecture.length > 80 || values.version.length > 120) incomplete('IPK 包名、版本或架构缺失/非法');
+  const scanFiles: ScanFile[] = [];
   const material: string[] = [];
   const binaryFiles: string[] = [];
   const files: ParsedIPK['files'] = [];
@@ -147,6 +149,7 @@ export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimi
       files.push({ path, size: entry.bytes.length, kind: entry.kind });
       material.push(JSON.stringify({ path, kind: entry.kind, size: entry.bytes.length, link: entry.link }));
       if (entry.kind !== 'file') continue;
+      if (includeScanFiles) scanFiles.push({ path, bytes: entry.bytes });
       if (/\.(?:gz|xz|bz2|zst|zip|tar|ipk|deb|7z)$/iu.test(entry.path) || (entry.bytes[0] === 31 && entry.bytes[1] === 139) || (entry.bytes[0] === 80 && entry.bytes[1] === 75)) incomplete(`包内嵌套归档未扫描：${path}`);
       let text: string | null = null;
       if (!entry.bytes.includes(0) && entry.bytes.length > limits.maxTextFile) incomplete(`包内文本或无法识别的二进制超过单文件扫描预算：${path}`);
@@ -158,9 +161,9 @@ export async function parseIPK(bytes: Uint8Array, overrides: Partial<ArchiveLimi
       } else {
         if (section === 'control' || /\.(?:sh|bash|py|js|mjs|lua|pl|rb|php)$/iu.test(entry.path) || (entry.bytes[0] === 35 && entry.bytes[1] === 33)) incomplete(`关键脚本无法按 UTF-8 扫描：${path}`);
         binaryFiles.push(path);
-        material.push(JSON.stringify({ path, binary: true, sha256: await sha256(entry.bytes), note: '静态清单与摘要，不等于二进制病毒扫描；需结合对应 Release 源码和构建配置判断关联。' }));
+        material.push(JSON.stringify({ path, binary: true, sha256: await sha256(entry.bytes), note: '静态清单与摘要，不等于二进制病毒扫描。GitHub 投稿需结合 Release 源码；直传包由独立查毒服务检查。' }));
       }
     }
   }
-  return { packageName: values.package, architecture: values.architecture, version: values.version, materials: material.join('\n'), binaryFiles, files, coverage: [`IPK 封装：${bytes[0] === 31 ? 'tar.gz' : 'ar'}；control/data 支持 tar 或 tar.gz`, `全部 ${files.length} 个条目；累计解包 ${budget.expanded} 字节；文本 ${budget.text} 字节；二进制 ${binaryFiles.length} 个（未做动态/杀毒扫描）`, 'PAX/GNU 长名称、xz/zstd、包内嵌套归档和危险链接进入未完成，不静默跳过'] };
+  return { ...(includeScanFiles ? { scanFiles } : {}), packageName: values.package, architecture: values.architecture, version: values.version, materials: material.join('\n'), binaryFiles, files, coverage: [`IPK 封装：${bytes[0] === 31 ? 'tar.gz' : 'ar'}；control/data 支持 tar 或 tar.gz`, `全部 ${files.length} 个条目；累计解包 ${budget.expanded} 字节；文本 ${budget.text} 字节；二进制 ${binaryFiles.length} 个（未做动态/杀毒扫描）`, 'PAX/GNU 长名称、xz/zstd、包内嵌套归档和危险链接进入未完成，不静默跳过'] };
 }

@@ -14,6 +14,7 @@ import AppDrawer from './AppDrawer.vue'
 import AppMenu from './AppMenu.vue'
 import { navigateTabs } from '../composables/tabs'
 import SubmissionForm from './SubmissionForm.vue'
+import UploadForm from './UploadForm.vue'
 
 type Action = 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
 
@@ -47,6 +48,7 @@ const error = ref('')
 const busy = ref('')
 const submitOpen = ref(false)
 const detailId = ref('')
+const uploadOpen = ref(false)
 const detail = ref<StudioPluginDetail | null>(null)
 const detailLoading = ref(false)
 const detailTab = ref<'snapshot' | 'tasks' | 'audits'>('snapshot')
@@ -262,6 +264,17 @@ void load()
       </template>
     </AppModal>
 
+    <AppModal v-model="uploadOpen" title="上传新版本">
+      <UploadForm
+        v-if="uploadOpen && detail"
+        :key="detail.plugin.id"
+        studio
+        :plugin-id="detail.plugin.id"
+        :initial="{ name: detail.upload?.name || detail.plugin.full_name, description: detail.upload?.description || detail.plugin.description || undefined, tutorial: detail.upload?.tutorial || undefined }"
+        @submitted="uploadOpen = false; openDetail(detail.plugin.id); load()"
+      />
+    </AppModal>
+
     <AppDrawer :model-value="!!detailId" :title="detail?.plugin.full_name || '插件详情'" wide @update:model-value="detailId = ''">
       <template #subtitle>
         <p v-if="detail" class="sp__drawer-sub">
@@ -365,6 +378,7 @@ void load()
 
       <template #footer>
         <AppButton v-if="detail" variant="ghost" icon="refresh" @click="openDetail(detail.plugin.id)">重新读取</AppButton>
+        <AppButton v-if="detail?.plugin.source_kind === 'upload'" variant="primary" icon="upload" @click="uploadOpen = true">上传新版本</AppButton>
         <AppButton v-if="detail" variant="secondary" icon="external-link" :href="`/plugins/${detail.plugin.id}`">打开公开页</AppButton>
       </template>
     </AppDrawer>

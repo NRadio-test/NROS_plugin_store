@@ -447,7 +447,24 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.getByRole('button', { name:'上传并提交审核', exact:true }).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);
     await expect.poll(async () => (await (await request.get(`/api/plugins/${id}`)).json()).readme, { timeout:30000 }).toBe('# 更新后的使用教程');
-    record('IPK 直传', '四种宽度表单、必填校验、保留切换资料、隔离 R2/审核/下载、教程 XSS 防护及版本更新');
+
+    // 管理员侧同样能给直传插件上传新版本（Studio 详情抽屉，表单预填当前资料）
+    await page.setViewportSize({ width: 1280, height: 900 }); // 窄屏下 Studio 侧栏折叠，先回到桌面宽度
+    await page.goto('/studio');
+    await page.getByLabel('用户名', { exact: true }).fill('e2e-admin');
+    await page.getByLabel('密码', { exact: true }).fill('E2e-Only!Fixture-2468');
+    await page.getByRole('button', { name: '管理员登录', exact: true }).click();
+    await page.getByRole('button', { name: '插件管理', exact: true }).click();
+    await page.getByLabel('搜索名称或描述').fill('直传浏览器样例');
+    await expect(page.locator('.sp__table tbody tr')).toHaveCount(1);
+    await page.getByRole('button', { name: '详情', exact: true }).first().click();
+    await page.getByRole('button', { name: '上传新版本', exact: true }).click();
+    const updateDialog = page.getByRole('dialog', { name: '上传新版本', exact: true });
+    await expect(updateDialog.getByLabel('插件名称', { exact: true })).toHaveValue('直传浏览器样例');
+    await expect(updateDialog.getByLabel('使用教程', { exact: true })).toHaveValue('# 更新后的使用教程');
+    await updateDialog.getByRole('button', { name: '关闭', exact: true }).click();
+
+    record('IPK 直传', '四种宽度表单、必填校验、保留切换资料、隔离 R2/审核/下载、教程 XSS 防护、版本更新与管理员侧更新入口');
   });
 
   test.afterAll(async () => {

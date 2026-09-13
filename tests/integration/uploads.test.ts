@@ -66,6 +66,7 @@ describe('IPK 直接上传：真实 R2/D1、共用审核与下载', () => {
     expect((await e.UPLOADS!.list()).objects).toHaveLength(0);
   });
   it('缺少存储绑定不影响旧接口；缺少 AI 配置不发布', async () => {
+    await installFixture();
     const e = testEnv(), cookie = await login(e);
     expect((await upload({ ...e, UPLOADS: undefined }, cookie)).status).toBe(503);
     expect((await request({ ...e, UPLOADS: undefined }, '/api/plugins')).status).toBe(200);
@@ -78,11 +79,24 @@ describe('IPK 直接上传：真实 R2/D1、共用审核与下载', () => {
     const t = await (await upload(e, cookie)).json() as any; await processTask(e, t.taskId);
     expect((await request(e, `/api/plugins/${t.pluginId}/download/1`)).status).toBe(404);
   });
-  it('无法核验二进制不送入 AI 放行', async () => {
+  it('二进制通过查毒后接受 AI 审核，无需 GitHub 源码', async () => {
     const e = testEnv(), cookie = await login(e), {aiCalls} = await installFixture(); await saveAI(e, AI_CONFIG);
     const t = await (await upload(e, cookie, { bytes:await makeIPK({ dataFiles:[{name:'usr/bin/program',bytes:new Uint8Array([127,69,76,70,0,1])}] }) })).json() as any;
     await processTask(e, t.taskId);
-    expect((await e.DB.prepare('SELECT status FROM tasks WHERE id=?').bind(t.taskId).first<any>()).status).toBe('incomplete'); expect(aiCalls).toHaveLength(0);
+    expect((await e.DB.prepare('SELECT status FROM tasks WHERE id=?').bind(t.taskId).first<any>()).status).toBe('done'); expect(aiCalls).toHaveLength(1);
+    expect(JSON.stringify(aiCalls)).toContain('Cloudmersive');
+  });
+  it.each(['missing', 'malware', 'invalid', 'rate_limit'] as const)('查毒 %s 不调用 AI 或发布', async mode => {
+    const e = testEnv(), cookie = await login(e), { aiCalls } = await installFixture(); await saveAI(e, AI_CONFIG);
+    if (mode === 'missing') e.CLOUDMERSIVE_API_KEY = '';
+    else vi.mocked(globalThis.fetch).mockImplementation(async () => mode === 'rate_limit' ? new Response(null, { status: 429 }) : Response.json(mode === 'malware' ? { CleanResult: false, FoundViruses: [{ VirusName: 'test-only' }] } : { CleanResult: 'true' }));
+    const t = await (await upload(e, cookie)).json() as any;
+    const processing = processTask(e, t.taskId);
+    if (mode === 'invalid' || mode === 'rate_limit') await expect(processing).rejects.toMatchObject({ code: 'antivirus_transient' });
+    else await processing;
+    expect((await e.DB.prepare('SELECT status FROM tasks WHERE id=?').bind(t.taskId).first<any>()).status).toBe(mode === 'missing' ? 'waiting_config' : mode === 'malware' ? 'rejected' : 'retry');
+    expect(aiCalls).toHaveLength(0);
+    expect((await request(e, `/api/plugins/${t.pluginId}/download/1`)).status).toBe(404);
   });
   it('更新需原提交会话；新资料审核前保留旧版，迟到任务不能覆盖', async () => {
     const { e, cookie, task } = await publishUpload(); const other = await login(e, '13900139000'); const path = `/api/plugins/${task.pluginId}/upload`;

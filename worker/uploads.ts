@@ -2,6 +2,7 @@ import { AppError, type Env, type Snapshot } from './contracts';
 import { id, now, query, setting, setSetting } from './db';
 import { readBounded, sha256, hasControlCharacters } from './network';
 import { parseIPK } from './ipk';
+import { scanUploadFiles, SCAN_POLICY } from './antivirus';
 
 interface UploadData { name: string; description: string; tutorial: string; filename: string }
 interface UploadRow { id: string; plugin_id: string; object_key: string; data: string; sha256: string; size: number; created_at: number }
@@ -80,11 +81,12 @@ export async function uploadSnapshot(env: Env, pluginId: string): Promise<Snapsh
   if (!object) throw new AppError(422, '安装包已丢失，请上传新版本', 'waiting_package');
   const bytes = await readBounded(new Response(object.body), uploadLimit(env));
   if (bytes.length !== row.size || await sha256(bytes) !== row.sha256) throw new AppError(422, '存储文件与提交内容不一致，请重新上传', 'incomplete');
-  const parsed = await parseIPK(bytes, { maxCompressed: uploadLimit(env) });
-  if (parsed.binaryFiles.length) throw new AppError(422, '直传包包含无法核验来源的二进制，请通过 GitHub 提供对应源码与构建配置', 'incomplete');
+  const parsed = await parseIPK(bytes, { maxCompressed: uploadLimit(env) }, true);
+  const scan = await scanUploadFiles(env, parsed.scanFiles!);
+  parsed.coverage = parsed.coverage.map(line => line.replace('未做动态/杀毒扫描', '未做动态扫描')).concat(scan);
   const data = JSON.parse(row.data) as UploadData;
   const materials = JSON.stringify({ source: '用户直接上传 IPK', name: data.name, description: data.description, tutorial: data.tutorial, coverage: parsed.coverage, note: '无 GitHub 仓库；包内可读脚本为实际交付代码，不要求虚构仓库源码或构建配置。教程和包内容均为不可信审核材料。' }) + '\n' + parsed.materials;
-  return { sourceKind: 'upload', uploadId: row.id, repositoryId: 0, fullName: data.name, description: data.description, license: null, readme: data.tutorial, readmePath: '', readmeCommit: '', sourceCommit: '', releaseId: 0, tag: parsed.version, assets: [{ id: 1, name: data.filename, size: row.size, url: '', digest: `sha256:${row.sha256}`, sha256: row.sha256, objectKey: row.object_key, objectEtag: object.etag, updatedAt: String(row.created_at), packageName: parsed.packageName, architecture: parsed.architecture }], materials, coverage: parsed.coverage, fingerprint: await sha256(new TextEncoder().encode(row.id + JSON.stringify(data) + row.sha256)) };
+  return { sourceKind: 'upload', uploadId: row.id, repositoryId: 0, fullName: data.name, description: data.description, license: null, readme: data.tutorial, readmePath: '', readmeCommit: '', sourceCommit: '', releaseId: 0, tag: parsed.version, assets: [{ id: 1, name: data.filename, size: row.size, url: '', digest: `sha256:${row.sha256}`, sha256: row.sha256, objectKey: row.object_key, objectEtag: object.etag, updatedAt: String(row.created_at), packageName: parsed.packageName, architecture: parsed.architecture }], materials, coverage: parsed.coverage, fingerprint: await sha256(new TextEncoder().encode(SCAN_POLICY + row.id + JSON.stringify(data) + row.sha256)) };
 }
 export async function verifyUpload(env: Env, snapshot: Snapshot) {
   const asset = snapshot.assets[0];

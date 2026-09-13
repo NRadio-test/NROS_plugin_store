@@ -44,7 +44,9 @@ export async function pluginDetail(env: Env, pluginId: string) {
  const assets = snapshot ? (await query(env, 'SELECT id,name,size,sha256,disabled,data FROM assets WHERE snapshot_id=? ORDER BY id', snapshot.id).all<{ id: number; name: string; size: number; sha256: string; disabled: number; data: string }>()).results : [];
  const tasks = (await query(env, 'SELECT id,revision,status,attempts,public_reason,internal_reason,created_at,updated_at,queued_at,lock_until FROM tasks WHERE plugin_id=? ORDER BY revision DESC LIMIT 20', pluginId).all()).results;
  const audits = (await query(env, 'SELECT id,action,target,created_at,admin_id FROM audit WHERE target=? ORDER BY created_at DESC LIMIT 20', pluginId).all()).results;
- return { plugin, snapshot, assets: assets.map(a => ({ id: a.id, name: a.name, size: a.size, sha256: a.sha256, disabled: a.disabled, package_name: assetField(a.data, 'packageName'), architecture: assetField(a.data, 'architecture') })), tasks, audits };
+ // 直传插件的名称、简介与教程存在 uploads.data 里，更新版本时用于回填表单。
+ const upload = plugin.source_kind === 'upload' ? await query(env, "SELECT json_extract(u.data,'$.name') name,json_extract(u.data,'$.description') description,json_extract(u.data,'$.tutorial') tutorial FROM uploads u JOIN plugins p ON p.upload_id=u.id WHERE p.id=?", pluginId).first() : null;
+ return { plugin, snapshot, assets: assets.map(a => ({ id: a.id, name: a.name, size: a.size, sha256: a.sha256, disabled: a.disabled, package_name: assetField(a.data, 'packageName'), architecture: assetField(a.data, 'architecture') })), tasks, audits, upload };
 }
 
 /** Studio 总览：只返回计数与公开配置摘要，绝不返回 API Key 明文、密文或 tasks.internal_reason。 */
