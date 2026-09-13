@@ -60,7 +60,10 @@ describe('公共市场排序白名单与公开审核信息', () => {
   expect(body.reviewedAt).toBe(555);
   expect(body.reviewPublicReason).toBe('公开理由：材料齐全');
   expect(body.publishedAt).toBe(777);
-  expect(Object.keys(body.plugin).sort()).toEqual(['description', 'download_count', 'favorite_count', 'favorited', 'full_name', 'id', 'source_kind', 'updated_at', 'version']);
+  // author 是公开作者标识；submitter_mask / submitter_id 等内部字段不得出现。
+  expect(Object.keys(body.plugin).sort()).toEqual(['author', 'description', 'download_count', 'favorite_count', 'favorited', 'full_name', 'id', 'source_kind', 'updated_at', 'version']);
+  expect(body.plugin.author).toBe('owner');
+  expect(JSON.stringify(body)).not.toContain('submitter_mask');
   expect(body.plugin.version).toBe('v2.3.4');
   expect(body.assets).toEqual([{ id: 4101, name: 'demo_arm64.ipk', size: 4096, sha256: 'c'.repeat(64), packageName: 'demo', architecture: 'arm64' }]);
   const serialized = JSON.stringify(body);

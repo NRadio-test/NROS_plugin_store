@@ -114,12 +114,22 @@
 }
 .pkg:hover { background: var(--surface-raised); }
 .pkg__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.pkg__title { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
-.pkg__name { overflow-wrap: anywhere; font-size: var(--fs-h3); font-weight: 600; color: var(--text); }
+/* 列表以插件名为第一层级：名字 18px/650，描述降为次要说明。 */
+.pkg__name { overflow-wrap: anywhere; font-size: 1.125rem; font-weight: 650; letter-spacing: -0.015em; color: var(--text); }
 .pkg__name:hover { color: var(--signal-text); text-decoration: none; }
-.pkg__repo { overflow-wrap: anywhere; font-family: var(--font-mono); font-size: var(--fs-cap); color: var(--text-3); }
-.pkg__desc { color: var(--text-2); font-size: var(--fs-body); overflow-wrap: anywhere; }
-.pkg__meta { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; font-family: var(--font-mono); font-size: var(--fs-cap); color: var(--text-3); }
+.pkg__desc {
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pkg__meta { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; font-size: var(--fs-cap); color: var(--text-3); }
+.pkg__meta .mono { font-size: var(--fs-cap); }
+.pkg__author { color: var(--text-2); }
 .pkg__meta span { display: inline-flex; align-items: center; gap: 5px; }
 .pkg__stats { display: flex; gap: var(--sp-5); text-align: right; }
 .pkg__stat { display: flex; flex-direction: column; gap: 2px; min-width: 56px; }

@@ -2,7 +2,8 @@
 除上传使用 multipart/form-data、下载返回附件流外，接口使用 JSON，错误 `{error, code}`。写入请求需要同源 Origin（浏览器自动提供），cookie 会话。字段 snake_case 用于数据库对象。
 GET /api/session → {user: {id,phone_mask}|null, admin:{id,username}|null}
 POST /api/login {phone} → {user}; POST /api/logout；管理员 POST /api/studio/login {username,password}, POST /api/studio/logout。
-GET /api/plugins?q=&page=1&sort=updated|downloads|favorites → {items:[Plugin],total,page,pageSize,sort}。Plugin: id,source_kind(github|upload),full_name,description,version,favorite_count,download_count, favorited,updated_at。
+GET /api/plugins?q=&page=1&sort=updated|downloads|favorites → {items:[Plugin],total,page,pageSize,sort}。Plugin: id,source_kind(github|upload),full_name,description,version,favorite_count,download_count,favorited,updated_at,author。
+author 是公开作者标识：GitHub 投稿取仓库所属者，直传取提交者手机号掩码（内地为 1**********）；掩码原文与 phone_index 不出现在公开响应里。profile 上线后由用户自设昵称取代。
 `sort` 缺省或非法值一律按 `updated`（p.updated_at DESC,p.id）；`downloads` → p.download_count DESC,p.updated_at DESC,p.id；`favorites` → favorite_count DESC,p.updated_at DESC,p.id。只使用该白名单，绝不把用户输入拼接进 SQL。`total` 与 `items` 口径一致：同样要求 status='published'、blocked=0 且存在已批准快照。
 GET /api/plugins/:id → {plugin:Plugin,readme,readmePath,readmeCommit,sourceCommit,license,assets:[{id,name,size,sha256,packageName,architecture}],reviewLabel,reviewedAt,reviewPublicReason,publishedAt}
 新增字段（其余字段不变）：`reviewedAt` 已批准快照的 snapshots.created_at（number|null）、`reviewPublicReason` 已批准快照的 public_reason（string，可能为空串）、`publishedAt` 插件最近一次上架时间，取 plugins.updated_at（number|null）。公共接口永不返回 snapshots.internal_reason / tasks.internal_reason。

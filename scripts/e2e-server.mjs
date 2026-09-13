@@ -31,6 +31,9 @@ const mf=new Miniflare(convertV4MiniflareOptions({modules:true,scriptPath:'.wran
 await mf.ready;
 const db=await mf.getD1Database('DB');
 // SQL migration is executed only against the ephemeral test namespace.
+// 隔离库跨轮次会保留上一轮的任务/插件，先清空再建表，保证每轮从空库开始。
+const existing = await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'").all();
+for (const row of existing.results || []) await db.prepare('DROP TABLE IF EXISTS "' + row.name + '"').run();
 for(const filename of (await readdir('migrations')).filter(f=>f.endsWith('.sql')).sort()){
 const migration=await readFile('migrations/'+filename,'utf8');
 const statements=migration.split(/;\s*(?:\n|$)/).filter(s=>s.trim());
@@ -40,6 +43,7 @@ for(const sql of statements)await db.prepare(sql).run();
 const salt=randomBytes(16),password='E2e-Only!Fixture-2468';
 const passwordHash=`pbkdf2-sha256$100000$${salt.toString('base64url')}$${pbkdf2Sync(password,salt,100000,32,'sha256').toString('base64url')}`;
 const authDb=await mf.getD1Database('ADMIN_AUTH_DB');
+await authDb.prepare('DROP TABLE IF EXISTS admins').run();
 await authDb.prepare('CREATE TABLE admins(id TEXT PRIMARY KEY,username TEXT UNIQUE COLLATE NOCASE,password_hash TEXT,must_change_password INTEGER NOT NULL DEFAULT 0,created_at INTEGER,updated_at INTEGER)').run();
 await authDb.prepare('INSERT INTO admins(id,username,password_hash,created_at,updated_at) VALUES(?,?,?,?,?)').bind('e2e-admin','e2e-admin',passwordHash,Date.now(),Date.now()).run();
 const config={baseUrl:'https://ai.vendor.com/v1',model:'isolated-fixture-model',apiKey:await encrypt(master,'e2e-only-fixture-key'),timeoutMs:1000,maxRetries:0,inputBudget:100000,outputBudget:1500,rules:'isolated fixture',structuredOutput:false};

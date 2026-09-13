@@ -6,6 +6,8 @@ export interface Plugin {
   id: string
   full_name: string
   source_kind?: 'github' | 'upload'
+  /** 公开作者：GitHub 投稿取仓库所属者，直传取提交者掩码（profile 上线后替换）。 */
+  author?: string
   description: string | null
   version: string | null
   favorite_count: number

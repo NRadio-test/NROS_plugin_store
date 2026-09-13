@@ -189,7 +189,7 @@ void load()
                     <span class="sp__repo-meta">
                       <span class="mono">ID {{ shortId(plugin.id) }}</span>
                       <span aria-hidden="true">·</span>
-                      <span class="mono">{{ plugin.source_kind === 'upload' ? '直接上传 IPK' : 'repo ' + plugin.repository_id }}</span>
+                      <span class="mono">{{ plugin.source_kind === 'upload' ? '直传' : 'repo ' + plugin.repository_id }}</span>
                       <span aria-hidden="true">·</span>
                       <span>revision {{ plugin.revision }}</span>
                     </span>

@@ -109,7 +109,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               <div class="detail-hero__text">
                 <h1>{{ name }}</h1>
                 <p class="detail-hero__owner">
-                  <AppIcon :name="uploaded ? 'upload' : 'git-branch'" :size="14" />{{ uploaded ? '直接上传 IPK' : detail.plugin.full_name }}
+                  <AppIcon :name="uploaded ? 'user' : 'git-branch'" :size="14" />{{ uploaded ? `作者 ${detail.plugin.author || '匿名'}` : detail.plugin.full_name }}
                 </p>
                 <p class="detail-hero__desc">{{ detail.plugin.description || '暂无描述' }}</p>
               </div>

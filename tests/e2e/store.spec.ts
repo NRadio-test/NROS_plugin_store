@@ -19,6 +19,7 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.getByLabel('张导小店绑定手机号').fill('13800138000');
     await page.getByRole('button', { name: '进入', exact: true }).click();
     await expect(page).toHaveURL(/\/submit$/);
+    const aiCallsBefore = (await (await request.get('/__test/info')).json()).aiCalls as number;
     await page.getByLabel('GitHub 公开仓库链接').fill('https://github.com/fixture/harmless');
     await page.getByRole('button', { name: '提交审核', exact: true }).click();
     await expect(page.getByText('投稿已保存，自动审核将在后台进行')).toBeVisible();
@@ -26,16 +27,19 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await page.goto('/me');
     await expect(page.getByRole('heading', { name: '我的提交' })).toBeVisible();
 
+    // 与其它 spec 共用同一个隔离服务器：按仓库名定位本用例的插件，不假设目录里只有它。
     await expect.poll(async () => {
-      const data = await (await request.get('/api/plugins')).json();
-      pluginId = data.items[0]?.id ?? '';
-      return data.total;
-    }, { timeout: 30000 }).toBe(1);
+      const data = await (await request.get('/api/plugins?q=' + encodeURIComponent('fixture/harmless'))).json();
+      pluginId = data.items.find((item: { full_name?: string }) => item.full_name === 'fixture/harmless')?.id ?? '';
+      return pluginId;
+    }, { timeout: 30000 }).not.toBe('');
 
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'harmless', exact: true })).toBeVisible();
     await expect(page.getByTestId('readme')).toHaveCount(0);
     await expect(page.locator('.pkg').first()).toBeVisible();
+    // 列表展示作者：GitHub 投稿取仓库所属者
+    await expect(page.locator('.pkg').first()).toContainText('作者 fixture');
 
     const favorite = page.getByRole('button', { name: '收藏 fixture/harmless' });
     await favorite.click();
@@ -79,7 +83,8 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     expect(typeof detail.reviewedAt).toBe('number');
     expect(detail.reviewPublicReason).toBeTruthy();
     expect(JSON.stringify(detail)).not.toContain('internal_reason');
-    expect(info.aiCalls).toBe(1);
+    // AI 调用计数在隔离服务器内是全局的（其它 spec 也会调用），因此断言增量而不是绝对值。
+    expect(info.aiCalls - aiCallsBefore).toBe(1);
     expect((await request.get('/api/studio/tasks')).status()).toBe(401);
 
     await page.goto('/me');
@@ -114,6 +119,9 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
     await expect(page.locator('input[type=password]')).toHaveCount(0);
 
     await page.getByRole('button', { name: '插件管理', exact: true }).click();
+    // 与其它 spec 共用隔离库：先按仓库名过滤，确保操作的是本用例的插件
+    await page.getByLabel('搜索名称或描述').fill('fixture/harmless');
+    await expect(page.locator('.sp__table tbody tr')).toHaveCount(1);
     await page.getByLabel('操作原因（对用户可见）').fill('端到端隔离测试下架');
     await page.getByRole('button', { name: /的更多操作$/ }).first().click();
     await page.getByRole('menuitem', { name: '下架' }).click();
@@ -426,6 +434,12 @@ test.describe.serial('真实浏览器 → Worker/D1/Queues → 隔离外部服�
       const d = await (await request.get('/api/plugins?q=' + encodeURIComponent('直传浏览器样例'))).json();
       id = d.items[0]?.id || ''; return d.total;
     }, { timeout: 30000 }).toBe(1);
+    // 列表展示作者：直传取提交者手机号掩码，且不再出现无信息量的来源标签
+    await page.goto('/');
+    const uploadRow = page.locator('.pkg').filter({ hasText: '直传浏览器样例' }).first();
+    await expect(uploadRow).toContainText('作者 1**********');
+    await expect(uploadRow).not.toContainText('直接上传 IPK');
+
     await page.goto(`/plugins/${id}`);
     await expect(page.getByRole('link', { name: 'GitHub 仓库' })).toHaveCount(0);
     await expect(page.getByTestId('readme')).toContainText('安装方法');

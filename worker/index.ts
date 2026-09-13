@@ -48,14 +48,29 @@ app.post('/api/studio/login', async (c) => { await limit(c, 'admin-login', 5, 60
     throw new AppError(400, '账号或密码格式错误'); const admin = await sharedAdmin(c.env, 'username', b.username); const dummy = 'pbkdf2-sha256$100000$AAAAAAAAAAAAAAAAAAAAAA$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'; if (!await verifyPassword(b.password, admin?.password_hash ?? dummy) || !admin)
     throw new AppError(401, '账号或密码不正确'); if (!await activeAdmin(admin)) throw new AppError(403, '请先前往留言箱完成密码修改，再登录商店', 'password_change_required'); const s = await createSession(c.env, 'admin', admin.id, admin); c.header('Set-Cookie', s.cookie); await audit(c.env, admin.id, 'login', admin.id); return c.json({ admin: { id: admin.id, username: admin.username } }); });
 app.post('/api/studio/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'admin')); return c.json({ ok: true }); });
-const publicSelect = `SELECT p.id,p.source_kind,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id`;
+const publicSelect = `SELECT p.id,p.source_kind,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,u.phone_mask submitter_mask,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id LEFT JOIN users u ON u.id=p.submitter_id`;
+/** 直传作者名：内地号码显示 1**********，其他地区保留首字符掩码；profile 上线后替换。 */
+function maskSubmitter(mask: unknown) {
+    const value = typeof mask === 'string' ? mask : '';
+    if (!value) return '匿名';
+    if (value.startsWith('+861')) return '1' + '*'.repeat(10);
+    const visible = value.startsWith('+86') ? value.slice(3) : value;
+    return visible.slice(0, 1) + '*'.repeat(Math.max(1, visible.length - 1));
+}
+/** 公开作者：GitHub 投稿取仓库所属者，直传取提交者掩码。掩码原文不外发。 */
+function publicPlugin(row: Record<string, unknown> | null) {
+    if (!row) return row;
+    const { submitter_mask, ...rest } = row;
+    const author = row.source_kind === 'upload' ? maskSubmitter(submitter_mask) : String(row.full_name ?? '').split('/')[0];
+    return { ...rest, author };
+}
 /** 市场排序白名单：非法 sort 一律回落 updated，绝不把用户输入拼进 SQL。 */
 const marketSorts: Record<string, string> = { updated: 'p.updated_at DESC,p.id', downloads: 'p.download_count DESC,p.updated_at DESC,p.id', favorites: 'favorite_count DESC,p.updated_at DESC,p.id' };
 app.get('/api/plugins', async (c) => { const term = (c.req.query('q') ?? '').slice(0, 200), page = Math.max(1, Math.min(10000, Math.floor(Number(c.req.query('page'))) || 1)); const requested = c.req.query('sort') ?? ''; const sort = Object.hasOwn(marketSorts, requested) ? requested : 'updated'; const where = " WHERE p.status='published' AND p.blocked=0 AND (p.full_name LIKE ? ESCAPE '\\' OR p.description LIKE ? ESCAPE '\\')"; const like = '%' + term.replace(/[\\%_]/g, '\\$&') + '%'; const items = await query(c.env, publicSelect + where + ' ORDER BY ' + marketSorts[sort] + ' LIMIT 12 OFFSET ?', like, like, (page - 1) * 12).all(); const total = await query(c.env, 'SELECT COUNT(*) total FROM plugins p' + where + ' AND EXISTS(SELECT 1 FROM snapshots s WHERE s.id=p.approved_snapshot_id)', like, like).first<{
     total: number;
 }>(); const session = await getSession(c.req.raw, c.env, 'user'); const favorites = session ? (await query(c.env, 'SELECT plugin_id FROM favorites WHERE user_id=?', session.subjectId).all<{
     plugin_id: string;
-}>()).results : []; return c.json({ items: items.results.map(p => ({ ...p, favorited: favorites.some(f => f.plugin_id === p.id) })), total: total?.total ?? 0, page, pageSize: 12, sort }); });
+}>()).results : []; return c.json({ items: items.results.map(p => ({ ...publicPlugin(p), favorited: favorites.some(f => f.plugin_id === p.id) })), total: total?.total ?? 0, page, pageSize: 12, sort }); });
 app.get('/api/plugins/:id', async (c) => { const snapshot = await getApproved(c.env, c.req.param('id')); if (!snapshot)
     throw new AppError(404, '插件未上架或已下架'); const plugin = await query(c.env, publicSelect + ' WHERE p.id=?', c.req.param('id')).first(); const user = await getSession(c.req.raw, c.env, 'user'); const favorite = user ? !!await query(c.env, 'SELECT 1 FROM favorites WHERE user_id=? AND plugin_id=?', user.subjectId, c.req.param('id')).first() : false; const disabled = await query(c.env, 'SELECT id FROM assets WHERE snapshot_id=(SELECT approved_snapshot_id FROM plugins WHERE id=?) AND disabled=1', c.req.param('id')).all<{
     id: number;
@@ -64,7 +79,7 @@ app.get('/api/plugins/:id', async (c) => { const snapshot = await getApproved(c.
 const review = await query(c.env, 'SELECT created_at,public_reason FROM snapshots WHERE id=(SELECT approved_snapshot_id FROM plugins WHERE id=?)', c.req.param('id')).first<{
     created_at: number;
     public_reason: string;
-}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...plugin, favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode === 'manual' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
+}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...publicPlugin(plugin), favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode === 'manual' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
 app.on(['GET', 'HEAD'], '/api/plugins/:id/download/:assetId', async (c) => { await limit(c, 'download', 60); if (!/^\d+$/.test(c.req.param('assetId')))
     throw new AppError(400, '附件编号无效'); return forwardDownload(c.req.raw, c.env, c.req.param('id'), Number(c.req.param('assetId'))); });
 app.put('/api/plugins/:id/favorite', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `favorite:${uid}`, 60, 60); const b = await body(c); if (typeof b.active !== 'boolean')
@@ -89,7 +104,7 @@ app.post('/api/submit', async (c) => { const uid = await requireUser(c); await r
     throw new AppError(400, '请填写 GitHub 仓库链接'); return c.json(await submit(c.env, b.url, uid), 202); });
 app.post('/api/plugins/:id/refresh', async (c) => { const uid = await requireUser(c); const p = await query(c.env, 'SELECT id FROM plugins WHERE id=? AND submitter_id=?', c.req.param('id'), uid).first(); if (!p)
     throw new AppError(403, '只能重新检查自己的提交'); await rateLimit(c.env, `refresh:${c.req.param('id')}`, 1, 600); return c.json(await refresh(c.env, c.req.param('id')), 202); });
-app.get('/api/me', async (c) => { const uid = await requireUser(c); const submissions = await query(c.env, "SELECT p.id,p.source_kind,p.full_name,p.status,p.public_reason,json_extract(u.data,'$.name') upload_name,json_extract(u.data,'$.description') upload_description,json_extract(u.data,'$.tutorial') upload_tutorial,(SELECT status FROM tasks t WHERE t.plugin_id=p.id ORDER BY revision DESC LIMIT 1) task_status FROM plugins p LEFT JOIN uploads u ON u.id=p.upload_id WHERE submitter_id=? ORDER BY p.created_at DESC", uid).all(); const favorites = await query(c.env, publicSelect + " JOIN favorites own ON own.plugin_id=p.id WHERE own.user_id=? AND p.status='published' AND p.blocked=0 ORDER BY own.created_at DESC", uid).all(); return c.json({ submissions: submissions.results, favorites: favorites.results.map(p => ({ ...p, favorited: true })) }); });
+app.get('/api/me', async (c) => { const uid = await requireUser(c); const submissions = await query(c.env, "SELECT p.id,p.source_kind,p.full_name,p.status,p.public_reason,json_extract(u.data,'$.name') upload_name,json_extract(u.data,'$.description') upload_description,json_extract(u.data,'$.tutorial') upload_tutorial,(SELECT status FROM tasks t WHERE t.plugin_id=p.id ORDER BY revision DESC LIMIT 1) task_status FROM plugins p LEFT JOIN uploads u ON u.id=p.upload_id WHERE submitter_id=? ORDER BY p.created_at DESC", uid).all(); const favorites = await query(c.env, publicSelect + " JOIN favorites own ON own.plugin_id=p.id WHERE own.user_id=? AND p.status='published' AND p.blocked=0 ORDER BY own.created_at DESC", uid).all(); return c.json({ submissions: submissions.results, favorites: favorites.results.map(p => ({ ...publicPlugin(p), favorited: true })) }); });
 app.get('/api/studio/plugins', async (c) => c.json(await listPlugins(c.env, { q: c.req.query('q'), status: c.req.query('status'), page: c.req.query('page'), pageSize: c.req.query('pageSize') })));
 app.get('/api/studio/plugins/:id', async (c) => c.json(await pluginDetail(c.env, c.req.param('id'))));
 app.get('/api/studio/overview', async (c) => c.json(await overview(c.env)));

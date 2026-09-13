@@ -62,12 +62,11 @@ async function download() {
 <template>
   <article class="pkg" :data-plugin-id="plugin.id">
     <div class="pkg__main">
-      <div class="pkg__title">
-        <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`">{{ name }}</RouterLink></h2>
-        <span class="pkg__repo">{{ plugin.source_kind === 'upload' ? '直接上传 IPK' : owner + '/' + name }}</span>
-      </div>
+      <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`">{{ name }}</RouterLink></h2>
       <p class="pkg__desc">{{ plugin.description || '暂无描述' }}</p>
       <div class="pkg__meta">
+        <span class="pkg__author">作者 {{ plugin.author || owner }}</span>
+        <span aria-hidden="true">·</span>
         <span class="mono">{{ plugin.version || '—' }}</span>
         <span aria-hidden="true">·</span>
         <span>{{ formatRelative(plugin.updated_at) }}更新</span>

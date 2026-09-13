@@ -2,7 +2,7 @@
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage, session, type Plugin } from '../lib/api'
-import { formatNumber, formatRelative } from '../lib/format'
+import { formatNumber } from '../lib/format'
 import SearchToolbar from '../components/SearchToolbar.vue'
 import AppPagination from '../components/AppPagination.vue'
 import PluginRow from '../components/PluginRow.vue'
@@ -29,7 +29,6 @@ const total = ref(0)
 const pageSize = ref(12)
 const loading = ref(true)
 const error = ref('')
-const syncedAt = ref<number | null>(null)
 
 let sequence = 0
 let timer: ReturnType<typeof setTimeout>
@@ -49,7 +48,6 @@ async function load() {
     total.value = data.total
     pageSize.value = data.pageSize
     if (data.sort) sort.value = readSort(data.sort)
-    syncedAt.value = Date.now()
   } catch (caught) {
     if (current === sequence) error.value = errorMessage(caught)
   } finally {
@@ -93,7 +91,6 @@ void load()
           <span>共 <b class="num">{{ formatNumber(total) }}</b> 个插件</span>
           <span aria-hidden="true">·</span>
           <span>{{ searching ? `匹配「${search.trim()}」` : `按${sortLabel}排序` }}</span>
-          <template v-if="syncedAt"><span aria-hidden="true">·</span><span>最近同步 {{ formatRelative(syncedAt) }}</span></template>
         </template>
       </p>
     </div>
