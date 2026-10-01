@@ -21,12 +21,12 @@ export const router = createRouter({
 })
 
 export function setMetadata(title: string, description = DEFAULT_DESCRIPTION) {
-  document.title = `${title} · 张导插件商店`
+  document.title = `${title} · 插件商店`
   document.querySelector('meta[name="description"]')?.setAttribute('content', description)
 }
 
 router.afterEach((to, from) => {
-  setMetadata(String(to.meta.title || '张导插件商店'))
+  setMetadata(String(to.meta.title || '插件商店'))
   document.querySelector('meta[name="robots"]')?.setAttribute('content', to.meta.private ? 'noindex,nofollow' : 'index,follow')
   if (to.path !== from.path) requestAnimationFrame(() => document.getElementById('main')?.focus({ preventScroll: true }))
 })

@@ -1,11 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { session } from '../lib/api'
 import SubmissionForm from '../components/SubmissionForm.vue'
 import AppIcon from '../components/AppIcon.vue'
 import AppButton from '../components/AppButton.vue'
 
 const mode = ref('github')
+const reviewOff = computed(() => session.reviewEnabled === false)
+const directSteps = [
+  { title: '准备资料与安装包', text: '填写名称、简介和使用教程，或提供公开仓库的正式 Release。', icon: 'book' as const },
+  { title: '提交并上架', text: '后台整理文件后直接上架，暂不执行自动审核或查毒。', icon: 'package' as const },
+  { title: '更新版本', text: '新版本同样按照当前开关设置处理。', icon: 'refresh' as const },
+]
 const uploadSteps = [
   { title: '填写插件资料', text: '准备名称、简介与使用教程。', icon: 'book' as const },
   { title: '上传 IPK 安装包', text: '版本和架构从包内读取。', icon: 'package' as const },
@@ -48,7 +54,7 @@ const steps = [
         <section class="submit__steps">
           <h2 class="submit__section-title">提交之后会发生什么</h2>
           <ol class="submit__timeline">
-            <li v-for="(step, index) in (mode === 'upload' ? uploadSteps : steps)" :key="step.title">
+            <li v-for="(step, index) in (reviewOff ? directSteps : mode === 'upload' ? uploadSteps : steps)" :key="step.title">
               <span class="submit__step-marker">{{ index + 1 }}</span>
               <div>
                 <p class="submit__step-title"><AppIcon :name="step.icon" :size="15" />{{ step.title }}</p>
@@ -70,8 +76,8 @@ const steps = [
             <ul>
               <li>GitHub 公开仓库</li>
               <li>Release 中的 .ipk 附件</li>
-              <li>可读的源码与构建配置</li>
-              <li>仓库 description 与 README</li>
+              <li v-if="!reviewOff">可读的源码与构建配置</li>
+              <li v-if="!reviewOff">仓库 description 与 README</li>
             </ul>
           </div>
           <div class="card submit__aside-card">
@@ -79,7 +85,7 @@ const steps = [
             <ul>
               <li>私有仓库或压缩包</li>
               <li>只有 draft / prerelease</li>
-              <li>缺少 README、源码或 IPK</li>
+              <li>{{ reviewOff ? '缺少 IPK 安装包' : '缺少 README、源码或 IPK' }}</li>
               <li>欺骗、垃圾或恶意插件</li>
             </ul>
           </div>

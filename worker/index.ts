@@ -6,6 +6,7 @@ import { submit, refresh, processTask, recover, scan, getApproved, enqueue } fro
 import { receiveUpload, deleteUploads, cleanupUploads } from './uploads';
 import { manualPublish } from './manual-publication';
 import { loadAI, saveAI } from './settings';
+import { reviewEnabled, UNREVIEWED_REASON } from './review-mode';
 import { testAI } from './ai';
 import { readBounded } from './network';
 import { forwardDownload, testSource, OFFICIAL_SOURCE, validateSource } from './download';
@@ -38,7 +39,7 @@ app.use('/api/studio/*', async (c, next) => { if (c.req.path === '/api/studio/lo
     await limit(c, 'studio', 60); await next(); });
 async function requireUser(c: any) { const s = await getSession(c.req.raw, c.env, 'user'); if (!s)
     throw new AppError(401, '请先填写手机号进入'); return s.subjectId; }
-app.get('/api/session', async (c) => { const u = await getSession(c.req.raw, c.env, 'user'), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ user: u ? await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
+app.get('/api/session', async (c) => { const u = await getSession(c.req.raw, c.env, 'user'), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ reviewEnabled: reviewEnabled(c.env), user: u ? await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
 app.post('/api/login', async (c) => { await limit(c, 'login', 10, 600); const b = await body(c); const phone = normalizePhone(b.phone); const index = await hmac(c.env.PHONE_HMAC_KEY, phone); const uid = id(); await query(c.env, 'INSERT OR IGNORE INTO users(id,phone_index,phone_mask,created_at) VALUES(?,?,?,?)', uid, index, `${phone.slice(0, 4)}****${phone.slice(-4)}`, now()).run(); const user = await query(c.env, 'SELECT id,phone_mask FROM users WHERE phone_index=?', index).first<{
     id: string;
     phone_mask: string;
@@ -79,7 +80,7 @@ app.get('/api/plugins/:id', async (c) => { const snapshot = await getApproved(c.
 const review = await query(c.env, 'SELECT created_at,public_reason FROM snapshots WHERE id=(SELECT approved_snapshot_id FROM plugins WHERE id=?)', c.req.param('id')).first<{
     created_at: number;
     public_reason: string;
-}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...publicPlugin(plugin), favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode === 'manual' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
+}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...publicPlugin(plugin), favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'unreviewed' ? UNREVIEWED_REASON : snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
 app.on(['GET', 'HEAD'], '/api/plugins/:id/download/:assetId', async (c) => { await limit(c, 'download', 60); if (!/^\d+$/.test(c.req.param('assetId')))
     throw new AppError(400, '附件编号无效'); return forwardDownload(c.req.raw, c.env, c.req.param('id'), Number(c.req.param('assetId'))); });
 app.put('/api/plugins/:id/favorite', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `favorite:${uid}`, 60, 60); const b = await body(c); if (typeof b.active !== 'boolean')
@@ -138,7 +139,7 @@ app.get('/api/studio/tasks', async (c) => c.json({ items: (await query(c.env, 'S
 app.get('/api/studio/logs', async (c) => c.json({ items: (await query(c.env, 'SELECT id,action,target,created_at FROM audit ORDER BY created_at DESC LIMIT 100').all()).results }));
 app.get('/api/studio/ai', async (c) => c.json(await loadAI(c.env, true)));
 app.put('/api/studio/ai', async (c) => { await saveAI(c.env, await body(c)); await audit(c.env, c.get('adminId'), 'ai-settings', 'ai'); return c.json({ ok: true }); });
-app.post('/api/studio/ai/test', async (c) => { await limit(c, 'ai-test', 5, 600); await testAI(await loadAI(c.env)); await audit(c.env, c.get('adminId'), 'ai-test', 'ai'); return c.json({ ok: true, message: '接口连通且返回有效审核格式' }); });
+app.post('/api/studio/ai/test', async (c) => { if (!reviewEnabled(c.env)) throw new AppError(409, '审核已关闭，暂不调用 AI 服务', 'review_disabled'); await limit(c, 'ai-test', 5, 600); await testAI(await loadAI(c.env)); await audit(c.env, c.get('adminId'), 'ai-test', 'ai'); return c.json({ ok: true, message: '接口连通且返回有效审核格式' }); });
 const officialSource = OFFICIAL_SOURCE;
 app.get('/api/studio/sources', async (c) => c.json({ items: await setting(c.env, 'sources') ?? [officialSource] }));
 app.get('/api/studio/sources/candidates', async (c) => c.json(await sourceCandidates(c.env)));

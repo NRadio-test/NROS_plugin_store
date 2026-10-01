@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { errorMessage, post } from '../lib/api'
+import { session, errorMessage, post } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppIcon from './AppIcon.vue'
 import AppButton from './AppButton.vue'
@@ -69,7 +69,7 @@ async function submit() {
 
     <div class="repo-form__actions">
       <AppButton variant="primary" size="lg" type="submit" icon="send" :loading="busy">
-        {{ busy ? '正在提交…' : '提交审核' }}
+        {{ busy ? '正在提交…' : (session.reviewEnabled === false ? '提交并上架' : '提交审核') }}
       </AppButton>
     </div>
 

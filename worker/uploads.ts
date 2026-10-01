@@ -1,6 +1,7 @@
 import { AppError, type Env, type Snapshot } from './contracts';
 import { id, now, query, setting, setSetting } from './db';
 import { readBounded, sha256, hasControlCharacters } from './network';
+import { reviewEnabled } from './review-mode';
 import { parseIPK } from './ipk';
 import { scanUploadFiles, SCAN_POLICY } from './antivirus';
 
@@ -42,7 +43,7 @@ export async function receiveUpload(env: Env, request: Request, userId: string |
   if (!file || typeof file === 'string' || !/^[^/\\]{1,180}\.ipk$/iu.test(file.name) || hasControlCharacters(file.name)) throw new AppError(400, '请选择 .ipk 安装包');
   if (!file.size || file.size > uploadLimit(env)) throw new AppError(413, 'IPK 超过上传大小上限或为空');
   const contents = new Uint8Array(await file.arrayBuffer());
-  await parseIPK(contents, { maxCompressed: uploadLimit(env) });
+  await parseIPK(contents, { maxCompressed: uploadLimit(env) }, false, !reviewEnabled(env));
   const digest = await sha256(contents);
   const data: UploadData = { name, description, tutorial, filename: file.name };
   const submissionKey = await sha256(JSON.stringify([userId, digest, data]));
@@ -71,7 +72,7 @@ export async function receiveUpload(env: Env, request: Request, userId: string |
     await storage.delete(key);
     throw new AppError(409, '提交状态已变化或已达到 128 MiB 存储额度，请刷新后重试', 'upload_conflict');
   }
-  return { pluginId: pid, taskId, status: 'pending', message: '投稿已保存，自动审核将在后台进行' };
+  return { pluginId: pid, taskId, status: 'pending', message: reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
 }
 
 export async function uploadSnapshot(env: Env, pluginId: string, manual = false): Promise<Snapshot> {

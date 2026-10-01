@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
-import { api, errorMessage } from '../lib/api'
+import { session, api, errorMessage } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppField from './AppField.vue'
 import AppButton from './AppButton.vue'
@@ -55,10 +55,10 @@ async function submit() {
         <p v-if="file" class="upload-form__filename">{{ file.name }} · {{ formatSize(file.size) }}</p>
       </AppField>
     </fieldset>
-    <p class="upload-form__hint">安装包内的文件会发送至 Cloudmersive 查毒，无需提供 GitHub 源码。</p>
+    <p class="upload-form__hint">{{ session.reviewEnabled === false ? '审核暂时关闭，安装包整理完成后直接上架；未经过自动审核或查毒。' : '安装包内的文件会发送至 Cloudmersive 查毒，无需提供 GitHub 源码。' }}</p>
     <p v-if="error" class="notice notice--danger" role="alert">{{ error }}</p>
     <p v-if="message" class="notice notice--success" role="status">{{ message }} <RouterLink v-if="!studio && !pluginId" to="/me">查看我的提交 →</RouterLink></p>
-    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : '上传并提交审核' }}</AppButton>
+    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : (session.reviewEnabled === false ? '上传并上架' : '上传并提交审核') }}</AppButton>
   </form>
 </template>
 

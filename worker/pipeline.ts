@@ -2,6 +2,7 @@ import { AppError, type Env, type Snapshot } from './contracts';
 import { getRepository, getSnapshot, normalizeRepoUrl, verifySnapshot } from './github';
 import { uploadSnapshot, verifyUpload } from './uploads';
 import { review } from './ai';
+import { reviewEnabled, UNREVIEWED_REASON } from './review-mode';
 import { loadAI } from './settings';
 import { id, now, query, setting, purgeRemovedMaterials } from './db';
 interface Plugin {
@@ -44,7 +45,7 @@ export async function submit(env: Env, url: string, userId: string | null) {
     if (p?.id !== pluginId)
         return { pluginId: p?.id, taskId: null, status: p?.status, message: '该仓库已收录或正在处理' };
     await enqueue(env, taskId);
-    return { pluginId, taskId, status: 'pending', message: '投稿已保存，自动审核将在后台进行' };
+    return { pluginId, taskId, status: 'pending', message: reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
 }
 export async function refresh(env: Env, pluginId: string, force = false) {
     const p = await query(env, 'SELECT * FROM plugins WHERE id=?', pluginId).first<Plugin>();
@@ -81,10 +82,12 @@ export async function processTask(env: Env, taskId: string) {
         return;
     }
     try {
-        const snapshot = p.source_kind === 'upload' ? await uploadSnapshot(env, p.id) : await getSnapshot(env, p.repository_id);
+        const enabled = reviewEnabled(env);
+        const snapshot = p.source_kind === 'upload' ? await uploadSnapshot(env, p.id, !enabled) : await getSnapshot(env, p.repository_id, fetch, !enabled);
+        if (!enabled) { snapshot.publicationMode = 'unreviewed'; snapshot.materials = ''; snapshot.coverage = [UNREVIEWED_REASON]; }
         await query(env, 'UPDATE plugins SET missing_count=0,missing_since=NULL WHERE id=? AND revision=?', p.id, p.revision).run();
         const configVersion = await setting<string>(env, 'reviewVersion') ?? 'v1';
-        const version = task.force_review ? configVersion + ':force:' + task.id : configVersion;
+        const version = enabled ? (task.force_review ? configVersion + ':force:' + task.id : configVersion) : 'unreviewed-v1:' + configVersion;
         const reused = await query(env, 'SELECT * FROM snapshots WHERE plugin_id=? AND fingerprint=? AND review_version=?', p.id, snapshot.fingerprint, version).first<{
             id: string;
             verdict: string;
@@ -92,7 +95,9 @@ export async function processTask(env: Env, taskId: string) {
             internal_reason: string;
         }>();
         let result;
-        if (reused)
+        if (!enabled)
+            result = { verdict: 'allow', publicReason: UNREVIEWED_REASON, internalReason: UNREVIEWED_REASON };
+        else if (reused)
             result = { verdict: reused.verdict, publicReason: reused.public_reason, internalReason: reused.internal_reason };
         else {
             const config = await loadAI(env);
@@ -121,7 +126,7 @@ export async function processTask(env: Env, taskId: string) {
                 statements.push(query(env, 'INSERT OR IGNORE INTO assets(id,snapshot_id,plugin_id,name,size,sha256,data) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM snapshots WHERE id=?)', a.id, sid, p.id, a.name, a.size, a.sha256 ?? '', JSON.stringify(a), sid));
         }
         if (result.verdict === 'allow')
-            statements.push(query(env, "UPDATE plugins SET approved_snapshot_id=?,status='published',description=?,full_name=?,public_reason=?,updated_at=CASE WHEN approved_snapshot_id=? THEN updated_at ELSE ? END,checked_at=? WHERE id=? AND revision=? AND blocked=0 AND EXISTS(SELECT 1 FROM tasks WHERE id=? AND lock_token=? AND lock_until>?) AND COALESCE((SELECT json_extract(value,'$') FROM settings WHERE key='reviewVersion'),'v1')=?", sid, snapshot.description, snapshot.fullName, result.publicReason, sid, created, created, p.id, p.revision, task.id, token, created, configVersion));
+            statements.push(query(env, "UPDATE plugins SET approved_snapshot_id=?,status='published',description=?,full_name=?,public_reason=?,updated_at=CASE WHEN approved_snapshot_id=? THEN updated_at ELSE ? END,checked_at=? WHERE id=? AND revision=? AND blocked=0 AND EXISTS(SELECT 1 FROM tasks WHERE id=? AND lock_token=? AND lock_until>?) AND COALESCE((SELECT json_extract(value,'$') FROM settings WHERE key='reviewVersion'),'v1')=?", sid, snapshot.description, snapshot.fullName, result.publicReason, sid, created, enabled ? created : null, p.id, p.revision, task.id, token, created, configVersion));
         statements.push(query(env, 'UPDATE tasks SET status=?,public_reason=?,internal_reason=?,lock_until=NULL,updated_at=? WHERE id=? AND lock_token=?', result.verdict === 'allow' ? 'done' : result.verdict === 'reject' ? 'rejected' : 'incomplete', result.publicReason, result.internalReason, created, task.id, token));
         await env.DB.batch(statements);
         if (result.verdict === 'allow') {

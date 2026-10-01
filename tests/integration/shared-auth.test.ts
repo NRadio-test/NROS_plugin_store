@@ -33,7 +33,7 @@ describe('留言箱共享管理员，只读认证与商店会话隔离', () => {
   const cookie = cookieOf(response);
   expect(response.headers.get('set-cookie')).toContain('HttpOnly');
   expect(response.headers.get('set-cookie')).not.toContain('Domain=');
-  expect(await (await request(e, '/api/session', 'GET', undefined, cookie)).json()).toEqual({ user: null, admin: { id: 'admin', username: 'fixture-admin' } });
+  expect(await (await request(e, '/api/session', 'GET', undefined, cookie)).json()).toEqual({ user: null, admin: { id: 'admin', username: 'fixture-admin' }, reviewEnabled: true });
   expect((await request(e, '/api/studio/overview', 'GET', undefined, cookie)).status).toBe(200);
   expect((await request(e, '/api/studio/password', 'POST', { currentPassword: password, newPassword: 'unused' }, cookie)).status).toBe(403);
   expect((await e.DB.prepare('SELECT COUNT(*) n FROM admins').first<{ n: number }>())!.n).toBe(0);

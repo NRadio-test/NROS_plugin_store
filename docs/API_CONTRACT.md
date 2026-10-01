@@ -50,3 +50,7 @@ GET /api/studio/sources/candidates → {items:[{pluginId,fullName,version,assets
 `POST /api/studio/plugins/:id/manual-publish`，请求 `{ "confirmed": true, "revision": 当前插件revision }`。仅管理员会话、同源请求可调用；外部读取后再次校验会话。成功返回 `{ok:true,status:"published",message:...}`。版本变化返回 409，缺少安装包/结构不可处理时不发布。
 
 跳过源码内容、AI 与 Cloudmersive 查毒，仍验证安装包身份、摘要、结构和下载所需信息。原子保存手动发布快照、附件、任务记录与 `manual-publish` 审计，增加 revision，取消旧活动审核任务；可显式恢复已下架但文件仍可用的插件。仅绑定当前候选，新版本仍进入原有自动审核。公共详情新增 `publicationMode`（manual/automatic），手动发布 `reviewedAt=null`，`reviewLabel` 明确标识未经自动审核或查毒。
+
+### 审核暂停开关
+
+`GET /api/session` 新增布尔字段 `reviewEnabled`，用于提交页、Studio 与按钮文案显示。关闭时，新处理快照的 `publicationMode` 为 `unreviewed`，`reviewedAt` 为 null，`reviewLabel` 如实标记未经自动审核或查毒；这是正常发布记录而非管理员手动批准。`POST /api/studio/ai/test` 在关闭时返回 409/review_disabled，不发出外部请求。开关只来自服务端 REVIEW_ENABLED 环境配置，客户端不能修改。

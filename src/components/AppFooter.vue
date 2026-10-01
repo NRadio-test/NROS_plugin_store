@@ -9,7 +9,7 @@ const year = new Date().getFullYear()
       <p class="foot__links">
         <RouterLink to="/submit">提交插件</RouterLink>
         <RouterLink to="/me">个人中心</RouterLink>
-        <span>© {{ year }} 张导插件商店</span>
+        <span>© {{ year }} 插件商店</span>
       </p>
     </div>
   </footer>

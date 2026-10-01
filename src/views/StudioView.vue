@@ -116,7 +116,7 @@ function select(key: PanelKey) {
           <span class="signal-mark" aria-hidden="true"><i /><i /><i /></span>
           <span class="studio__brand-text">
             <span class="studio__brand-name">Studio</span>
-            <span class="studio__brand-sub">张导插件商店</span>
+            <span class="studio__brand-sub">插件商店</span>
           </span>
         </div>
 
@@ -174,6 +174,7 @@ function select(key: PanelKey) {
         </header>
 
         <div class="studio__content">
+          <p v-if="session.reviewEnabled === false" class="notice">审核已暂停。新提交内容整理完成后直接上架，标记为未审核；审核配置与代码均已保留。</p>
           <Suspense>
             <StudioOverview v-if="panel === 'overview'" @open="select" />
             <StudioPlugins v-else-if="panel === 'plugins'" />

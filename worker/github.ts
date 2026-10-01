@@ -194,7 +194,7 @@ export async function verifySnapshot(env: GitEnv, snapshot: Snapshot, fetcher: F
     if (repo.full_name !== snapshot.fullName || (repo.description ?? '') !== snapshot.description || (repo.license?.spdx_id && repo.license.spdx_id !== 'NOASSERTION' ? repo.license.spdx_id : null) !== snapshot.license) return false;
     const release = await api<Release>(env, `/repos/${repo.full_name}/releases/${snapshot.releaseId}`, fetcher, false);
     if (release.id !== snapshot.releaseId || release.draft !== false || release.prerelease !== false || release.tag_name !== snapshot.tag || await resolveTag(env, repo, snapshot.tag, fetcher, false) !== snapshot.sourceCommit) return false;
-    const display = await readReadme(env, repo, fetcher, false, snapshot.publicationMode === 'manual');
+    const display = await readReadme(env, repo, fetcher, false, snapshot.publicationMode === 'manual' || snapshot.publicationMode === 'unreviewed');
     if (display.readmeCommit !== snapshot.readmeCommit || display.readmePath !== snapshot.readmePath || display.readme !== snapshot.readme) return false;
     const assets = await releaseAssets(env, repo, release.id, fetcher, false);
     if (assets.length !== snapshot.assets.length) return false;

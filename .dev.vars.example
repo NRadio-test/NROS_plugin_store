@@ -9,3 +9,6 @@ GITHUB_TOKEN=
 CLOUDMERSIVE_API_KEY=
 # 标准 TAR 扫描请求上限；免费套餐先按 3.5 MB 限制。
 CLOUDMERSIVE_MAX_SCAN_BYTES=3500000
+
+# false 暂停 AI / 查毒；true 恢复自动审核。
+REVIEW_ENABLED=false

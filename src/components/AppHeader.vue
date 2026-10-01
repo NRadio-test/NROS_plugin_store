@@ -34,9 +34,9 @@ async function logout() {
 <template>
   <header class="top">
     <div class="wrap top__in">
-      <RouterLink to="/" class="brand" aria-label="张导插件商店 首页">
+      <RouterLink to="/" class="brand" aria-label="插件商店 首页">
         <span class="signal-mark" aria-hidden="true"><i /><i /><i /></span>
-        <span class="brand__name">张导插件商店</span>
+        <span class="brand__name">插件商店</span>
       </RouterLink>
 
       <nav class="nav" aria-label="主要导航">

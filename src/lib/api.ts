@@ -38,13 +38,14 @@ export interface Detail {
   license: string | null
   assets: Asset[]
   reviewLabel: string
-  publicationMode?: 'manual' | 'automatic'
+  publicationMode?: 'manual' | 'automatic' | 'unreviewed'
   reviewedAt?: number | null
   reviewPublicReason?: string
   publishedAt?: number | null
 }
 
 export interface Session {
+  reviewEnabled?: boolean
   user: { id: string; phone_mask: string } | null
   admin: { id: string; username: string } | null
 }

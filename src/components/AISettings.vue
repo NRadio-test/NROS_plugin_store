@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { api, errorMessage, post, put } from '../lib/api'
+import { session, api, errorMessage, post, put } from '../lib/api'
 import { toast } from '../lib/toast'
 import AsyncState from './AsyncState.vue'
 import AppIcon from './AppIcon.vue'
@@ -79,6 +79,7 @@ onMounted(load)
 
 <template>
   <section class="ai">
+    <p v-if="session.reviewEnabled === false" class="notice">审核暂时关闭：已保存的配置保留，当前不会调用 AI 或查毒服务。</p>
     <header class="ai__head">
       <div>
         <h2 class="ai__title">AI 审核设置</h2>
@@ -160,7 +161,7 @@ onMounted(load)
 
         <div class="ai__actions">
           <AppButton variant="primary" type="submit" icon="check" :loading="busy === 'save'">{{ busy === 'save' ? '正在保存…' : '保存设置' }}</AppButton>
-          <AppButton type="button" icon="zap" :loading="busy === 'test'" @click="test">测试已保存配置</AppButton>
+          <AppButton type="button" icon="zap" :disabled="session.reviewEnabled === false" :loading="busy === 'test'" @click="test">测试已保存配置</AppButton>
           <span class="ai__note">测试不会发布插件。</span>
         </div>
 
