@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from './AppIcon.vue'
+import BrandLogo from './BrandLogo.vue'
 import AppButton from './AppButton.vue'
 import AppMenu from './AppMenu.vue'
 import { toast } from '../lib/toast'
@@ -17,7 +18,7 @@ const links = [
   { to: '/submit', label: '提交插件', icon: 'upload' as const },
 ]
 
-const account = computed(() => session.user?.phone_mask || '')
+const account = computed(() => session.user?.display_name || session.user?.phone_mask || '')
 
 async function logout() {
   loggingOut.value = true
@@ -34,8 +35,8 @@ async function logout() {
 <template>
   <header class="top">
     <div class="wrap top__in">
-      <RouterLink to="/" class="brand" aria-label="插件商店 首页">
-        <span class="signal-mark" aria-hidden="true"><i /><i /><i /></span>
+      <RouterLink to="/" class="brand" aria-label="NRadio 插件商店 首页">
+        <BrandLogo />
         <span class="brand__name">插件商店</span>
       </RouterLink>
 
@@ -64,8 +65,8 @@ async function logout() {
           <div class="menu__sep" />
           <button type="button" class="menu__item" role="menuitem" :disabled="loggingOut" @click="logout"><AppIcon name="log-out" :size="17" />{{ loggingOut ? '正在退出…' : '退出登录' }}</button>
         </AppMenu>
-        <AppButton v-else to="/login" aria-label="手机号进入" variant="primary" icon="user">
-          <span class="account__label">手机号进入</span>
+        <AppButton v-else to="/login" :aria-label="session.ssoEnabled ? '登录' : '手机号进入'" variant="secondary" icon="user">
+          <span class="account__label">{{ session.ssoEnabled ? '登录' : '手机号进入' }}</span>
         </AppButton>
       </div>
     </div>

@@ -248,7 +248,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <div class="detail__review">
                   <div class="detail__review-row">
                     <span class="detail__review-label">审核结论</span>
-                    <span><AppBadge variant="success" dot><AppIcon name="shield-check" :size="12" />{{ detail.reviewLabel || '通过自动审核' }}</AppBadge></span>
+                    <span><AppBadge variant="success" dot><AppIcon name="shield-check" :size="12" />{{ detail.reviewLabel || '人工审核通过' }}</AppBadge></span>
                   </div>
                   <div class="detail__review-row">
                     <span class="detail__review-label">公开理由</span>
@@ -269,7 +269,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 </div>
                 <div class="notice notice--warning detail__notice">
                   <AppIcon name="alert" :size="16" />
-                  <span>{{ detail.publicationMode === 'unreviewed' ? '审核暂时关闭，此版本未经过自动审核或查毒。' : detail.publicationMode === 'manual' ? '此版本由管理员直接上架，未经过自动审核或查毒。' : '自动审核为静态检查，不保证无病毒。' }}</span>
+                  <span>{{ detail.publicationMode === 'human-reviewed' ? '当前版本已由管理员人工审核并允许收录。未执行自动查毒。' : detail.publicationMode === 'unreviewed' ? '审核暂时关闭，此版本未经过自动审核或查毒。' : detail.publicationMode === 'manual' ? '此版本由管理员直接上架，未经过自动审核或查毒。' : '自动审核为静态检查，不保证无病毒。' }}</span>
                 </div>
               </section>
             </div>
@@ -368,10 +368,8 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 22px 28px;
   align-items: start;
-  padding: 26px;
-  border-radius: var(--r-page);
-  background: var(--surface);
-  box-shadow: var(--shadow-shell);
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--line);
 }
 .detail-hero__ident { display: flex; gap: 16px; min-width: 0; }
 .detail-hero__text { min-width: 0; }
@@ -381,17 +379,16 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .detail-hero__actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .detail-hero__stats {
   grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  margin: 4px 0 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0;
 }
-.detail-hero__stats dd { margin: 0; }
+.detail-hero__stats .stat { flex-direction: row; align-items: baseline; gap: 8px; }
+.detail-hero__stats dd { margin: 0; font-size: var(--fs-sm); font-weight: 600; }
 .stat__value--text { font-size: var(--fs-body); font-weight: 620; }
 
-.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 24px; margin-top: 24px; align-items: start; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 288px; gap: 24px; margin-top: 24px; align-items: start; }
 .detail-main { min-width: 0; }
 .detail__tabs { margin-bottom: 16px; flex-wrap: wrap; }
 .detail__panel { padding: 24px; }
@@ -412,11 +409,11 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .detail-aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-h) + 18px); }
 .download-card { padding: 20px; scroll-margin-top: calc(var(--header-h) + 20px); }
 .download-card__head { display: flex; align-items: center; gap: 12px; }
-.download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--r-control); background: var(--signal-surface); color: var(--signal-text); }
+.download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-2); }
 .download-card__title { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
-.download-card__version { font-size: var(--fs-h2); font-weight: 680; letter-spacing: -0.025em; }
+.download-card__version { font-size: 18px; font-weight: 600; letter-spacing: -0.025em; }
 .download-card__note { margin-top: 12px; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
-.asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface-raised); }
+.asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
 .asset__name { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600; word-break: break-all; }
 .asset__meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: var(--fs-cap); color: var(--text-3); }
 .asset__hash { font-size: var(--fs-cap); color: var(--text-3); }
@@ -439,7 +436,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 }
 @media (max-width: 767px) {
   .detail { padding-top: 16px; padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
-  .detail-hero { grid-template-columns: 1fr; padding: 20px; gap: 18px; }
+  .detail-hero { grid-template-columns: 1fr; padding: 0 0 20px; gap: 18px; }
   .detail-hero__ident { gap: 12px; }
   .detail-hero__actions { width: 100%; }
   .detail-hero__actions .btn { flex: 1; }

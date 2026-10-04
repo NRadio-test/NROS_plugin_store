@@ -2,7 +2,8 @@ import { AppError, type Env, type Snapshot } from './contracts';
 import { getRepository, getSnapshot, normalizeRepoUrl, verifySnapshot } from './github';
 import { uploadSnapshot, verifyUpload } from './uploads';
 import { review } from './ai';
-import { reviewEnabled, UNREVIEWED_REASON } from './review-mode';
+import { manualReview, publicationFilter, reviewEnabled, UNREVIEWED_REASON } from './review-mode';
+import { prepareReview } from './manual-review';
 import { loadAI } from './settings';
 import { id, now, query, setting, purgeRemovedMaterials } from './db';
 interface Plugin {
@@ -45,7 +46,7 @@ export async function submit(env: Env, url: string, userId: string | null) {
     if (p?.id !== pluginId)
         return { pluginId: p?.id, taskId: null, status: p?.status, message: '该仓库已收录或正在处理' };
     await enqueue(env, taskId);
-    return { pluginId, taskId, status: 'pending', message: reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
+    return { pluginId, taskId, status: 'pending', message: manualReview(env) ? '投稿已保存，资料整理后交由管理员人工审核' : reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
 }
 export async function refresh(env: Env, pluginId: string, force = false) {
     const p = await query(env, 'SELECT * FROM plugins WHERE id=?', pluginId).first<Plugin>();
@@ -84,8 +85,9 @@ export async function processTask(env: Env, taskId: string) {
     try {
         const enabled = reviewEnabled(env);
         const snapshot = p.source_kind === 'upload' ? await uploadSnapshot(env, p.id, !enabled) : await getSnapshot(env, p.repository_id, fetch, !enabled);
-        if (!enabled) { snapshot.publicationMode = 'unreviewed'; snapshot.materials = ''; snapshot.coverage = [UNREVIEWED_REASON]; }
         await query(env, 'UPDATE plugins SET missing_count=0,missing_since=NULL WHERE id=? AND revision=?', p.id, p.revision).run();
+        if (manualReview(env)) { await prepareReview(env, p, task.id, token, snapshot); return; }
+        if (!enabled) { snapshot.publicationMode = 'unreviewed'; snapshot.materials = ''; snapshot.coverage = [UNREVIEWED_REASON]; }
         const configVersion = await setting<string>(env, 'reviewVersion') ?? 'v1';
         const version = enabled ? (task.force_review ? configVersion + ':force:' + task.id : configVersion) : 'unreviewed-v1:' + configVersion;
         const reused = await query(env, 'SELECT * FROM snapshots WHERE plugin_id=? AND fingerprint=? AND review_version=?', p.id, snapshot.fingerprint, version).first<{
@@ -180,11 +182,11 @@ export async function recover(env: Env) { await query(env, "UPDATE tasks SET sta
  *  重新排队只会把 R2 对象整包读回来再解析一遍，因此跳过。
  *  未上架的直传包仍会扫描，保留 AI 配置补全后的自动重试。
  *  直传对象缺失由下载时的 etag/size 校验兜底，作者也可以用「重新检查」主动复核。 */
-export async function scan(env: Env, cursor = '') { const rows = await query(env, "SELECT id FROM plugins WHERE blocked=0 AND NOT (status='published' AND (source_kind='upload' OR EXISTS(SELECT 1 FROM snapshots s WHERE s.id=plugins.approved_snapshot_id AND json_extract(s.data,'$.publicationMode')='manual'))) AND id>? ORDER BY id LIMIT 25", cursor).all<{
+export async function scan(env: Env, cursor = '') { const rows = await query(env, "SELECT id FROM plugins WHERE blocked=0 AND NOT (status='published' AND (source_kind='upload' OR EXISTS(SELECT 1 FROM snapshots s WHERE s.id=plugins.approved_snapshot_id AND json_extract(s.data,'$.publicationMode')='manual')))" + (manualReview(env) ? " AND NOT EXISTS(SELECT 1 FROM manual_reviews r WHERE r.plugin_id=plugins.id AND r.revision=plugins.revision AND r.decision IN ('pending','rejected'))" : '') + " AND id>? ORDER BY id LIMIT 25", cursor).all<{
     id: string;
 }>(); for (const row of rows.results)
     await refresh(env, row.id); if (rows.results.length === 25)
     await env.JOBS.send({ scanCursor: rows.results.at(-1)!.id }); }
-export async function getApproved(env: Env, pluginId: string): Promise<Snapshot | null> { const row = await query(env, "SELECT s.data FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id WHERE p.id=? AND p.blocked=0 AND p.status='published'", pluginId).first<{
+export async function getApproved(env: Env, pluginId: string): Promise<Snapshot | null> { const row = await query(env, "SELECT s.data FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id WHERE p.id=? AND p.blocked=0 AND p.status='published'" + publicationFilter(env), pluginId).first<{
     data: string;
 }>(); return row ? JSON.parse(row.data) : null; }

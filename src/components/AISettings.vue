@@ -79,7 +79,8 @@ onMounted(load)
 
 <template>
   <section class="ai">
-    <p v-if="session.reviewEnabled === false" class="notice">审核暂时关闭：已保存的配置保留，当前不会调用 AI 或查毒服务。</p>
+    <p v-if="session.reviewMode === 'manual'" class="notice">当前采用人工审核；此处配置保留备用，不参与上架。</p>
+    <p v-else-if="session.reviewEnabled === false" class="notice">自动审核已停用；已保存的配置保留。</p>
     <header class="ai__head">
       <div>
         <h2 class="ai__title">AI 审核设置</h2>

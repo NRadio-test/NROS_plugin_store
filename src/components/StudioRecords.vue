@@ -27,10 +27,11 @@ const visibleTasks = computed(() => tasks.value.slice((page.value - 1) * pageSiz
 const visibleLogs = computed(() => logs.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 
 const ACTION_LABELS: Record<string, string> = {
-  login: '管理员登录', logout: '退出登录', submit: '提交仓库', sync: '同步仓库', retry: '重新审核',
+  login: '管理员登录', logout: '退出登录', submit: '提交仓库', sync: '同步仓库', retry: '重新整理资料',
   unlist: '下架插件', delete: '删除插件', restore: '显式恢复', 'ai-settings': '更新 AI 设置',
   'ai-test': '测试 AI 接口', 'download-sources': '更新下载源', 'source-test': '测试下载源',
   'manual-publish': '手动上架',
+  'manual-approve': '人工审核通过', 'manual-reject': '退回作者修改',
   'password-change': '修改管理员密码',
 }
 
@@ -53,10 +54,9 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
   <section class="records">
     <header class="records__head">
       <div>
-        <h2 class="records__title">{{ kind === 'tasks' ? '审核任务' : '操作日志' }}</h2>
         <p class="records__desc">
           {{ kind === 'tasks'
-            ? '公开理由对用户可见，内部依据仅管理员可见。'
+            ? '跟踪提交资料的整理进度。人工审核请前往审核收件箱。'
             : '记录管理员、动作与目标。' }}
         </p>
       </div>
@@ -69,7 +69,7 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
       :empty="!total"
       skeleton="row"
       :skeleton-count="6"
-      :empty-title="kind === 'tasks' ? '暂无审核任务' : '暂无操作日志'"
+      :empty-title="kind === 'tasks' ? '暂无整理任务' : '暂无操作日志'"
       :empty-text="kind === 'tasks' ? '新投稿与定时同步会生成任务。' : '管理员操作会记录在这里。'"
       @retry="load"
     >
@@ -125,18 +125,17 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
 .records__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .records__title { font-size: var(--fs-h2); }
 .records__desc { margin-top: 5px; max-width: 80ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
-.records__list { display: flex; flex-direction: column; gap: 10px; }
+.records__list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); overflow: hidden; }
 .record {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px 16px;
   align-items: start;
   padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-group);
+  border-bottom: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: var(--shadow-xs);
 }
+.record:last-child { border-bottom: 0; }
 .record--log { grid-template-columns: auto minmax(0, 1fr); align-items: center; padding: 13px 16px; }
 .record__head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .record__rev, .record__attempts { font-size: var(--fs-cap); color: var(--text-3); font-family: var(--font-mono); }

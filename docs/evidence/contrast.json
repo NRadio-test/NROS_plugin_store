@@ -1,86 +1,86 @@
 [
   {
     "name": "深色正文/页面",
-    "foreground": "#f3f8fd",
-    "background": "#07101b",
-    "contrast": 17.89,
+    "foreground": "#eceef1",
+    "background": "#17191d",
+    "contrast": 15.14,
     "passed": true
   },
   {
     "name": "深色正文/表面",
-    "foreground": "#f3f8fd",
-    "background": "#0e1a29",
-    "contrast": 16.4,
+    "foreground": "#eceef1",
+    "background": "#202329",
+    "contrast": 13.54,
     "passed": true
   },
   {
     "name": "深色次文字/表面",
-    "foreground": "#b7c6d5",
-    "background": "#0e1a29",
-    "contrast": 10.06,
+    "foreground": "#c1c7cf",
+    "background": "#202329",
+    "contrast": 9.25,
     "passed": true
   },
   {
     "name": "深色弱化文字/表面",
-    "foreground": "#9cadbf",
-    "background": "#0e1a29",
-    "contrast": 7.63,
+    "foreground": "#adb5c0",
+    "background": "#202329",
+    "contrast": 7.61,
     "passed": true
   },
   {
     "name": "深色次文字/抬升面",
-    "foreground": "#b7c6d5",
-    "background": "#152c41",
-    "contrast": 8.21,
+    "foreground": "#c1c7cf",
+    "background": "#292d34",
+    "contrast": 8.12,
     "passed": true
   },
   {
     "name": "深色弱化文字/抬升面",
-    "foreground": "#9cadbf",
-    "background": "#152c41",
-    "contrast": 6.23,
+    "foreground": "#adb5c0",
+    "background": "#292d34",
+    "contrast": 6.68,
     "passed": true
   },
   {
     "name": "深色链接/页面",
-    "foreground": "#5cdeff",
-    "background": "#07101b",
-    "contrast": 12.15,
+    "foreground": "#78c7db",
+    "background": "#17191d",
+    "contrast": 9.21,
     "passed": true
   },
   {
     "name": "深色链接/表面",
-    "foreground": "#5cdeff",
-    "background": "#0e1a29",
-    "contrast": 11.14,
+    "foreground": "#78c7db",
+    "background": "#202329",
+    "contrast": 8.24,
     "passed": true
   },
   {
     "name": "深色主按钮文字",
-    "foreground": "#050e17",
-    "background": "#5cdeff",
-    "contrast": 12.34,
+    "foreground": "#172128",
+    "background": "#78c7db",
+    "contrast": 8.56,
     "passed": true
   },
   {
     "name": "深色主按钮悬浮文字",
-    "foreground": "#050e17",
-    "background": "#84e8ff",
-    "contrast": 13.84,
+    "foreground": "#172128",
+    "background": "#98d8e7",
+    "contrast": 10.36,
     "passed": true
   },
   {
     "name": "深色危险按钮文字",
-    "foreground": "#050e17",
+    "foreground": "#172128",
     "background": "#ff9689",
-    "contrast": 9.22,
+    "contrast": 7.77,
     "passed": true
   },
   {
     "name": "深色弱化文字/悬浮面",
-    "foreground": "#9cadbf",
-    "background": "#1d384f",
-    "contrast": 5.28,
+    "foreground": "#adb5c0",
+    "background": "#30353d",
+    "contrast": 5.96,
     "passed": true
   },
   {
@@ -106,86 +106,86 @@
   },
   {
     "name": "深色中性状态/抬升面",
-    "foreground": "#8d9aa7",
-    "background": "#152c41",
-    "contrast": 4.98,
+    "foreground": "#adb5c0",
+    "background": "#292d34",
+    "contrast": 6.68,
     "passed": true
   },
   {
     "name": "深色选中文字/选中底",
-    "foreground": "#5cdeff",
-    "background": "#173243",
-    "contrast": 8.48,
+    "foreground": "#78c7db",
+    "background": "#253c45",
+    "contrast": 6.07,
     "passed": true
   },
   {
     "name": "浅色正文/页面",
-    "foreground": "#08131f",
-    "background": "#f4f7fa",
-    "contrast": 17.39,
+    "foreground": "#20252c",
+    "background": "#f6f7f8",
+    "contrast": 14.37,
     "passed": true
   },
   {
     "name": "浅色正文/表面",
-    "foreground": "#08131f",
+    "foreground": "#20252c",
     "background": "#ffffff",
-    "contrast": 18.7,
+    "contrast": 15.41,
     "passed": true
   },
   {
     "name": "浅色次文字/表面",
-    "foreground": "#44576a",
+    "foreground": "#4c5663",
     "background": "#ffffff",
     "contrast": 7.45,
     "passed": true
   },
   {
     "name": "浅色弱化文字/表面",
-    "foreground": "#596b7c",
+    "foreground": "#606b78",
     "background": "#ffffff",
-    "contrast": 5.5,
+    "contrast": 5.42,
     "passed": true
   },
   {
     "name": "浅色次文字/抬升面",
-    "foreground": "#44576a",
-    "background": "#f1f6fa",
-    "contrast": 6.85,
+    "foreground": "#4c5663",
+    "background": "#f2f4f6",
+    "contrast": 6.76,
     "passed": true
   },
   {
     "name": "浅色弱化文字/抬升面",
-    "foreground": "#596b7c",
-    "background": "#f1f6fa",
-    "contrast": 5.05,
+    "foreground": "#606b78",
+    "background": "#f2f4f6",
+    "contrast": 4.92,
     "passed": true
   },
   {
     "name": "浅色链接/页面",
-    "foreground": "#0e7490",
-    "background": "#f4f7fa",
-    "contrast": 4.98,
+    "foreground": "#0b687f",
+    "background": "#f6f7f8",
+    "contrast": 5.93,
     "passed": true
   },
   {
     "name": "浅色链接/表面",
-    "foreground": "#0e7490",
+    "foreground": "#0b687f",
     "background": "#ffffff",
-    "contrast": 5.36,
+    "contrast": 6.36,
     "passed": true
   },
   {
     "name": "浅色主按钮文字",
     "foreground": "#ffffff",
-    "background": "#0e7490",
-    "contrast": 5.36,
+    "background": "#0b687f",
+    "contrast": 6.36,
     "passed": true
   },
   {
     "name": "浅色主按钮悬浮文字",
     "foreground": "#ffffff",
-    "background": "#155e75",
-    "contrast": 7.27,
+    "background": "#08576b",
+    "contrast": 8.12,
     "passed": true
   },
   {
@@ -197,9 +197,9 @@
   },
   {
     "name": "浅色弱化文字/悬浮面",
-    "foreground": "#596b7c",
-    "background": "#e6eef5",
-    "contrast": 4.69,
+    "foreground": "#606b78",
+    "background": "#e9edf0",
+    "contrast": 4.61,
     "passed": true
   },
   {
@@ -226,15 +226,15 @@
   {
     "name": "浅色中性状态/抬升面",
     "foreground": "#556576",
-    "background": "#f1f6fa",
-    "contrast": 5.5,
+    "background": "#f2f4f6",
+    "contrast": 5.43,
     "passed": true
   },
   {
     "name": "浅色选中文字/选中底",
-    "foreground": "#0e7490",
-    "background": "#e0f1f7",
-    "contrast": 4.62,
+    "foreground": "#0b687f",
+    "background": "#e9f2f5",
+    "contrast": 5.6,
     "passed": true
   }
 ]

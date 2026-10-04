@@ -39,11 +39,8 @@ watchPostEffect(() => {
 <style scoped>
 .field__head { display: flex; align-items: baseline; gap: 8px; }
 .field__flag {
-  padding: 1px 7px;
-  border-radius: var(--r-pill);
-  background: var(--surface-raised);
   color: var(--text-3);
   font-size: var(--fs-cap);
-  font-weight: 600;
+  font-weight: 400;
 }
 </style>

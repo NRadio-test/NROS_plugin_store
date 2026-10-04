@@ -1,4 +1,4 @@
-/** 主题：深色为准，浅色同语义派生；用 data-theme 属性切换，跟随系统默认。 */
+/** 中性明暗主题；尊重已有偏好及系统设置。 */
 import { ref, watch } from 'vue'
 
 const STORAGE_KEY = 'theme-preference'
@@ -14,7 +14,7 @@ function applyTheme(dark: boolean) {
   const root = document.documentElement
   root.setAttribute('data-theme', dark ? 'dark' : 'light')
   root.classList.toggle('dark', dark)
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#07101b' : '#f4f7fa')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#17191d' : '#f6f7f8')
 }
 
 watch(isDarkMode, dark => {

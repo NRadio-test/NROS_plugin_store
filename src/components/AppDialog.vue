@@ -62,8 +62,9 @@ onBeforeUnmount(() => { panel.value?.close(); unlock() })
 .app-dialog[open] { display: flex; flex-direction: column; }
 .app-dialog::backdrop { background: var(--backdrop); }
 .app-dialog--wide { width: min(52rem, calc(100% - 32px)); }
-.app-dialog--drawer { margin: 0 0 0 auto; width: min(44rem, calc(100% - 16px)); height: 100svh; max-height: 100svh; border-radius: var(--r-page) 0 0 var(--r-page); }
+.app-dialog--drawer { position: fixed; inset: 0 0 0 auto; margin: 0; width: min(44rem, calc(100% - 16px)); height: 100svh; max-height: 100svh; border-radius: var(--r-page) 0 0 var(--r-page); }
 .app-dialog__head, .app-dialog__body, .app-dialog__foot { padding: var(--sp-6); }
+.app-dialog__head, .app-dialog__foot { flex-shrink: 0; }
 .app-dialog__head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-4); border-bottom: 1px solid var(--line); }
 .app-dialog__head > div { min-width: 0; }
 .app-dialog__head h2 { overflow-wrap: anywhere; }

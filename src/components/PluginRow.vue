@@ -74,8 +74,7 @@ async function download() {
     </div>
 
     <div class="pkg__stats">
-      <div class="pkg__stat"><b>{{ formatNumber(count) }}</b><span>收藏</span></div>
-      <div class="pkg__stat"><b>{{ formatNumber(plugin.download_count) }}</b><span>下载</span></div>
+      <span><b>{{ formatNumber(count) }}</b><span class="sr-only">收藏</span></span><span aria-hidden="true">/</span><span><b>{{ formatNumber(plugin.download_count) }}</b><span class="sr-only">下载</span></span>
     </div>
 
     <div class="pkg__actions">
@@ -106,11 +105,25 @@ async function download() {
 </template>
 
 <style scoped>
+.pkg { gap: 20px; }
 .pkg__main { position: relative; }
+.pkg__name { font-size: 16px; font-weight: 600; letter-spacing: 0; }
+.pkg__desc { color: var(--text-2); margin-top: 1px; }
+.pkg__meta { margin-top: 4px; font-size: 12px; }
+.pkg__stats { width: 130px; flex: none; display: flex; gap: 12px; font-size: 13px; color: var(--text-3); }
+.pkg__stats b { font-weight: 400; color: var(--text-2); }
+.pkg__actions { width: 152px; flex: none; justify-content: flex-end; }
+.pkg__actions .btn--icon { background: transparent; border-color: transparent; }
 .pkg__name a { color: var(--text); text-decoration: none; }
 .pkg__name a:hover { color: var(--signal-text); }
 /* 标题链接覆盖整块文字区；统计与操作区保持在覆盖层之上 */
 .pkg__name a::after { content: ''; position: absolute; inset: 0; }
 .pkg__stats, .pkg__actions { position: relative; z-index: 1; }
 .pkg__actions [aria-pressed='true'] { color: var(--signal-text); background: var(--signal-surface); }
+@media(max-width:640px) {
+  .pkg { padding: 16px !important; gap: 12px; }
+  .pkg__stats { width: auto; flex: 1; }
+  .pkg__stats .sr-only { position: static; width: auto; height: auto; clip-path: none; margin-left: 5px; }
+  .pkg__actions { width: auto; }
+}
 </style>

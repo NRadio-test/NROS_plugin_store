@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Env } from '../../worker/contracts';
 import { INTERNAL_SENTINEL, publish, request, seedAdmin, seedPlugin, seedTask, testEnv } from './harness';
 
-const STUDIO_FIELDS = ['source_kind', 'id', 'full_name', 'repository_id', 'description', 'status', 'blocked', 'revision', 'version', 'favorite_count', 'download_count', 'public_reason', 'created_at', 'updated_at', 'checked_at', 'approved_snapshot_id', 'submitter_id', 'task_status', 'task_attempts', 'last_task_at'].sort();
+const STUDIO_FIELDS = ['source_kind', 'id', 'full_name', 'repository_id', 'review_status', 'description', 'status', 'blocked', 'revision', 'version', 'favorite_count', 'download_count', 'public_reason', 'created_at', 'updated_at', 'checked_at', 'approved_snapshot_id', 'submitter_id', 'task_status', 'task_attempts', 'last_task_at'].sort();
 const DEFAULT_AI_BASE_URL = 'https://api.openai.com/v1';
 
 interface ListBody { items: Record<string, any>[]; total: number; page: number; pageSize: number }
@@ -42,7 +42,7 @@ describe('Studio 管理、总览与改密接口', () => {
   await seedPlugin(x.e, { id: 'p-blocked', fullName: 'owner/blocked', status: 'published', blocked: 1, createdAt: 1400, downloads: 3, favorites: 2 });
   const cookie = await seedAdmin(x.e);
   const body = await (await request(x.e, '/api/studio/overview', 'GET', undefined, cookie)).json() as Record<string, any>;
-  expect(body.counts).toEqual({ plugins: 5, published: 2, inReview: 1, waiting: 1, rejected: 1, removed: 1, blocked: 1, favorites: 2, downloads: 3, users: 2, tasksActive: 1, tasksFailed: 1 });
+  expect(body.counts).toEqual({ awaitingReview: 0, plugins: 5, published: 2, inReview: 1, waiting: 1, rejected: 1, removed: 1, blocked: 1, favorites: 2, downloads: 3, users: 2, tasksActive: 1, tasksFailed: 1 });
   expect(body.ai).toEqual({ configured: true, model: 'fixture-model', baseUrl: 'https://ai.vendor.com/v1' });
   const serialized = JSON.stringify(body);
   expect(serialized).not.toContain('isolated-key');
@@ -61,7 +61,7 @@ describe('Studio 管理、总览与改密接口', () => {
   const body = await (await request(e, '/api/studio/overview', 'GET', undefined, cookie)).json() as Record<string, any>;
   expect(body.ai.configured).toBe(false);
   expect(body.ai.baseUrl).toBe(DEFAULT_AI_BASE_URL);
-  expect(body.counts).toEqual({ plugins: 0, published: 0, inReview: 0, waiting: 0, rejected: 0, removed: 0, blocked: 0, favorites: 0, downloads: 0, users: 0, tasksActive: 0, tasksFailed: 0 });
+  expect(body.counts).toEqual({ awaitingReview: 0, plugins: 0, published: 0, inReview: 0, waiting: 0, rejected: 0, removed: 0, blocked: 0, favorites: 0, downloads: 0, users: 0, tasksActive: 0, tasksFailed: 0 });
   expect(body.recentTasks).toEqual([]);
   expect(JSON.stringify(body)).not.toContain('apiKey');
  });

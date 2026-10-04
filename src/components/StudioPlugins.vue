@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
-import { api, errorMessage, post, type StudioPlugin, type StudioPluginDetail } from '../lib/api'
+import { api, errorMessage, post, session, type StudioPlugin, type StudioPluginDetail } from '../lib/api'
 import { statusMeta, isActive } from '../lib/status'
 import { formatDateTime, formatNumber, formatSize, formatRelative, shortId } from '../lib/format'
 import { toast } from '../lib/toast'
@@ -9,6 +9,7 @@ import AppPagination from './AppPagination.vue'
 import AppIcon from './AppIcon.vue'
 import AppBadge from './AppBadge.vue'
 import AppButton from './AppButton.vue'
+import AppField from './AppField.vue'
 import AppModal from './AppModal.vue'
 import AppDrawer from './AppDrawer.vue'
 import AppMenu from './AppMenu.vue'
@@ -16,12 +17,15 @@ import { navigateTabs } from '../composables/tabs'
 import SubmissionForm from './SubmissionForm.vue'
 import UploadForm from './UploadForm.vue'
 
+const emit = defineEmits<{ review: [id: string] }>()
+
 type Action = 'manual-publish' | 'sync' | 'retry' | 'unlist' | 'delete' | 'restore'
 
 const FILTERS = [
   { key: 'all', label: '全部' },
   { key: 'published', label: '已上架' },
-  { key: 'in_review', label: '审核中' },
+  { key: 'awaiting_review', label: '待人工审核' },
+  { key: 'in_review', label: '整理中' },
   { key: 'waiting', label: '等待处理' },
   { key: 'rejected', label: '已拒绝' },
   { key: 'removed', label: '已下架' },
@@ -31,10 +35,10 @@ const FILTERS = [
 const ACTION_META: Record<Action, { label: string; title: string; confirm: string; danger: boolean; hint: string }> = {
   'manual-publish': { label: '手动上架', title: '手动上架当前版本', confirm: '确认手动上架', danger: false, hint: '跳过 AI 审核和查毒，直接公开当前版本并开放下载。页面将标明手动上架；新版本仍需单独审核或手动上架。' },
   sync: { label: '同步', title: '同步原仓库', confirm: '开始同步', danger: false, hint: '重新读取 GitHub 快照。' },
-  retry: { label: '重新审核', title: '重新审核', confirm: '重新审核', danger: false, hint: '重新读取材料并送审。' },
+  retry: { label: '重新整理', title: '重新整理', confirm: '重新整理', danger: false, hint: '重新整理当前版本，之后进入人工审核。' },
   unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，不可自动恢复。' },
   delete: { label: '删除', title: '删除插件', confirm: '确认删除', danger: true, hint: '清理快照、附件与收藏，仅保留提交状态与原因。' },
-  restore: { label: '显式恢复', title: '显式恢复', confirm: '恢复并重新审核', danger: false, hint: '重新进入审核，通过后上架。' },
+  restore: { label: '显式恢复', title: '显式恢复', confirm: '恢复并提交审核', danger: false, hint: '重新进入审核，通过后上架。' },
 }
 
 const items = ref<StudioPlugin[]>([])
@@ -76,6 +80,7 @@ async function load() {
 }
 
 function ask(plugin: StudioPlugin, action: Action) {
+  reason.value = ''
   pending.value = { plugin, action }
 }
 
@@ -124,10 +129,6 @@ void load()
 <template>
   <section class="sp">
     <header class="sp__head">
-      <div>
-        <h2 class="sp__title">插件管理</h2>
-        <p class="sp__desc">搜索插件，执行同步、重审、下架与恢复。</p>
-      </div>
       <AppButton variant="primary" icon="plus" @click="submitOpen = true">提交插件</AppButton>
     </header>
 
@@ -135,12 +136,7 @@ void load()
       <div class="input-icon sp__search">
         <AppIcon name="search" :size="16" />
         <label for="studio-search" class="sr-only">搜索名称或描述</label>
-        <input id="studio-search" v-model="query" class="input" type="search" placeholder="搜索仓库名称或描述" autocomplete="off" />
-      </div>
-      <div class="input-icon sp__search">
-        <AppIcon name="flag" :size="16" />
-        <label for="studio-reason" class="sr-only">操作原因（对用户可见）</label>
-        <input id="studio-reason" v-model="reason" class="input" maxlength="300" placeholder="操作原因" />
+        <input id="studio-search" v-model="query" class="input" type="search" placeholder="搜索名称或简介" autocomplete="off" />
       </div>
       <AppButton size="md" icon="refresh" :loading="loading" @click="load">刷新</AppButton>
     </div>
@@ -173,7 +169,7 @@ void load()
           <table class="table sp__table">
             <thead>
               <tr>
-                <th scope="col">仓库</th>
+                <th scope="col">作品</th>
                 <th scope="col">状态</th>
                 <th scope="col">版本</th>
                 <th scope="col">收藏 / 下载</th>
@@ -185,13 +181,9 @@ void load()
               <tr v-for="plugin in items" :key="plugin.id">
                 <td>
                   <div class="sp__repo">
-                    <span class="sp__repo-name">{{ plugin.full_name }}</span>
+                    <button class="sp__repo-name" @click="openDetail(plugin.id)">{{ plugin.full_name }}</button>
                     <span class="sp__repo-meta">
-                      <span class="mono">ID {{ shortId(plugin.id) }}</span>
-                      <span aria-hidden="true">·</span>
-                      <span class="mono">{{ plugin.source_kind === 'upload' ? '直传' : 'repo ' + plugin.repository_id }}</span>
-                      <span aria-hidden="true">·</span>
-                      <span>revision {{ plugin.revision }}</span>
+                      <span>{{ plugin.source_kind === 'upload' ? 'IPK 直传' : 'GitHub 仓库' }}</span>
                     </span>
                     <span class="sp__repo-reason">{{ plugin.public_reason || '—' }}</span>
                   </div>
@@ -202,22 +194,22 @@ void load()
                       <AppIcon :name="statusMeta(plugin.status).icon" :size="12" />{{ statusMeta(plugin.status).label }}
                     </AppBadge>
                     <AppBadge v-if="plugin.blocked" variant="danger"><AppIcon name="ban" :size="12" />禁止自动恢复</AppBadge>
-                    <span v-if="plugin.task_status && plugin.task_status !== plugin.status" class="sp__task">
+                    <span v-if="plugin.task_status && isActive(plugin.task_status) && plugin.task_status !== plugin.status" class="sp__task">
                       任务：{{ statusMeta(plugin.task_status).label }}
                     </span>
                   </div>
                 </td>
-                <td class="mono small">{{ plugin.version || '—' }}</td>
-                <td class="tnum small">{{ formatNumber(plugin.favorite_count) }} / {{ formatNumber(plugin.download_count) }}</td>
-                <td class="small muted">{{ plugin.checked_at ? formatRelative(plugin.checked_at) : '尚未检查' }}</td>
+                <td class="mono small"><span class="sp__cell-label">已上架版本</span>{{ plugin.version || '—' }}</td>
+                <td class="tnum small"><span class="sp__cell-label">收藏 / 下载</span>{{ formatNumber(plugin.favorite_count) }} / {{ formatNumber(plugin.download_count) }}</td>
+                <td class="small muted"><span class="sp__cell-label">最近检查</span>{{ plugin.checked_at ? formatRelative(plugin.checked_at) : '尚未检查' }}</td>
                 <td>
                   <div class="table__actions">
-                    <AppButton size="sm" variant="ghost" icon="external-link" @click="openDetail(plugin.id)">详情</AppButton>
-                    <AppButton v-if="plugin.source_kind !== 'upload'" size="sm" :loading="busy === plugin.id && pending?.action === 'sync'" @click="ask(plugin, 'sync')">同步</AppButton>
-                    <AppButton size="sm" :disabled="!!busy" @click="ask(plugin, 'manual-publish')">手动上架</AppButton>
+                    <AppButton v-if="session.reviewMode === 'manual' && !plugin.blocked" size="sm" @click="emit('review', plugin.id)">查看审核</AppButton>
+                    <AppButton v-if="session.reviewMode !== 'manual'" size="sm" :disabled="!!busy" @click="ask(plugin, 'manual-publish')">手动上架</AppButton>
                     <AppMenu :label="`${plugin.full_name} 的更多操作`">
                       <template #trigger><AppIcon name="sliders" :size="19" /></template>
-                      <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新审核</button>
+                      <button v-if="plugin.source_kind !== 'upload'" type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'sync')"><AppIcon name="refresh" :size="15" />同步原仓库</button>
+                      <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'retry')"><AppIcon name="refresh" :size="15" />重新整理</button>
                       <button type="button" class="menu__item" role="menuitem" :disabled="!!plugin.blocked" @click="ask(plugin, 'unlist')"><AppIcon name="ban" :size="15" />下架</button>
                       <button type="button" class="menu__item menu__item--danger" role="menuitem" @click="ask(plugin, 'delete')"><AppIcon name="trash" :size="15" />删除</button>
                       <template v-if="plugin.blocked || ['deleted', 'unlisted', 'removed'].includes(plugin.status || '')">
@@ -255,8 +247,10 @@ void load()
         <dl class="sp__confirm">
           <div><dt>当前状态</dt><dd><AppBadge :variant="statusMeta(pending.plugin.status).tone">{{ statusMeta(pending.plugin.status).label }}</AppBadge></dd></div>
           <div><dt>已批准版本</dt><dd class="mono small">{{ pending.plugin.version || '尚无' }}</dd></div>
-          <div><dt>公开原因</dt><dd class="small">{{ reason || pending.plugin.public_reason || '未填写' }}</dd></div>
         </dl>
+        <AppField label="操作原因（对用户可见）" for-id="studio-reason" hint="填写本次操作的说明，供作者查看。">
+          <textarea id="studio-reason" v-model="reason" class="textarea" maxlength="300" rows="3" :disabled="!!busy" />
+        </AppField>
       </template>
       <template #footer>
         <AppButton variant="ghost" @click="pending = null">取消</AppButton>
@@ -389,22 +383,20 @@ void load()
 
 <style scoped>
 .sp { display: flex; flex-direction: column; gap: 16px; }
-.sp__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.sp__head { display: flex; align-items: flex-start; justify-content: flex-end; gap: 16px; flex-wrap: wrap; }
 .sp__title { font-size: var(--fs-h2); }
 .sp__desc { margin-top: 5px; max-width: 88ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
-.sp__toolbar { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.6fr) auto; gap: 10px; align-items: center; }
-.sp__search { display: flex; align-items: center; gap: 10px; padding-inline: 12px; min-width: 0; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); color: var(--text-3); }
-.sp__search:focus-within { border-color: var(--signal); }
-.sp__search > svg { flex: none; }
-.sp__search .input { flex: 1; width: 0; min-width: 0; padding-inline: 0; border: 0; background: transparent; box-shadow: none; }
-.sp__search .input:focus-visible { outline-offset: 1px; }
+.sp__toolbar { display: grid; grid-template-columns: minmax(0, 440px) auto; justify-content: space-between; gap: 10px; align-items: center; }
+.sp__search { min-width: 0; }
 .sp__filters { display: flex; gap: 8px; flex-wrap: wrap; }
 .sp__table-card { overflow: hidden; }
 .sp__table { min-width: 900px; }
 .sp__table :deep(td) { vertical-align: top; }
 .sp__actions-col { text-align: right; }
 .sp__repo { display: flex; flex-direction: column; gap: 4px; min-width: 220px; }
-.sp__repo-name { font-weight: 640; font-size: var(--fs-body); }
+.sp__repo-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.sp__cell-label { display: none; }
+.sp__repo-name { border: 0; padding: 0; background: transparent; color: var(--text); cursor: pointer; text-align: left; font-family: inherit; font-weight: 640; font-size: var(--fs-body); }
 .sp__repo-meta { display: flex; align-items: center; gap: 6px; font-size: var(--fs-cap); color: var(--text-3); flex-wrap: wrap; }
 .sp__repo-reason { font-size: var(--fs-sm); color: var(--text-3); max-width: 46ch; }
 .sp__status { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
@@ -452,5 +444,18 @@ void load()
 @media (max-width: 1000px) {
   .sp__toolbar { grid-template-columns: 1fr; }
   .sp__drawer-facts, .sp__kv { grid-template-columns: 1fr; }
+}
+@media (max-width: 1000px) {
+  .sp__table { min-width: 0; }
+  .sp__table, .sp__table tbody { display: block; }
+  .sp__table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .sp__table tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 16px; gap: 12px 8px; border-bottom: 1px solid var(--line); }
+  .sp__table tbody tr:last-child { border-bottom: 0; }
+  .sp__table td { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .sp__table td:nth-child(1), .sp__table td:nth-child(2), .sp__table td:nth-child(6) { grid-column: 1 / -1; }
+  .sp__repo { min-width: 0; }
+  .sp__status { flex-direction: row; flex-wrap: wrap; }
+  .sp__cell-label { display: block; color: var(--text-3); font: 12px var(--font-sans); margin-bottom: 4px; }
+  .sp__table .table__actions { justify-content: flex-start; }
 }
 </style>

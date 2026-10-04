@@ -1,3 +1,13 @@
+## 当前人工审核接口（2026-10-04）
+
+- `GET /api/session` 增加 `reviewMode=manual`；此模式 `reviewEnabled=false` 表示自动引擎停用，不表示免审。
+- `GET /api/studio/plugins?status=awaiting_review` 返回当前版本的待审队列，支持原有搜索与分页；`overview.counts.awaitingReview` 是待人工处理数量。
+- `GET /api/studio/plugins/:id` 增加 `candidate`，包括 revision、decision、冻结的名称/简介/说明、版本与附件。仅管理员可读取。
+- `GET|HEAD /api/studio/plugins/:id/review/download/:assetId` 下载当前待审附件，需有效管理员会话；不接受目标 URL，不使用第三方下载源，不计入市场下载统计。
+- `POST /api/studio/plugins/:id/review`：`{revision,decision: "approve"|"reject",reason?,internalReason?}`。退回 reason 至少 5 字，最多 240 字；内部备注最多 6000 字。决定绑定当前待审版本、管理员和时间，重复/并发或失效版本返回 409。
+- 通过后公共 `publicationMode=human-reviewed`、`reviewLabel=人工审核通过`，`reviewedAt` 为实际人工批准时间。退回不公开候选，已有批准版本继续可用。
+- 人工模式下旧 `/manual-publish` 只批准现有待审记录，无法在候选尚未准备时免审发布。下面旧自动/免审契约只供保留引擎参考。
+
 # 前后端接口约定
 除上传使用 multipart/form-data、下载返回附件流外，接口使用 JSON，错误 `{error, code}`。写入请求需要同源 Origin（浏览器自动提供），cookie 会话。字段 snake_case 用于数据库对象。
 GET /api/session → {user: {id,phone_mask}|null, admin:{id,username}|null}
@@ -51,6 +61,6 @@ GET /api/studio/sources/candidates → {items:[{pluginId,fullName,version,assets
 
 跳过源码内容、AI 与 Cloudmersive 查毒，仍验证安装包身份、摘要、结构和下载所需信息。原子保存手动发布快照、附件、任务记录与 `manual-publish` 审计，增加 revision，取消旧活动审核任务；可显式恢复已下架但文件仍可用的插件。仅绑定当前候选，新版本仍进入原有自动审核。公共详情新增 `publicationMode`（manual/automatic），手动发布 `reviewedAt=null`，`reviewLabel` 明确标识未经自动审核或查毒。
 
-### 审核暂停开关
+### 历史：审核暂停开关（仅保留的 automatic 模式适用）
 
 `GET /api/session` 新增布尔字段 `reviewEnabled`，用于提交页、Studio 与按钮文案显示。关闭时，新处理快照的 `publicationMode` 为 `unreviewed`，`reviewedAt` 为 null，`reviewLabel` 如实标记未经自动审核或查毒；这是正常发布记录而非管理员手动批准。`POST /api/studio/ai/test` 在关闭时返回 409/review_disabled，不发出外部请求。开关只来自服务端 REVIEW_ENABLED 环境配置，客户端不能修改。

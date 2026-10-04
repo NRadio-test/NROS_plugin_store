@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
-import { session, api, errorMessage } from '../lib/api'
+import { api, errorMessage } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppField from './AppField.vue'
 import AppButton from './AppButton.vue'
@@ -27,7 +27,7 @@ async function submit() {
   form.set('name', name.value); form.set('description', description.value); form.set('tutorial', tutorial.value); form.set('file', file.value)
   busy.value = true
   try {
-    const path = props.pluginId ? `/api/plugins/${props.pluginId}/upload` : props.studio ? '/api/studio/submit/upload' : '/api/submit/upload'
+    const path = props.pluginId ? `${props.studio ? '/api/studio' : '/api'}/plugins/${props.pluginId}/upload` : props.studio ? '/api/studio/submit/upload' : '/api/submit/upload'
     const result = await api<{ message: string }>(path, { method: 'POST', body: form })
     message.value = result.message
     file.value = null
@@ -47,7 +47,7 @@ async function submit() {
       <AppField label="插件简介" :for-id="fieldId + '-description'" required hint="简要说明用途。">
         <textarea :id="fieldId + '-description'" v-model="description" class="textarea" required maxlength="500" rows="3" />
       </AppField>
-      <AppField label="使用教程" :for-id="fieldId + '-tutorial'" required hint="支持 Markdown。">
+      <AppField label="使用教程" :for-id="fieldId + '-tutorial'" required hint="说明支持的设备、安装步骤和卸载方法，支持 Markdown。">
         <textarea :id="fieldId + '-tutorial'" v-model="tutorial" class="textarea" required maxlength="20000" rows="8" />
       </AppField>
       <AppField label="IPK 安装包" :for-id="fieldId + '-file'" required :hint="ready ? '最大 32 MiB，版本与架构从包内读取。' : '先填写上面的资料。'">
@@ -55,10 +55,10 @@ async function submit() {
         <p v-if="file" class="upload-form__filename">{{ file.name }} · {{ formatSize(file.size) }}</p>
       </AppField>
     </fieldset>
-    <p class="upload-form__hint">{{ session.reviewEnabled === false ? '审核暂时关闭，安装包整理完成后直接上架；未经过自动审核或查毒。' : '安装包内的文件会发送至 Cloudmersive 查毒，无需提供 GitHub 源码。' }}</p>
+    <p class="upload-form__hint">提交后进入人工审核。请说明支持的设备、安装与卸载方法。</p>
     <p v-if="error" class="notice notice--danger" role="alert">{{ error }}</p>
     <p v-if="message" class="notice notice--success" role="status">{{ message }} <RouterLink v-if="!studio && !pluginId" to="/me">查看我的提交 →</RouterLink></p>
-    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : (session.reviewEnabled === false ? '上传并上架' : '上传并提交审核') }}</AppButton>
+    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : '上传并提交人工审核' }}</AppButton>
   </form>
 </template>
 

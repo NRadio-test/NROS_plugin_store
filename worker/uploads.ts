@@ -1,7 +1,7 @@
 import { AppError, type Env, type Snapshot } from './contracts';
 import { id, now, query, setting, setSetting } from './db';
 import { readBounded, sha256, hasControlCharacters } from './network';
-import { reviewEnabled } from './review-mode';
+import { manualReview, reviewEnabled } from './review-mode';
 import { parseIPK } from './ipk';
 import { scanUploadFiles, SCAN_POLICY } from './antivirus';
 
@@ -72,7 +72,7 @@ export async function receiveUpload(env: Env, request: Request, userId: string |
     await storage.delete(key);
     throw new AppError(409, '提交状态已变化或已达到 128 MiB 存储额度，请刷新后重试', 'upload_conflict');
   }
-  return { pluginId: pid, taskId, status: 'pending', message: reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
+  return { pluginId: pid, taskId, status: 'pending', message: manualReview(env) ? '投稿已保存，资料整理后交由管理员人工审核' : reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
 }
 
 export async function uploadSnapshot(env: Env, pluginId: string, manual = false): Promise<Snapshot> {

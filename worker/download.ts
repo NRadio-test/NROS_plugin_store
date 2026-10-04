@@ -1,5 +1,6 @@
 import { AppError, type Asset, type DownloadSource, type Env, type Snapshot } from './contracts';
 import { GITHUB_HOSTS, readBounded, safeFetch, validatePublicHttpsUrl } from './network';
+import { publicationFilter } from './review-mode';
 import { hash, hmac, rateLimit } from './security';
 
 interface Approved { snapshotId: string; snapshot: Snapshot; asset: Asset }
@@ -13,7 +14,7 @@ async function officialJSON(env: Env, path: string): Promise<Record<string, unkn
 }
 async function approved(env: Env, pluginId: string, assetId: number): Promise<Approved> {
  if (!Number.isSafeInteger(assetId) || assetId <= 0 || !/^[A-Za-z0-9_-]{1,100}$/.test(pluginId)) throw new AppError(400, '下载标识无效');
- const row = await env.DB.prepare("SELECT p.approved_snapshot_id,s.data AS snapshot_data,a.data AS asset_data FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0 AND s.verdict='allow'").bind(pluginId, assetId).first<{ approved_snapshot_id: string; snapshot_data: string; asset_data: string }>();
+ const row = await env.DB.prepare("SELECT p.approved_snapshot_id,s.data AS snapshot_data,a.data AS asset_data FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0 AND s.verdict='allow'" + publicationFilter(env)).bind(pluginId, assetId).first<{ approved_snapshot_id: string; snapshot_data: string; asset_data: string }>();
  if (!row) throw new AppError(404, '该安装包尚未通过审核或已停用', 'unapproved_asset');
  const snapshot = JSON.parse(row.snapshot_data) as Snapshot, asset = JSON.parse(row.asset_data) as Asset;
  if (asset.id !== assetId || !snapshot.assets.some(a => a.id === assetId) || !asset.name.toLowerCase().endsWith('.ipk') || !Number.isSafeInteger(asset.size) || asset.size < 1 || asset.size > (Number(env.MAX_IPK_BYTES) || 32 * 1024 * 1024)) throw new AppError(409, '资产快照不完整');
@@ -106,10 +107,20 @@ async function obtain(env: Env, source: DownloadSource, selected: Approved, full
   return response;
  } catch (error) { await response.body?.cancel(); throw error; }
 }
+export async function forwardReviewDownload(request: Request, env: Env, pluginId: string, assetId: number): Promise<Response> {
+ const row = await env.DB.prepare("SELECT r.snapshot_id,s.data FROM manual_reviews r JOIN plugins p ON p.id=r.plugin_id AND p.revision=r.revision JOIN snapshots s ON s.id=r.snapshot_id WHERE p.id=? AND p.blocked=0 AND r.decision='pending'").bind(pluginId).first<{snapshot_id:string;data:string}>();
+ if (!row) throw new AppError(404, '待审安装包不存在');
+ const snapshot = JSON.parse(row.data) as Snapshot, asset = snapshot.assets.find(a => a.id === assetId);
+ if (!asset) throw new AppError(404, '待审附件不存在');
+ return streamDownload(request, env, pluginId, {snapshotId:row.snapshot_id,snapshot,asset}, true);
+}
 export async function forwardDownload(request: Request, env: Env, pluginId: string, assetId: number | string): Promise<Response> {
  if (!['GET','HEAD'].includes(request.method)) throw new AppError(405, '下载仅支持 GET/HEAD');
  if ([...new URL(request.url).searchParams.keys()].length > 0) throw new AppError(400, '下载地址不接受目标 URL 或来源参数');
  const selected = await approved(env, pluginId, Number(assetId));
+ return streamDownload(request, env, pluginId, selected);
+}
+async function streamDownload(request: Request, env: Env, pluginId: string, selected: Approved, reviewOnly = false): Promise<Response> {
  let range;
  try { range = parseRange(request.headers.get('Range'), selected.asset.size); }
  catch (error) { if (error instanceof AppError && error.status === 416) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${selected.asset.size}`, 'Cache-Control': 'no-store' } }); throw error; }
@@ -123,7 +134,7 @@ export async function forwardDownload(request: Request, env: Env, pluginId: stri
   upstream = new Response('body' in object ? (object as R2ObjectBody).body : null);
  } else {
  const fullName = await verifyOfficial(env, selected);
- const configured = await sources(env);
+ const configured = reviewOnly ? [OFFICIAL_SOURCE] : await sources(env);
  for (const source of configured) {
   try { upstream = await obtain(env, source, selected, fullName, request, range); break; }
   catch { if (request.signal.aborted) throw new AppError(499, '下载请求已取消'); }
@@ -151,8 +162,11 @@ export async function forwardDownload(request: Request, env: Env, pluginId: stri
   }
   if ((expected >= 8 && !ipkMagic(prefix)) || prefix.length > expected) { await reader.cancel(); throw new AppError(502, '下载源没有返回支持的 IPK 内容'); }
  }
- const stillApproved = await env.DB.prepare("SELECT 1 AS ok FROM plugins p JOIN assets a ON a.snapshot_id=p.approved_snapshot_id AND a.plugin_id=p.id WHERE p.id=? AND p.approved_snapshot_id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0").bind(pluginId, selected.snapshotId, selected.asset.id).first();
+ const stillApproved = reviewOnly
+  ? await env.DB.prepare("SELECT 1 FROM manual_reviews r JOIN plugins p ON p.id=r.plugin_id AND p.revision=r.revision JOIN assets a ON a.snapshot_id=r.snapshot_id WHERE p.id=? AND r.snapshot_id=? AND r.decision='pending' AND p.blocked=0 AND a.id=? AND a.disabled=0").bind(pluginId, selected.snapshotId, selected.asset.id).first()
+  : await env.DB.prepare("SELECT 1 FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND p.approved_snapshot_id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0" + publicationFilter(env)).bind(pluginId, selected.snapshotId, selected.asset.id).first();
  if (!stillApproved) { await reader.cancel(); throw new AppError(409, '安装包状态已改变，请刷新页面'); }
+ if (!reviewOnly) {
  const now = Date.now(), bucket = Math.floor(now / (10 * 60 * 1000));
  try {
   await env.DB.batch([
@@ -160,6 +174,7 @@ export async function forwardDownload(request: Request, env: Env, pluginId: stri
    env.DB.prepare('UPDATE plugins SET download_count=download_count+1 WHERE id=? AND changes()=1').bind(pluginId),
   ]);
  } catch { await reader.cancel(); throw new AppError(503, '暂时无法记录下载尝试'); }
+ }
  let received = prefix.length;
  const body = new ReadableStream<Uint8Array>({
   start(controller) { controller.enqueue(prefix); },

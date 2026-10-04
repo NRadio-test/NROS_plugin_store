@@ -12,9 +12,10 @@ export interface StatusMeta {
 }
 
 const STATUS: Record<string, StatusMeta> = {
-  pending: { label: '等待检查', tone: 'info', icon: 'clock', hint: '已进入队列，等待后台读取仓库快照' },
-  queued: { label: '等待检查', tone: 'info', icon: 'clock' },
-  running: { label: '检查中', tone: 'brand', icon: 'loader', hint: '正在读取 GitHub 快照并执行自动审核' },
+  awaiting_review: { label: '待人工审核', tone: 'warning', icon: 'clock', hint: '资料已就绪，等待管理员审核当前版本' },
+  pending: { label: '资料整理中', tone: 'info', icon: 'clock', hint: '已进入队列，等待后台读取仓库快照' },
+  queued: { label: '资料整理中', tone: 'info', icon: 'clock' },
+  running: { label: '检查中', tone: 'brand', icon: 'loader', hint: '正在整理资料和安装包，完成后进入人工审核' },
   processing: { label: '检查中', tone: 'brand', icon: 'loader' },
   reviewing: { label: '审核中', tone: 'brand', icon: 'loader' },
   retry: { label: '等待重试', tone: 'warning', icon: 'refresh', hint: '外部服务暂时不可用，将按退避策略重试' },
@@ -32,14 +33,14 @@ const STATUS: Record<string, StatusMeta> = {
   uncertain: { label: '待补充', tone: 'warning', icon: 'alert-circle' },
   incomplete: { label: '检查未完成', tone: 'warning', icon: 'alert-circle' },
   superseded: { label: '已被后续任务替代', tone: 'neutral', icon: 'history' },
-  rejected: { label: '已拒绝', tone: 'danger', icon: 'x-circle' },
+  rejected: { label: '已退回', tone: 'danger', icon: 'x-circle' },
   failed: { label: '检查失败', tone: 'danger', icon: 'alert' },
   removed: { label: '已下架', tone: 'neutral', icon: 'ban' },
   unlisted: { label: '已下架', tone: 'neutral', icon: 'ban' },
   deleted: { label: '已删除', tone: 'neutral', icon: 'trash' },
 }
 
-const UNKNOWN: StatusMeta = { label: '等待检查', tone: 'neutral', icon: 'clock' }
+const UNKNOWN: StatusMeta = { label: '资料整理中', tone: 'neutral', icon: 'clock' }
 
 export const statusMeta = (status?: string | null): StatusMeta => (status ? STATUS[status] ?? { ...UNKNOWN, label: status } : UNKNOWN)
 

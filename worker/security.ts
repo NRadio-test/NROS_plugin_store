@@ -1,4 +1,5 @@
 import { AppError, type Env } from './contracts';
+import { ssoEnabled, checkSSOSession, logoutSSO, type SSOUser } from './sso';
 
 const utf8 = (value: string) => new TextEncoder().encode(value);
 const base64url = (value: Uint8Array) => btoa(String.fromCharCode(...value)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
@@ -64,7 +65,7 @@ export async function verifyPassword(password: string, encoded: string): Promise
  } catch { return false; }
 }
 export type SessionKind = 'user' | 'admin';
-export interface Session { subjectId: string; expiresAt: number; username?: string }
+export interface Session { subjectId: string; expiresAt: number; username?: string; user?: SSOUser }
 
 export interface SharedAdmin { id: string; username: string; password_hash: string; must_change_password: number }
 /** 共享库只读；缺少绑定时不回退到商店 admins。 */
@@ -89,6 +90,7 @@ function cookieToken(request: Request, env: Env, kind: SessionKind) {
  return token && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : null;
 }
 export async function createSession(env: Env, kind: SessionKind, id: string, authenticated?: SharedAdmin) {
+ if (kind === 'user' && ssoEnabled(env)) throw new AppError(403, '普通用户会话由统一登录服务签发');
  let subject = id;
  if (kind === 'admin') {
   const admin = authenticated ?? await sharedAdmin(env, 'id', id);
@@ -102,6 +104,7 @@ export async function createSession(env: Env, kind: SessionKind, id: string, aut
  return { token, cookie: sessionCookie(env, kind, token, seconds), expiresAt };
 }
 export async function getSession(request: Request, env: Env, kind: SessionKind): Promise<Session | null> {
+ if (kind === 'user' && ssoEnabled(env)) return checkSSOSession(request, env);
  const token = cookieToken(request, env, kind);
  if (!token) return null;
  const row = await env.DB.prepare('SELECT subject_id,expires_at FROM sessions WHERE token_hash=? AND kind=? AND expires_at>?').bind(await hash(token), kind, Date.now()).first<{ subject_id: string; expires_at: number }>();
@@ -115,6 +118,7 @@ export async function getSession(request: Request, env: Env, kind: SessionKind):
  return { subjectId: admin!.id, expiresAt: row.expires_at, username: admin!.username };
 }
 export async function logoutSession(request: Request, env: Env, kind: SessionKind): Promise<string> {
+ if (kind === 'user' && ssoEnabled(env)) return logoutSSO(request, env);
  const token = cookieToken(request, env, kind);
  if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash=? AND kind=?').bind(await hash(token), kind).run();
  return sessionCookie(env, kind, '', 0);

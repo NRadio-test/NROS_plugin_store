@@ -1,30 +1,26 @@
-/* 张导插件商店 · 原型设计系统
-   依据《「张导请回答」全局 UI 设计思路》§4/§6/§7/§8/§9/§10/§12/§13 移植。
-   深色为准，浅色由同一套语义派生。所有颜色为 6 位十六进制，便于脚本计算对比度。 */
+/* 插件商店 · 产品界面令牌。中性表面、细分隔线，青色只用于行动与状态。 */
 
 :root {
   color-scheme: dark;
 
-  /* 色值取自线上 message.fallaxaura.com 的 --color-* 令牌，未做改动 */
-  --bg: #07101b;
-  --bg-deep: #030812;
-  --surface: #0e1a29;
-  --surface-raised: #152c41;
-  --surface-hover: #1d384f;
-  --line: rgba(85, 122, 145, 0.34);
-  --line-strong: rgba(111, 167, 193, 0.52);
+  --bg: #17191d;
+  --bg-deep: #191c20;
+  --surface: #202329;
+  --surface-raised: #292d34;
+  --surface-hover: #30353d;
+  --line: #383d45;
+  --line-strong: #636b77;
 
-  --text: #f3f8fd;
-  --text-2: #b7c6d5;
-  --text-3: #9cadbf;
+  --text: #eceef1;
+  --text-2: #c1c7cf;
+  --text-3: #adb5c0;
 
-  --signal: #5cdeff;
-  --signal-hover: #84e8ff;
-  --signal-text: #5cdeff;
-  --on-signal: #050e17;
-  --on-danger: #050e17;
-  /* 线上未定义选中底色，此处为 signal 12% 叠加在 surface 上的实色等价值 */
-  --signal-surface: #173243;
+  --signal: #78c7db;
+  --signal-hover: #98d8e7;
+  --signal-text: #78c7db;
+  --on-signal: #172128;
+  --on-danger: #172128;
+  --signal-surface: #253c45;
 
   --success: #6bd3a3;
   --success-surface: #073120;
@@ -33,28 +29,28 @@
   --warning-surface: #2b2210;
   --danger: #ff9689;
   --danger-surface: #451914;
-  --neutral-status: #8d9aa7;
+  --neutral-status: #adb5c0;
 
   --backdrop: rgba(0, 2, 5, 0.78);
   --focus-ring: rgba(114, 236, 255, 0.44);
-  --shadow-shell: 0 1.125rem 3.125rem rgba(0, 2, 7, 0.34);
-  --shadow-dialog: 0 1.75rem 5rem rgba(0, 1, 3, 0.55);
-  --shadow-button: 0 0.5rem 1.5rem rgba(0, 127, 154, 0.2);
+  --shadow-shell: none;
+  --shadow-dialog: 0 12px 40px rgba(0, 0, 0, 0.28);
+  --shadow-button: none;
 
-  --font-sans: "HarmonyOS Sans SC", MiSans, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --font-mono: SFMono-Regular, "Cascadia Code", "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
 
-  --fs-h1: clamp(1.5rem, 1.2rem + 1vw, 1.875rem);
+  --fs-h1: 1.5rem;
   --fs-h2: 1.125rem;
   --fs-h3: 1rem;
   --fs-body: 1rem;
   --fs-sm: 0.875rem;
   --fs-cap: 0.8125rem;
 
-  --r-control: 12px;
-  --r-button: 14px;
-  --r-group: 16px;
-  --r-page: 24px;
+  --r-control: 6px;
+  --r-button: 6px;
+  --r-group: 8px;
+  --r-page: 8px;
   --r-pill: 999px;
 
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
@@ -64,36 +60,35 @@
   --dur: 220ms;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  --page-max: 74rem;
+  --page-max: 70rem;
   --page-max-wide: 84rem;
   --form-max: 42.5rem;
   --read-max: 38rem;
-  --sidebar: 17rem;
+  --sidebar: 14rem;
   --safe-x: max(16px, env(safe-area-inset-left, 0px));
 }
 
 :root[data-theme='light'] {
   color-scheme: light;
 
-  /* 浅色由深色同一套语义派生，保持色相与层级关系 */
-  --bg: #f4f7fa;
+  --bg: #f6f7f8;
   --bg-deep: #ffffff;
   --surface: #ffffff;
-  --surface-raised: #f1f6fa;
-  --surface-hover: #e6eef5;
-  --line: rgba(14, 60, 80, 0.18);
-  --line-strong: rgba(14, 60, 80, 0.34);
+  --surface-raised: #f2f4f6;
+  --surface-hover: #e9edf0;
+  --line: #dce1e6;
+  --line-strong: #919ba7;
 
-  --text: #08131f;
-  --text-2: #44576a;
-  --text-3: #596b7c;
+  --text: #20252c;
+  --text-2: #4c5663;
+  --text-3: #606b78;
 
-  --signal: #0e7490;
-  --signal-hover: #155e75;
-  --signal-text: #0e7490;
+  --signal: #0b687f;
+  --signal-hover: #08576b;
+  --signal-text: #0b687f;
   --on-signal: #ffffff;
   --on-danger: #ffffff;
-  --signal-surface: #e0f1f7;
+  --signal-surface: #e9f2f5;
 
   --success: #0b6b45;
   --success-surface: #e6f4ee;
@@ -105,9 +100,9 @@
 
   --backdrop: rgba(8, 19, 31, 0.55);
   --focus-ring: rgba(14, 116, 144, 0.28);
-  --shadow-shell: 0 1.125rem 3.125rem rgba(15, 35, 55, 0.1);
-  --shadow-dialog: 0 1.75rem 5rem rgba(15, 35, 55, 0.18);
-  --shadow-button: 0 0.5rem 1.5rem rgba(14, 116, 144, 0.18);
+  --shadow-shell: none;
+  --shadow-dialog: 0 12px 40px rgba(24, 32, 44, 0.16);
+  --shadow-button: none;
 }
 
 

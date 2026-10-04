@@ -8,7 +8,7 @@ import AppIcon from './AppIcon.vue'
 import AppBadge from './AppBadge.vue'
 import AppButton from './AppButton.vue'
 
-type PanelKey = 'overview' | 'plugins' | 'tasks' | 'logs' | 'ai' | 'sources' | 'security'
+type PanelKey = 'reviews' | 'overview' | 'plugins' | 'tasks' | 'logs' | 'ai' | 'sources' | 'security'
 const emit = defineEmits<{ open: [panel: PanelKey] }>()
 
 const data = ref<StudioOverview | null>(null)
@@ -33,9 +33,9 @@ const tiles = () => {
   return [
     { key: 'plugins', label: '收录插件', value: counts?.plugins ?? 0, icon: 'package' as const, tone: '' },
     { key: 'published', label: '已上架', value: counts?.published ?? 0, icon: 'check-circle' as const, tone: 'success' },
-    { key: 'inReview', label: '审核进行中', value: counts?.inReview ?? 0, icon: 'activity' as const, tone: '' },
+    { key: 'awaitingReview', label: '等待人工审核', value: counts?.awaitingReview ?? 0, icon: 'activity' as const, tone: '' },
     { key: 'waiting', label: '等待材料或配置', value: counts?.waiting ?? 0, icon: 'clock' as const, tone: 'warning' },
-    { key: 'rejected', label: '已拒绝', value: counts?.rejected ?? 0, icon: 'x-circle' as const, tone: 'danger' },
+    { key: 'rejected', label: '已退回', value: counts?.rejected ?? 0, icon: 'x-circle' as const, tone: 'danger' },
     { key: 'blocked', label: '已停用', value: counts?.blocked ?? 0, icon: 'ban' as const, tone: 'danger' },
   ]
 }
@@ -46,7 +46,6 @@ const tiles = () => {
     <template v-if="data">
       <section class="ov__tiles">
         <article v-for="tile in tiles()" :key="tile.key" class="stat-tile">
-          <span class="stat-tile__icon" :class="tile.tone && `stat-tile__icon--${tile.tone}`"><AppIcon :name="tile.icon" :size="17" /></span>
           <div class="stat">
             <span class="stat__label">{{ tile.label }}</span>
             <span class="stat__value">{{ formatNumber(tile.value) }}</span>
@@ -68,8 +67,8 @@ const tiles = () => {
                 <AppIcon :name="data.ai.configured ? 'sparkles' : 'settings'" :size="16" />
               </span>
               <div class="ov__config-text">
-                <p class="ov__config-title">AI 审核接口</p>
-                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '未配置，新投稿会等待' }}</p>
+                <p class="ov__config-title">自动审核（备用）</p>
+                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '已停用，不影响人工审核' }}</p>
               </div>
               <AppBadge :variant="data.ai.configured ? 'success' : 'warning'" dot>{{ data.ai.configured ? '已配置' : '待配置' }}</AppBadge>
             </div>
@@ -88,7 +87,7 @@ const tiles = () => {
                 <AppIcon name="activity" :size="16" />
               </span>
               <div class="ov__config-text">
-                <p class="ov__config-title">审核任务</p>
+                <p class="ov__config-title">整理任务</p>
                 <p class="ov__config-sub">进行中 {{ data.counts.tasksActive }} 个 · 失败 {{ data.counts.tasksFailed }} 个</p>
               </div>
               <AppButton size="sm" variant="ghost" icon-right="chevron-right" @click="emit('open', 'tasks')">查看</AppButton>
@@ -127,14 +126,14 @@ const tiles = () => {
       <article class="card">
         <header class="card__head">
           <div>
-            <p class="card__title">最近的审核任务</p>
+            <p class="card__title">最近处理记录</p>
           </div>
           <AppButton size="sm" variant="ghost" icon-right="chevron-right" @click="emit('open', 'tasks')">全部任务</AppButton>
         </header>
         <div v-if="!data.recentTasks.length" class="card__body">
           <div class="empty" style="border: 0; padding: 28px">
             <span class="empty__icon"><AppIcon name="activity" :size="20" /></span>
-            <h3 class="empty__title">还没有审核任务</h3>
+            <h3 class="empty__title">还没有整理任务</h3>
             <p class="empty__text">提交公开仓库后会显示任务。</p>
           </div>
         </div>
@@ -149,8 +148,8 @@ const tiles = () => {
       </article>
 
       <section class="ov__actions">
-        <AppButton variant="primary" icon="upload" @click="emit('open', 'plugins')">提交 GitHub 仓库</AppButton>
-        <AppButton icon="sparkles" @click="emit('open', 'ai')">配置 AI 审核</AppButton>
+        <AppButton icon="upload" @click="emit('open', 'plugins')">管理投稿</AppButton>
+        <AppButton icon="shield-check" @click="emit('open', 'reviews')">打开审核收件箱</AppButton>
         <AppButton icon="layers" @click="emit('open', 'sources')">测试下载源</AppButton>
         <AppButton icon="lock" @click="emit('open', 'security')">修改管理员密码</AppButton>
       </section>
@@ -159,7 +158,11 @@ const tiles = () => {
 </template>
 
 <style scoped>
-.ov__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.ov__tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); }
+.ov__tiles .stat-tile { padding: 20px; border-radius: 0; border: 0; border-right: 1px solid var(--line); box-shadow: none; background: transparent; }
+.ov__tiles .stat-tile:nth-child(3n) { border-right: 0; }
+.ov__tiles .stat-tile:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
+.ov__tiles .stat__value { font-size: 24px; }
 .ov__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
 .ov__config { display: flex; flex-direction: column; gap: 4px; }
 .ov__config-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -184,5 +187,5 @@ const tiles = () => {
   .ov__task { grid-template-columns: 110px minmax(0, 1fr) auto; }
   .ov__task-reason { display: none; }
 }
-@media (max-width: 560px) { .ov__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } }
+@media (max-width: 560px) { .ov__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ov__tiles .stat-tile { padding: 16px; } .ov__tiles .stat-tile:nth-child(3n) { border-right: 1px solid var(--line); } .ov__tiles .stat-tile:nth-child(2n) { border-right: 0; } .ov__tiles .stat-tile:nth-child(-n+4) { border-bottom: 1px solid var(--line); } }
 </style>

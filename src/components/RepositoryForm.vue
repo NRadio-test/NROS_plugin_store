@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { session, errorMessage, post } from '../lib/api'
+import { errorMessage, post } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppIcon from './AppIcon.vue'
 import AppButton from './AppButton.vue'
@@ -69,7 +69,7 @@ async function submit() {
 
     <div class="repo-form__actions">
       <AppButton variant="primary" size="lg" type="submit" icon="send" :loading="busy">
-        {{ busy ? '正在提交…' : (session.reviewEnabled === false ? '提交并上架' : '提交审核') }}
+        {{ busy ? '正在提交…' : '提交人工审核' }}
       </AppButton>
     </div>
 
@@ -78,11 +78,11 @@ async function submit() {
       <div>
         <p class="notice__title">{{ result.message }}</p>
         <p class="repo-form__result-line">
-          任务在后台继续，可关闭页面。
+          资料会在后台整理，管理员通过后上架。
           <RouterLink v-if="!studio" to="/me">查看我的提交 →</RouterLink>
         </p>
         <p v-if="result.taskId" class="repo-form__task">
-          <span>任务编号</span><code>{{ result.taskId }}</code>
+          <span>提交编号</span><code>{{ result.taskId }}</code>
         </p>
       </div>
     </div>

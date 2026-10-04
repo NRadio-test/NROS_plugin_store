@@ -38,15 +38,17 @@ export interface Detail {
   license: string | null
   assets: Asset[]
   reviewLabel: string
-  publicationMode?: 'manual' | 'automatic' | 'unreviewed'
+  publicationMode?: 'manual' | 'automatic' | 'unreviewed' | 'human-reviewed'
   reviewedAt?: number | null
   reviewPublicReason?: string
   publishedAt?: number | null
 }
 
 export interface Session {
+  reviewMode?: 'manual' | 'automatic'
   reviewEnabled?: boolean
-  user: { id: string; phone_mask: string } | null
+  ssoEnabled?: boolean
+  user: { id: string; phone_mask?: string; display_name?: string } | null
   admin: { id: string; username: string } | null
 }
 
@@ -56,6 +58,9 @@ export interface Submission {
   source_kind?: 'github' | 'upload'
   status: string
   public_reason: string
+  review_status?: 'pending' | 'approved' | 'rejected' | null
+  review_reason?: string
+  revision?: number
   task_status: string | null
   upload_name?: string
   upload_description?: string
@@ -90,7 +95,15 @@ export interface StudioTask {
 
 export interface StudioAsset { id: number; name: string; size: number; sha256: string; disabled: number; package_name: string | null; architecture: string | null }
 
+export interface ManualCandidate {
+  id: string; revision: number; decision: 'pending' | 'approved' | 'rejected'; publicReason: string; internalReason: string
+  createdAt: number; reviewedAt: number | null; name: string; description: string; version: string; readme: string
+  readmeCommit: string; readmePath: string; uploaded: boolean
+  assets: Array<{id:number;name:string;size:number;packageName?:string;architecture?:string}>
+}
+
 export interface StudioPluginDetail {
+  candidate: ManualCandidate | null
   plugin: StudioPlugin
   snapshot: { id: string; revision: number; verdict: string; public_reason: string; internal_reason: string; review_version: string; created_at: number } | null
   assets: StudioAsset[]
@@ -102,7 +115,7 @@ export interface StudioPluginDetail {
 
 export interface StudioOverview {
   counts: {
-    plugins: number; published: number; inReview: number; waiting: number; rejected: number
+    awaitingReview: number; plugins: number; published: number; inReview: number; waiting: number; rejected: number
     removed: number; blocked: number; favorites: number; downloads: number; users: number
     tasksActive: number; tasksFailed: number
   }
@@ -143,11 +156,18 @@ export const put = <T>(path: string, body: unknown) => api<T>(path, { method: 'P
 
 export const session = reactive<Session & { loaded: boolean; error: string }>({ user: null, admin: null, loaded: false, error: '' })
 
-export async function loadSession() {
+export async function loadSession(autoSSO = false) {
   try {
-    Object.assign(session, await api<Session>('/api/session'))
+    Object.assign(session, { ssoEnabled: false }, await api<Session>('/api/session'))
     session.error = ''
+    if (session.user) sessionStorage.removeItem('plugin-sso-checked')
+    if (autoSSO && session.ssoEnabled && !session.user && !location.pathname.startsWith('/studio') && !sessionStorage.getItem('plugin-sso-checked')) {
+      sessionStorage.setItem('plugin-sso-checked', String(Date.now()))
+      const result = await post<{ authorizationUrl: string }>('/api/login', { silent: true, next: location.pathname + location.search })
+      location.assign(result.authorizationUrl)
+    }
   } catch (error) {
+    if (session.ssoEnabled) session.user = null
     session.error = errorMessage(error)
   } finally {
     session.loaded = true

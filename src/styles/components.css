@@ -8,17 +8,11 @@
 /* ---------- 顶栏 ---------- */
 .top {
   position: sticky; top: 0; z-index: 20;
-  background: var(--bg);
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 .top__in { display: flex; align-items: center; gap: var(--sp-4); min-height: 60px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 600; }
-/* 品牌标记：CSS 三柱信号 */
-.signal-mark { display: inline-flex; align-items: flex-end; gap: 3px; height: 20px; }
-.signal-mark i { display: block; width: 3px; border-radius: 2px; background: var(--signal); }
-.signal-mark i:nth-child(1) { height: 9px; opacity: 0.55; }
-.signal-mark i:nth-child(2) { height: 20px; }
-.signal-mark i:nth-child(3) { height: 14px; opacity: 0.8; }
 .brand__name { font-size: var(--fs-body); letter-spacing: -0.01em; }
 
 .nav { display: flex; align-items: center; gap: 2px; margin-inline-start: var(--sp-4); }
@@ -28,7 +22,7 @@
   color: var(--text-2); font-size: var(--fs-sm);
 }
 .nav a:hover { color: var(--text); background: var(--surface-hover); text-decoration: none; }
-.nav a[aria-current] { color: var(--signal-text); background: var(--signal-surface); }
+.nav a[aria-current] { color: var(--text); background: var(--surface-raised); font-weight: 600; }
 
 .top__end { display: flex; align-items: center; gap: var(--sp-2); margin-inline-start: auto; }
 
@@ -43,9 +37,9 @@
 }
 .btn:not(:disabled):not([aria-disabled="true"]):active { transform: scale(0.985); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
-.btn--signal { background: var(--signal); color: var(--on-signal); font-weight: 700; box-shadow: var(--shadow-button); }
+.btn--signal { background: var(--signal); color: var(--on-signal); font-weight: 600; box-shadow: none; }
 .btn--signal:not(:disabled):not([aria-disabled="true"]):hover { background: var(--signal-hover); box-shadow: var(--shadow-button); }
-.btn--raised { background: var(--surface-raised); color: var(--text); }
+.btn--raised { background: var(--surface); border-color: var(--line); color: var(--text); }
 .btn--raised:not(:disabled):not([aria-disabled="true"]):hover { background: var(--surface-hover); }
 .btn--quiet { color: var(--text-2); }
 .btn--quiet:hover { background: var(--surface-hover); color: var(--text); }
@@ -63,7 +57,7 @@
 /* ---------- 徽章与状态 ---------- */
 .badge {
   display: inline-flex; align-items: center; gap: 6px;
-  padding: 2px 10px; border-radius: var(--r-pill);
+  padding: 2px 8px; border-radius: 4px;
   background: var(--surface-raised); color: var(--neutral-status);
   font-size: var(--fs-cap); font-weight: 500;
 }
@@ -312,7 +306,7 @@ details.more[open] > summary { color: var(--text-2); }
 .table-wrap { overflow-x: auto; min-width: 0; }
 
 /* ---------- 旧组件类名兼容层（迁移完成后删除） ---------- */
-.card { background: var(--surface); border-radius: var(--r-group); box-shadow: var(--shadow-shell); border: 0; }
+.card { background: var(--surface); border-radius: var(--r-group); box-shadow: none; border: 1px solid var(--line); }
 .card--pad { padding: var(--sp-5); }
 .card--flat { box-shadow: none; }
 .card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-4); padding: var(--sp-5) var(--sp-5) 0; flex-wrap: wrap; }
@@ -334,7 +328,7 @@ details.more[open] > summary { color: var(--text-2); }
 .empty__icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-control); background: var(--surface-raised); color: var(--text-2); }
 .spinner { width: 18px; height: 18px; border: 2px solid var(--line-strong); border-top-color: var(--signal); border-radius: var(--r-pill); animation: spin 700ms linear infinite; }
 .loading-row { display: flex; align-items: center; gap: 10px; justify-content: center; padding: var(--sp-8); color: var(--text-3); font-size: var(--fs-sm); }
-.chip { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--text-2); font-size: var(--fs-sm); display: inline-flex; align-items: center; gap: 6px; }
+.chip { height: 40px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: transparent; color: var(--text-2); font-size: var(--fs-sm); display: inline-flex; align-items: center; gap: 6px; }
 .chip:hover { background: var(--surface-raised); color: var(--text); }
 .chip[aria-pressed='true'] { background: var(--signal-surface); color: var(--signal-text); border-color: transparent; }
 .segmented { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-raised); border-radius: var(--r-control); }
@@ -365,7 +359,7 @@ details.more[open] > summary { color: var(--text-2); }
 .field__hint { font-size: var(--fs-cap); color: var(--text-3); }
 .field__hint--error { color: var(--danger); }
 .field__head { display: flex; align-items: baseline; gap: var(--sp-2); }
-.field__flag { padding: 1px 8px; border-radius: var(--r-pill); background: var(--surface-raised); color: var(--text-3); font-size: var(--fs-cap); }
+.field__flag { color: var(--text-3); font-size: var(--fs-cap); font-weight: 400; }
 .helper { font-size: var(--fs-cap); color: var(--text-3); }
 .hash { font-family: var(--font-mono); font-size: var(--fs-cap); color: var(--text-3); word-break: break-all; }
 .inline-error { color: var(--danger); font-size: var(--fs-sm); }
@@ -450,3 +444,8 @@ details.more[open] > summary { color: var(--text-2); }
   .pkg__actions .btn--icon { flex: none; }
   .tabs__item { padding-inline: var(--sp-3); }
 }
+
+/* Shared search fields keep icons inside the input, including admin views. */
+.input-icon { position: relative; min-width: 0; display: flex; align-items: center; }
+.input-icon > svg { position: absolute; left: 12px; color: var(--text-3); pointer-events: none; }
+.input-icon > .input { padding-left: 38px; }

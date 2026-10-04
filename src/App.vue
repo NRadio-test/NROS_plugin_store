@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onBeforeUnmount, onMounted } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
 import AppToaster from './components/AppToaster.vue'
 import { loadSession } from './lib/api'
 
-onMounted(loadSession)
+onMounted(() => {
+  void loadSession(true)
+  document.addEventListener('visibilitychange', refreshOnFocus)
+})
+function refreshOnFocus() {
+  if (document.visibilityState !== 'visible') return
+  sessionStorage.removeItem('plugin-sso-checked')
+  void loadSession(true)
+}
+onBeforeUnmount(() => document.removeEventListener('visibilitychange', refreshOnFocus))
 </script>
 
 <template>

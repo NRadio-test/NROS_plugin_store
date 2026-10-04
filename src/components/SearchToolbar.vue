@@ -58,7 +58,7 @@ defineExpose({ focus: () => input.value?.focus() })
 <style scoped>
 .search {
   display: flex; align-items: center; gap: var(--sp-3);
-  width: 100%; min-width: 0; height: 48px; padding-inline: var(--sp-4) var(--sp-2);
+  width: 100%; min-width: 0; height: 44px; padding-inline: 12px 4px;
   border: 1px solid var(--line-strong); border-radius: var(--r-control);
   background: var(--surface); box-shadow: none;
 }
@@ -69,7 +69,7 @@ defineExpose({ focus: () => input.value?.focus() })
 .search input {
   flex: 1; min-width: 0; width: 100%; height: 100%; padding: 0;
   border: 0; border-radius: 0; background: transparent; color: var(--text);
-  font: inherit; outline: none;
+  font: inherit; font-size: var(--fs-sm); outline: none;
 }
 .search input::placeholder { color: var(--text-3); }
 .search input::-webkit-search-cancel-button { display: none; }
