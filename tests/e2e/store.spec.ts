@@ -8,7 +8,7 @@ test.describe.serial('人工审核后的市场、收藏、下载与版本更新'
   test('GitHub 投稿需管理员批准，README 安全渲染，多架构文件可下载和收藏',async({page,request})=>{
     await page.goto('/login?next=/submit'); await page.getByLabel('张导小店绑定手机号').fill('13800138000'); await page.getByRole('button',{name:'进入',exact:true}).click();
     await page.getByRole('tab',{name:'GitHub 仓库',exact:true}).click(); await page.getByLabel('GitHub 公开仓库链接').fill('https://github.com/fixture/harmless');
-    await page.getByRole('button',{name:'提交人工审核',exact:true}).click();
+    await page.getByRole('button',{name:'提交审核',exact:true}).click();
     await expect(page.getByText('投稿已保存，资料整理后交由管理员人工审核',{exact:true})).toBeVisible();
     await expect.poll(async()=>{ const data=await (await page.request.get('/api/me')).json(); pluginId=data.submissions.find((p:{full_name:string})=>p.full_name==='fixture/harmless')?.id||''; return pluginId; }).not.toBe('');
     expect((await request.get(`/api/plugins/${pluginId}`)).status()).toBe(404);
@@ -39,7 +39,7 @@ test.describe.serial('人工审核后的市场、收藏、下载与版本更新'
     const bytes=Buffer.from(await makeIPK());
     const first=await page.request.post('/api/submit/upload',{headers:{Origin:'http://127.0.0.1:8789'},multipart:{name:'版本更新作品',description:'验证版本审核',tutorial:'# 第一版教程',file:{name:'versioned.ipk',mimeType:'application/octet-stream',buffer:bytes}}}); expect(first.status()).toBe(202); const {pluginId:id}=await first.json();
     await approve(page,id); await logoutAdmin(page); await page.goto('/me'); const own=page.locator('.submission-row').filter({hasText:'版本更新作品'}); await own.getByRole('button',{name:'上传新版本',exact:true}).click();
-    const dialog=page.getByRole('dialog',{name:'上传新版本',exact:true}); await dialog.getByLabel('使用教程',{exact:true}).fill('# 第二版教程'); await dialog.getByLabel('IPK 安装包',{exact:true}).setInputFiles({name:'versioned.ipk',mimeType:'application/octet-stream',buffer:bytes}); await dialog.getByRole('button',{name:'上传并提交人工审核',exact:true}).click(); await expect(dialog).not.toBeVisible();
+    const dialog=page.getByRole('dialog',{name:'上传新版本',exact:true}); await dialog.getByLabel('使用教程',{exact:true}).fill('# 第二版教程'); await dialog.getByLabel('IPK 安装包',{exact:true}).setInputFiles({name:'versioned.ipk',mimeType:'application/octet-stream',buffer:bytes}); await dialog.getByRole('button',{name:'提交审核',exact:true}).click(); await expect(dialog).not.toBeVisible();
     await expect(own).toContainText('旧版本仍已上架'); expect((await (await request.get(`/api/plugins/${id}`)).json()).readme).toBe('# 第一版教程');
     await loginAdmin(page);
     await expect.poll(async()=> (await (await page.request.get(`/api/studio/plugins/${id}`)).json()).candidate?.decision).toBe('pending');
@@ -51,7 +51,7 @@ test.describe.serial('人工审核后的市场、收藏、下载与版本更新'
     await own.getByRole('button',{name:'上传新版本',exact:true}).click();
     await dialog.getByLabel('使用教程',{exact:true}).fill('# 第三版教程\n支持测试设备。');
     await dialog.getByLabel('IPK 安装包',{exact:true}).setInputFiles({name:'versioned.ipk',mimeType:'application/octet-stream',buffer:bytes});
-    await dialog.getByRole('button',{name:'上传并提交人工审核',exact:true}).click(); await expect(dialog).not.toBeVisible();
+    await dialog.getByRole('button',{name:'提交审核',exact:true}).click(); await expect(dialog).not.toBeVisible();
     await approve(page,id); expect((await (await request.get(`/api/plugins/${id}`)).json()).readme.replace(/\r\n/g,'\n')).toBe('# 第三版教程\n支持测试设备。');
   });
   test('插件管理可打开对应待审版本的人工审核',async({page,request})=>{

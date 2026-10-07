@@ -15,7 +15,7 @@ test('关闭自动引擎仍须人工审核，作者能看到等待状态且不�
   await page.getByRole('tab',{name:'GitHub 仓库',exact:true}).click();
   await page.getByRole('tab',{name:'直接上传 IPK',exact:true}).click();
   await expect(page.getByLabel('插件名称',{exact:true})).toHaveValue('作者待审作品');
-  await page.getByRole('button',{name:'上传并提交人工审核',exact:true}).click();
+  await page.getByRole('button',{name:'提交审核',exact:true}).click();
   await expect(page.getByRole('status').filter({hasText:'交由管理员人工审核'})).toBeVisible();
   await page.goto('/me');
   await page.getByRole('button',{name:'等待审核',exact:true}).click();

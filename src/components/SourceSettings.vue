@@ -108,12 +108,6 @@ onMounted(load)
 <template>
   <section class="src">
     <header class="src__head">
-      <div>
-        <h2 class="src__title">下载源设置</h2>
-        <p class="src__desc">
-          默认只启用 GitHub 官方源。第三方源需先停用测试，再信任并启用。
-        </p>
-      </div>
       <div class="row gap-2">
         <AppButton icon="plus" @click="addSource">添加下载源</AppButton>
         <AppButton variant="primary" icon="check" :loading="busy === 'save'" @click="save">保存全部</AppButton>
@@ -244,22 +238,13 @@ onMounted(load)
         <AppIcon :name="feedback.ok ? 'check-circle' : 'alert-circle'" :size="16" />
         <span>{{ feedback.message }}</span>
       </div>
-
-      <div class="notice">
-        <AppIcon name="info" :size="16" />
-        <span>
-          
-        </span>
-      </div>
     </AsyncState>
   </section>
 </template>
 
 <style scoped>
 .src { display: flex; flex-direction: column; gap: 16px; }
-.src__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.src__title { font-size: var(--fs-h2); }
-.src__desc { margin-top: 5px; max-width: 92ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
+.src__head { display: flex; justify-content: flex-end; gap: 16px; flex-wrap: wrap; }
 .src__target { margin-bottom: 16px; }
 .src__empty { display: flex; align-items: center; gap: 8px; color: var(--text-3); font-size: var(--fs-sm); }
 .src__list { display: flex; flex-direction: column; gap: 14px; }

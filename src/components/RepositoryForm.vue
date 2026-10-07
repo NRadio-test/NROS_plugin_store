@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { errorMessage, post } from '../lib/api'
 import { toast } from '../lib/toast'
 import AppIcon from './AppIcon.vue'
@@ -15,12 +15,6 @@ const url = ref('')
 const busy = ref(false)
 const error = ref('')
 const result = ref<SubmitResult | null>(null)
-
-/** 前端只做明显错误的即时提示，真正的规范化与校验始终在服务端。 */
-const preview = computed(() => {
-  const match = /^https:\/\/github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9_.-]{1,100})\/?$/.exec(url.value.trim().replace(/\.git$/, ''))
-  return match ? `${match[1]}/${match[2]}` : ''
-})
 
 async function submit() {
   busy.value = true
@@ -47,7 +41,7 @@ async function submit() {
       label="GitHub 公开仓库链接"
       for-id="repository-url"
       :error="error"
-      hint="只接受 github.com 的 HTTPS 公开仓库。"
+      hint="需提供 README，并在正式 Release 中上传 .ipk。"
       required
     >
       <div class="repo-form__input">
@@ -64,12 +58,11 @@ async function submit() {
           placeholder="https://github.com/owner/repository"
         />
       </div>
-      <p v-if="preview" class="repo-form__preview">仓库：{{ preview }}</p>
     </AppField>
 
     <div class="repo-form__actions">
       <AppButton variant="primary" size="lg" type="submit" icon="send" :loading="busy">
-        {{ busy ? '正在提交…' : '提交人工审核' }}
+        {{ busy ? '正在提交…' : '提交审核' }}
       </AppButton>
     </div>
 
@@ -78,11 +71,7 @@ async function submit() {
       <div>
         <p class="notice__title">{{ result.message }}</p>
         <p class="repo-form__result-line">
-          资料会在后台整理，管理员通过后上架。
           <RouterLink v-if="!studio" to="/me">查看我的提交 →</RouterLink>
-        </p>
-        <p v-if="result.taskId" class="repo-form__task">
-          <span>提交编号</span><code>{{ result.taskId }}</code>
         </p>
       </div>
     </div>
@@ -94,13 +83,8 @@ async function submit() {
 .repo-form__input { position: relative; display: flex; align-items: center; }
 .repo-form__prefix { position: absolute; left: 14px; color: var(--text-3); display: inline-flex; }
 .repo-form__field { padding-left: 42px; }
-.repo-form__preview { color: var(--signal-text); font-family: var(--font-mono); font-size: var(--fs-sm); overflow-wrap: anywhere; }
 .repo-form__actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.repo-form__note { flex: 1; min-width: 220px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
 .repo-form__result { align-items: flex-start; }
 .repo-form__result-line { margin-top: 4px; }
-.repo-form__task { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: var(--fs-sm); }
-.repo-form__task span { color: var(--text-3); }
-.repo-form__task code { padding: 2px 7px; border-radius: var(--r-control); background: var(--surface); border: 1px solid var(--line); font-size: var(--fs-cap); }
-@media (max-width: 560px) { .repo-form__actions .btn { width: 100%; } .repo-form__task { flex-wrap: wrap; overflow-wrap: anywhere; } }
+@media (max-width: 560px) { .repo-form__actions .btn { width: 100%; } }
 </style>

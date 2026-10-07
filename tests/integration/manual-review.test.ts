@@ -39,6 +39,7 @@ describe('所有来源和版本必须由管理员人工审核',()=>{
     const detail=await (await request(x.e,`/api/studio/plugins/${x.task.pluginId}`,'GET',undefined,x.cookie)).json() as any;
     expect(detail.candidate.readme).toContain('使用教程');
     expect(detail.candidate.assets[0].name).toBe('demo.ipk');
+    expect(detail.candidate.publicReason).toBe('');
     expect((await (await request(x.e,'/api/studio/overview','GET',undefined,x.cookie)).json() as any).counts.awaitingReview).toBe(1);
     expect((await (await request(x.e,'/api/studio/plugins?status=awaiting_review','GET',undefined,x.cookie)).json() as any).items).toHaveLength(1);
   });

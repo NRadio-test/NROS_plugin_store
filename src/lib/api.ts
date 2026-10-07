@@ -44,11 +44,19 @@ export interface Detail {
   publishedAt?: number | null
 }
 
+export interface PluginVersion {
+  id: string
+  version: string
+  publishedAt: number
+  assets: Array<Asset & { available: boolean }>
+}
+export interface VersionPage { items: PluginVersion[]; total: number; page: number; pageSize: number }
+
 export interface Session {
   reviewMode?: 'manual' | 'automatic'
   reviewEnabled?: boolean
   ssoEnabled?: boolean
-  user: { id: string; phone_mask?: string; display_name?: string } | null
+  user: { id: string; phone_mask?: string; display_name?: string; avatar_url?: string; profile_updated_at?: number } | null
   admin: { id: string; username: string } | null
 }
 
@@ -137,7 +145,7 @@ export interface SourceCandidate {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number, public code?: string) { super(message) }
+  constructor(message: string, public status: number, public code?: string, public ssoEnabled?: boolean) { super(message) }
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -146,8 +154,8 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     ...options,
     headers: { ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers },
   })
-  const value = await response.json().catch(() => ({})) as { error?: string; code?: string }
-  if (!response.ok) throw new ApiError(value.error || `请求失败（${response.status}）`, response.status, value.code)
+  const value = await response.json().catch(() => ({})) as { error?: string; code?: string; ssoEnabled?: boolean }
+  if (!response.ok) throw new ApiError(value.error || `请求失败（${response.status}）`, response.status, value.code, value.ssoEnabled)
   return value as T
 }
 
@@ -167,6 +175,7 @@ export async function loadSession(autoSSO = false) {
       location.assign(result.authorizationUrl)
     }
   } catch (error) {
+    if (error instanceof ApiError && typeof error.ssoEnabled === 'boolean') session.ssoEnabled = error.ssoEnabled
     if (session.ssoEnabled) session.user = null
     session.error = errorMessage(error)
   } finally {

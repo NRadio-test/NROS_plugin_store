@@ -8,6 +8,7 @@ import AppPagination from '../components/AppPagination.vue'
 import PluginRow from '../components/PluginRow.vue'
 import AsyncState from '../components/AsyncState.vue'
 import AppButton from '../components/AppButton.vue'
+import AppIcon from '../components/AppIcon.vue'
 
 type SortKey = 'updated' | 'favorites' | 'downloads'
 
@@ -83,13 +84,15 @@ void load()
 <template>
   <div class="wrap market">
     <header class="market__head">
-      <div><h1>插件市场</h1><p>浏览已通过人工审核的路由器插件。</p></div>
-      <AppButton to="/submit" variant="primary" icon="plus">提交插件</AppButton>
+      <div class="market__intro">
+        <h1>插件市场</h1>
+        <div class="market__intro-actions"><AppButton to="/submit" variant="primary" icon="plus">提交插件</AppButton><RouterLink to="/me" class="market__personal">我的提交与收藏 <AppIcon name="arrow-right" :size="16" /></RouterLink></div>
+      </div>
     </header>
 
     <section class="market__catalog" aria-label="插件目录">
       <div class="market__toolbar">
-        <div class="market__search"><SearchToolbar v-model:search-query="search" v-model:current-page="page" /></div>
+        <div class="market__search"><SearchToolbar v-model:search-query="search" v-model:current-page="page" size="lg" /></div>
         <div class="market__sort"><label for="market-sort">排序</label><select id="market-sort" v-model="sort" class="select" @change="page = 1"><option v-for="item in SORTS" :key="item.key" :value="item.key">{{ item.label }}</option></select></div>
       </div>
       <div class="market__result-meta" aria-live="polite">
@@ -101,7 +104,7 @@ void load()
           <span>{{ searching ? `匹配「${search.trim()}」` : `按${sortLabel}排序` }}</span>
         </template>
       </div>
-      <div v-if="!loading && !error && plugins.length" class="market__columns" aria-hidden="true"><span>插件</span><span>收藏 / 下载</span><span>操作</span></div>
+      <div v-if="!loading && !error && plugins.length" class="market__columns" aria-hidden="true"><span>编号 / 插件</span><span>收藏 / 下载</span><span>操作</span></div>
       <div class="market__results">
         <AsyncState
           :loading="loading"
@@ -110,11 +113,10 @@ void load()
           :skeleton-count="6"
           skeleton="row"
           :empty-title="searching ? '没有找到匹配的插件' : '暂无已上架插件'"
-          :empty-text="searching ? '换个关键词试试。' : '上传 IPK 或提交 GitHub 仓库，人工审核通过后在这里展示。'"
           @retry="load"
         >
           <div class="list">
-            <PluginRow v-for="plugin in plugins" :key="plugin.id" :plugin="plugin" />
+            <PluginRow v-for="(plugin, index) in plugins" :key="plugin.id" :plugin="plugin" :query="search" :index="(page - 1) * pageSize + index + 1" />
           </div>
           <template #empty>
             <RouterLink v-if="!searching" to="/submit" class="btn btn--signal" style="margin-top: var(--sp-2)">提交插件</RouterLink>
@@ -129,26 +131,29 @@ void load()
 </template>
 
 <style scoped>
-.market { padding-top: 32px; padding-bottom: 48px; }
-.market__head { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 24px; }
-.market__head p { color: var(--text-3); font-size: var(--fs-sm); margin-top: 6px; }
-.market__catalog { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-group); overflow: hidden; }
-.market__toolbar { display: flex; align-items: center; gap: 20px; padding: 16px 20px; }
-.market__search { flex: 1; min-width: 0; max-width: 28rem; }
+.market { padding-top: 40px; padding-bottom: 56px; }
+.market__head { margin-bottom: 24px; }
+.market__intro { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.market__intro h1 { font-size: 44px; font-weight: 650; line-height: 1.2; letter-spacing: -0.04em; }
+.market__intro-actions { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.market__personal { font-size: 14px; color: var(--text-2); min-height: 44px; display: inline-flex; align-items: center; gap: 10px; }
+.market__catalog { border-top: 2px solid var(--text); padding-top: 24px; }
+.market__toolbar { display: flex; align-items: center; gap: 24px; padding: 0 0 18px; }
+.market__search { flex: 1; min-width: 0; max-width: 40rem; }
 .market__sort { display: flex; align-items: center; gap: var(--sp-3); margin-inline-start: auto; }
 .market__sort label { font-size: var(--fs-sm); color: var(--text-3); white-space: nowrap; }
 .market__sort .select { width: auto; min-width: 9rem; height: 44px; font-size: var(--fs-sm); }
-.market__result-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 0 20px 16px; font-size: var(--fs-cap); color: var(--text-3); }
-.market__columns { display: grid; grid-template-columns: minmax(0,1fr) 130px 152px; gap: 20px; padding: 10px 20px; border-top: 1px solid var(--line); background: var(--surface-raised); color: var(--text-3); font-size: var(--fs-cap); }
+.market__result-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 0 0 18px; font-size: 12px; color: var(--text-3); }
+.market__columns { display: grid; grid-template-columns: minmax(0,1fr) 130px 152px; gap: 24px; padding: 12px 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--text-3); font-size: 11px; }
 .market__columns span:last-child { text-align: right; }
 .market__results :deep(.list) { border-top: 0; }
-.market__results :deep(.pkg:last-child) { border-bottom: 0; }
-.market__results :deep(.pkg) { padding: 20px; }
+.market__results :deep(.pkg) { padding: 24px; }
 .market__results { min-height: 300px; }
 @media (max-width: 640px) {
   .market { padding-top: 24px; }
-  .market__head { align-items: flex-start; }
-  .market__head .btn { padding-inline: 12px; }
+  .market__intro { gap: 16px; }
+  .market__intro h1 { font-size: 32px; }
+  .market__intro-actions { gap: 16px; }
   .market__columns { display: none; }
   .market__toolbar { flex-wrap: wrap; gap: var(--sp-3); }
   .market__search { flex-basis: 100%; max-width: none; }

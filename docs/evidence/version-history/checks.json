@@ -1,0 +1,222 @@
+{
+  "detailLayouts": [
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        },
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        }
+      ],
+      "filenames": [
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.3.1_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.2.0_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.4.2_aarch64_cortex-a53.ipk"
+        }
+      ],
+      "historyCount": 2,
+      "overflow": false,
+      "scrollY": 0,
+      "shaVisible": false,
+      "width": 375
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        },
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        }
+      ],
+      "filenames": [
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.3.1_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.2.0_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.4.2_aarch64_cortex-a53.ipk"
+        }
+      ],
+      "historyCount": 2,
+      "overflow": false,
+      "scrollY": 0,
+      "shaVisible": false,
+      "width": 768
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        },
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        }
+      ],
+      "filenames": [
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.3.1_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.2.0_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.4.2_aarch64_cortex-a53.ipk"
+        }
+      ],
+      "historyCount": 2,
+      "overflow": false,
+      "scrollY": 0,
+      "shaVisible": false,
+      "width": 1280
+    },
+    {
+      "buttons": [
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        },
+        {
+          "height": 44,
+          "text": "下载",
+          "width": 83
+        }
+      ],
+      "filenames": [
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.3.1_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.2.0_aarch64_cortex-a53.ipk"
+        },
+        {
+          "clipped": false,
+          "text": "luci-app-nradio-router-status-panel_1.4.2_aarch64_cortex-a53.ipk"
+        }
+      ],
+      "historyCount": 2,
+      "overflow": false,
+      "scrollY": 0,
+      "shaVisible": false,
+      "width": 1600
+    }
+  ],
+  "secondaryLayouts": [
+    {
+      "buttonsOutside": [],
+      "heading": "插件市场",
+      "overflow": false,
+      "path": "/",
+      "width": 375
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "插件市场",
+      "overflow": false,
+      "path": "/",
+      "width": 768
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "提交插件",
+      "overflow": false,
+      "path": "/submit",
+      "width": 375
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "提交插件",
+      "overflow": false,
+      "path": "/submit",
+      "width": 768
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "提交插件",
+      "overflow": false,
+      "path": "/submit",
+      "width": 375
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "提交插件",
+      "overflow": false,
+      "path": "/submit",
+      "width": 768
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "个人中心",
+      "overflow": false,
+      "path": "/me",
+      "width": 375
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "个人中心",
+      "overflow": false,
+      "path": "/me",
+      "width": 768
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "审核收件箱",
+      "overflow": false,
+      "path": "/studio",
+      "width": 375
+    },
+    {
+      "buttonsOutside": [],
+      "heading": "审核收件箱",
+      "overflow": false,
+      "path": "/studio",
+      "width": 768
+    }
+  ],
+  "downloads": [
+    {
+      "version": "1.3.1",
+      "bytes": 514,
+      "matches": true
+    },
+    {
+      "version": "1.4.2",
+      "bytes": 514,
+      "matches": true,
+      "differsFromOld": true
+    }
+  ],
+  "emptyHistory": true
+}

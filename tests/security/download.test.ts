@@ -40,6 +40,16 @@ function payload(method='GET',range?:string,type='application/octet-stream') {
 }
 const req = (method='GET',range?:string) => new Request('https://store.example.com/download',{method,headers:{'CF-Connecting-IP':'203.0.113.1','User-Agent':'isolated-test',...(range?{Range:range}:{})}});
 describe('下载资产边界、流式转发和统计',()=>{
+ it('GitHub 历史下载核验旧快照的 Release 和 tag，而非最新版本',async()=>{
+  const f=await fixture();
+  await bindings.DB.prepare("INSERT INTO snapshots(id,plugin_id,revision,fingerprint,data,verdict,public_reason,internal_reason,review_version,created_at) SELECT 'newer-release',plugin_id,2,'newer-fingerprint',json_set(data,'$.tag','v2','$.releaseId',78),verdict,public_reason,internal_reason,review_version,2 FROM snapshots WHERE id=?").bind(f.snapshotId).run();
+  await bindings.DB.prepare("UPDATE plugins SET approved_snapshot_id='newer-release' WHERE id=?").bind(f.pluginId).run();
+  metadata(f.asset); payload();
+  const response=await forwardDownload(req(),bindings,f.pluginId,971,f.snapshotId);
+  expect(response.status).toBe(200);
+  expect(new TextDecoder().decode(await response.arrayBuffer())).toBe(content);
+  expect(pending).toHaveLength(0);
+ });
  it('拒绝任意 URL、未批准资产和异常 Range',async()=>{
   const f=await fixture();
   await expect(forwardDownload(new Request('https://store.example.com/download?url=https://evil.com'),bindings,f.pluginId,971)).rejects.toThrow('不接受');

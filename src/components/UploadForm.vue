@@ -44,28 +44,27 @@ async function submit() {
       <AppField label="插件名称" :for-id="fieldId + '-name'" required>
         <input :id="fieldId + '-name'" v-model="name" class="input" required maxlength="80" autocomplete="off" />
       </AppField>
-      <AppField label="插件简介" :for-id="fieldId + '-description'" required hint="简要说明用途。">
+      <AppField label="插件简介" :for-id="fieldId + '-description'" required>
         <textarea :id="fieldId + '-description'" v-model="description" class="textarea" required maxlength="500" rows="3" />
       </AppField>
-      <AppField label="使用教程" :for-id="fieldId + '-tutorial'" required hint="说明支持的设备、安装步骤和卸载方法，支持 Markdown。">
+      <AppField label="使用教程" :for-id="fieldId + '-tutorial'" required hint="设备、安装与卸载步骤；支持 Markdown。">
         <textarea :id="fieldId + '-tutorial'" v-model="tutorial" class="textarea" required maxlength="20000" rows="8" />
       </AppField>
-      <AppField label="IPK 安装包" :for-id="fieldId + '-file'" required :hint="ready ? '最大 32 MiB，版本与架构从包内读取。' : '先填写上面的资料。'">
+      <AppField label="IPK 安装包" :for-id="fieldId + '-file'" required :hint="ready ? '.ipk，最大 32 MiB。' : '请先填写名称、简介和教程。'">
         <input :id="fieldId + '-file'" ref="fileInput" class="input upload-form__file" type="file" accept=".ipk" :disabled="!ready" required @change="select" />
         <p v-if="file" class="upload-form__filename">{{ file.name }} · {{ formatSize(file.size) }}</p>
       </AppField>
     </fieldset>
-    <p class="upload-form__hint">提交后进入人工审核。请说明支持的设备、安装与卸载方法。</p>
     <p v-if="error" class="notice notice--danger" role="alert">{{ error }}</p>
     <p v-if="message" class="notice notice--success" role="status">{{ message }} <RouterLink v-if="!studio && !pluginId" to="/me">查看我的提交 →</RouterLink></p>
-    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : '上传并提交人工审核' }}</AppButton>
+    <AppButton type="submit" variant="primary" icon="upload" :loading="busy" :disabled="!ready || !file">{{ busy ? '正在上传…' : '提交审核' }}</AppButton>
   </form>
 </template>
 
 <style scoped>
 .upload-form, .upload-form fieldset { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .upload-form fieldset { border: 0; padding: 0; margin: 0; }
-.upload-form__hint, .upload-form__filename { font-size: var(--fs-sm); color: var(--text-3); overflow-wrap: anywhere; }
+.upload-form__filename { font-size: var(--fs-sm); color: var(--text-3); overflow-wrap: anywhere; }
 .upload-form__file { height: auto; min-height: 48px; padding: 10px; max-width: 100%; }
 .upload-form__file::file-selector-button { font: inherit; color: var(--text); background: var(--surface-raised); border: 1px solid var(--line); border-radius: var(--r-control); padding: 8px 12px; margin-right: 12px; cursor: pointer; }
 .upload-form > .btn { align-self: flex-start; }

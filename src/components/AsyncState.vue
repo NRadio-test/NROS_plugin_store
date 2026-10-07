@@ -40,7 +40,7 @@ defineEmits<{ retry: [] }>()
   <div v-else-if="empty" class="empty">
     <span class="empty__icon"><AppIcon :name="emptyIcon" :size="22" /></span>
     <h3 class="empty__title">{{ emptyTitle || '暂无内容' }}</h3>
-    <p class="empty__text">{{ emptyText || '稍后再试。' }}</p>
+    <p v-if="emptyText" class="empty__text">{{ emptyText }}</p>
     <slot name="empty" />
   </div>
 

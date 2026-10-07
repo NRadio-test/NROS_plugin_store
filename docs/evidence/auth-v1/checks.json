@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-07",
+  "scope": "local only",
+  "typecheck": "passed",
+  "eslint": "passed",
+  "productionBuild": "passed",
+  "artifactIsolation": "passed",
+  "vitest": {
+    "files": 16,
+    "tests": 192,
+    "result": "passed"
+  },
+  "adminScriptTests": {
+    "tests": 2,
+    "result": "passed"
+  },
+  "finalSsoRegressionTests": {
+    "tests": 25,
+    "result": "passed"
+  },
+  "serviceBindingContract": {
+    "result": "passed",
+    "implementation": "actual standalone auth Worker and two isolated plugin Worker instances",
+    "youzan": "simulated replies",
+    "checks": [
+      "verified canonical ID equality",
+      "one Youzan authorization reused silently",
+      "refresh",
+      "profile",
+      "browser-bound callback",
+      "replay rejection",
+      "site token isolation",
+      "global logout",
+      "administrator isolation"
+    ]
+  },
+  "browserPreview": {
+    "result": "passed",
+    "checks": [
+      "silent sign-in",
+      "name and avatar",
+      "profile sync",
+      "logout",
+      "interactive sign-in",
+      "refresh"
+    ],
+    "consoleErrors": 0
+  },
+  "productionLoginVerified": false,
+  "secretsReadOrChanged": false,
+  "remoteMigration": false,
+  "deployed": false,
+  "pushed": false
+}

@@ -14,8 +14,9 @@ import AppButton from '../components/AppButton.vue'
 import MonogramAvatar from '../components/MonogramAvatar.vue'
 import { navigateTabs } from '../composables/tabs'
 import CopyButton from '../components/CopyButton.vue'
+import VersionHistory from '../components/VersionHistory.vue'
 
-type TabKey = 'readme' | 'packages' | 'review'
+type TabKey = 'readme' | 'versions' | 'review'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,7 +34,7 @@ const readmeHtml = computed(() =>
 )
 const TABS: Array<{ key: TabKey; label: string; icon: 'book' | 'package' | 'shield-check' }> = [
   { key: 'readme', label: '说明文档', icon: 'book' },
-  { key: 'packages', label: '安装包与校验', icon: 'package' },
+  { key: 'versions', label: '历史版本', icon: 'package' },
   { key: 'review', label: '审核信息', icon: 'shield-check' },
 ]
 
@@ -168,9 +169,8 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               </div>
 
               <section v-if="tab === 'readme'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
-                <header class="detail__panel-head">
+                <header v-if="!uploaded" class="detail__panel-head">
                   <div>
-                    <p class="detail__panel-title">{{ uploaded ? '使用教程' : '仓库 README' }}</p>
                     <p v-if="!uploaded" class="detail__panel-sub">
                       <AppIcon name="file-text" :size="13" />{{ detail.readmePath || '未找到 README' }}
                       <span class="detail__panel-dot" aria-hidden="true">·</span>commit {{ shortHash(detail.readmeCommit) }}
@@ -192,67 +192,17 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <p v-else class="detail__missing">
                   <AppIcon name="alert-circle" :size="16" />{{ uploaded ? '暂无使用教程。' : '仓库没有 README。' }}
                 </p>
-                <p class="detail__footnote">
-                  {{ uploaded ? '提交者填写的内容，外部站点的图片不会加载。' : '作者原文快照，外部站点的图片不会加载。' }}
-                </p>
               </section>
 
-              <section v-else-if="tab === 'packages'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
-                <header class="detail__panel-head">
-                  <div>
-                    <p class="detail__panel-title">安装包与校验</p>
-                  </div>
-                </header>
-                <div class="table-wrap">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th scope="col">文件名</th>
-                        <th scope="col">包名 / 架构</th>
-                        <th scope="col">大小</th>
-                        <th scope="col">SHA-256</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="asset in detail.assets" :key="asset.id">
-                        <td class="table__primary">{{ asset.name }}</td>
-                        <td>
-                          <span class="mono small">{{ asset.packageName || '—' }}</span>
-                          <span class="detail__panel-dot" aria-hidden="true">·</span>
-                          <span class="small muted">{{ asset.architecture || '—' }}</span>
-                        </td>
-                        <td class="tnum">{{ formatSize(asset.size) }}</td>
-                        <td>
-                          <span class="row gap-1">
-                            <code class="small">{{ shortHash(asset.sha256, 16) }}</code>
-                            <CopyButton v-if="asset.sha256" :value="asset.sha256" label="已复制 SHA-256" :size="15" />
-                          </span>
-                        </td>
-                      </tr>
-                      <tr v-if="!detail.assets.length">
-                        <td colspan="4" class="muted">暂无可下载的附件。</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <p class="detail__footnote">
-                </p>
+              <section v-else-if="tab === 'versions'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
+                <VersionHistory :plugin-id="detail.plugin.id" />
               </section>
 
               <section v-else :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
-                <header class="detail__panel-head">
-                  <div>
-                    <p class="detail__panel-title">审核信息</p>
-                  </div>
-                </header>
                 <div class="detail__review">
                   <div class="detail__review-row">
                     <span class="detail__review-label">审核结论</span>
                     <span><AppBadge variant="success" dot><AppIcon name="shield-check" :size="12" />{{ detail.reviewLabel || '人工审核通过' }}</AppBadge></span>
-                  </div>
-                  <div class="detail__review-row">
-                    <span class="detail__review-label">公开理由</span>
-                    <span>{{ detail.reviewPublicReason || '未发现拒绝原因。' }}</span>
                   </div>
                   <div class="detail__review-row">
                     <span class="detail__review-label">{{ detail.publicationMode && detail.publicationMode !== 'automatic' ? '上架时间' : '审核时间' }}</span>
@@ -267,10 +217,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                     <span class="row gap-1"><code class="small">{{ shortHash(detail.sourceCommit) }}</code><CopyButton :value="detail.sourceCommit" label="已复制 commit" :size="15" /></span>
                   </div>
                 </div>
-                <div class="notice notice--warning detail__notice">
-                  <AppIcon name="alert" :size="16" />
-                  <span>{{ detail.publicationMode === 'human-reviewed' ? '当前版本已由管理员人工审核并允许收录。未执行自动查毒。' : detail.publicationMode === 'unreviewed' ? '审核暂时关闭，此版本未经过自动审核或查毒。' : detail.publicationMode === 'manual' ? '此版本由管理员直接上架，未经过自动审核或查毒。' : '自动审核为静态检查，不保证无病毒。' }}</span>
-                </div>
               </section>
             </div>
 
@@ -279,32 +225,19 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <div class="download-card__head">
                   <span class="download-card__icon"><AppIcon name="package" :size="19" /></span>
                   <div>
-                    <p class="download-card__title">下载安装包</p>
+                    <p class="download-card__title">最新版本</p>
                     <p class="download-card__version">{{ detail.plugin.version || '—' }}</p>
                   </div>
                 </div>
-                <p class="download-card__note">
-                  <template v-if="detail.assets.length > 1">请选择与设备架构相符的文件。</template>
-                  <template v-else-if="detail.assets.length === 1"></template>
-                  <template v-else>暂无可下载的附件。</template>
-                </p>
+                <p v-if="detail.assets.length > 1" class="download-card__note">选择设备对应的架构。</p>
 
                 <div v-for="asset in detail.assets" :key="asset.id" class="asset">
                   <p class="asset__name">{{ asset.name }}</p>
                   <p class="asset__meta">
-                    <span>{{ asset.packageName || '—' }}</span>
-                    <span class="detail__panel-dot" aria-hidden="true">·</span>
                     <span>{{ asset.architecture || '—' }}</span>
                     <span class="detail__panel-dot" aria-hidden="true">·</span>
                     <span class="tnum">{{ formatSize(asset.size) }}</span>
                   </p>
-                  <details class="asset__hash">
-                    <summary>SHA-256 摘要</summary>
-                    <span class="row gap-1" style="margin-top: 6px">
-                      <code class="small">{{ asset.sha256 || '—' }}</code>
-                      <CopyButton v-if="asset.sha256" :value="asset.sha256" label="已复制 SHA-256" :size="15" />
-                    </span>
-                  </details>
                   <AppButton
                     variant="primary"
                     block
@@ -345,9 +278,10 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               variant="primary"
               size="sm"
               icon="download"
-              @click="scrollToDownloads"
+              :loading="detail.assets.length === 1 && busy === String(detail.assets[0]!.id)"
+              @click="detail.assets.length === 1 ? download(String(detail.assets[0]!.id), detail.assets[0]!.name) : scrollToDownloads()"
             >
-              查看安装包
+              {{ detail.assets.length === 1 ? '下载最新版' : '选择安装包' }}
             </AppButton>
           </div>
         </template>
@@ -358,6 +292,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
 <style scoped>
 .detail { padding-top: 26px; }
+.detail > .container { width: min(var(--page-max-wide), 100% - 2 * var(--safe-x)); }
 .detail__crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 20px; font-size: var(--fs-sm); color: var(--text-3); }
 .detail__crumbs > svg { flex: none; }
 .breadcrumb__current { overflow-wrap: anywhere; }
@@ -373,7 +308,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 }
 .detail-hero__ident { display: flex; gap: 16px; min-width: 0; }
 .detail-hero__text { min-width: 0; }
-.detail-hero__text h1 { overflow-wrap: anywhere; font-size: var(--fs-h1); letter-spacing: -0.032em; }
+.detail-hero__text h1 { overflow-wrap: anywhere; font-size: clamp(28px, 4vw, 44px); line-height: 1.25; letter-spacing: -0.04em; }
 .detail-hero__owner { overflow-wrap: anywhere; word-break: break-word; display: inline-flex; align-items: center; gap: 6px; margin-top: 7px; font-size: var(--fs-sm); color: var(--text-3); font-family: var(--font-mono); }
 .detail-hero__desc { margin-top: 12px; max-width: 68ch; color: var(--text-2); line-height: 1.7; }
 .detail-hero__actions { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -388,37 +323,34 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .detail-hero__stats dd { margin: 0; font-size: var(--fs-sm); font-weight: 600; }
 .stat__value--text { font-size: var(--fs-body); font-weight: 620; }
 
-.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 288px; gap: 24px; margin-top: 24px; align-items: start; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) clamp(280px, 25vw, 352px); gap: clamp(20px, 2.5vw, 40px); margin-top: 28px; align-items: start; }
 .detail-main { min-width: 0; }
 .detail__tabs { margin-bottom: 16px; flex-wrap: wrap; }
-.detail__panel { padding: 24px; }
+.detail__panel { padding: 32px; }
 .detail__panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
 .detail__panel-title { font-size: var(--fs-h3); font-weight: 650; }
 .detail__panel-sub { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: var(--fs-sm); color: var(--text-3); flex-wrap: wrap; }
 .detail__panel-dot { opacity: 0.6; padding-inline: 2px; }
 .detail__readme { max-width: 78ch; }
+.detail__readme :deep(h1) { font-size: 24px; line-height: 1.35; letter-spacing: -0.025em; margin-bottom: 12px; }
 .detail__missing { display: flex; align-items: center; gap: 8px; padding: 18px; border: 1px dashed var(--line); border-radius: var(--r-control); color: var(--text-3); }
-.detail__footnote { margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
 .detail__review { display: flex; flex-direction: column; gap: 0; }
 .detail__review-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-body); align-items: center; }
 .detail__review-row:last-child { border-bottom: 0; }
 .detail__review-label { font-size: var(--fs-sm); color: var(--text-3); }
 .detail__review code { padding: 2px 6px; border-radius: var(--r-control); background: var(--surface-raised); border: 1px solid var(--line); }
-.detail__notice { margin-top: 18px; align-items: flex-start; }
 
-.detail-aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-h) + 18px); }
-.download-card { padding: 20px; scroll-margin-top: calc(var(--header-h) + 20px); }
+.detail-aside { min-width: 0; display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-h) + 18px); }
+.download-card { padding: 24px; border-top: 2px solid var(--signal); scroll-margin-top: calc(var(--header-h) + 20px); }
 .download-card__head { display: flex; align-items: center; gap: 12px; }
 .download-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: var(--text-2); }
 .download-card__title { font-size: var(--fs-sm); font-weight: 600; color: var(--text-3); }
 .download-card__version { font-size: 18px; font-weight: 600; letter-spacing: -0.025em; }
 .download-card__note { margin-top: 12px; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
 .asset { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; padding: 16px 0; border-top: 1px solid var(--line); }
-.asset__name { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600; word-break: break-all; }
+.asset__name { font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; line-height: 1.6; }
 .asset__meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: var(--fs-cap); color: var(--text-3); }
-.asset__hash { font-size: var(--fs-cap); color: var(--text-3); }
-.asset__hash summary { cursor: pointer; padding-block: 2px; min-height: 44px; display: flex; align-items: center; }
-.asset__hash code { display: block; word-break: break-all; color: var(--text-2); }
+.asset__meta span { min-width: 0; overflow-wrap: anywhere; }
 .download-card__extra { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .download-card__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--fs-sm); }
 
@@ -432,6 +364,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 @media (max-width: 1000px) {
   .detail-layout { grid-template-columns: 1fr; }
   .detail-aside { position: static; }
+  .detail-aside { grid-row: 1; }
   .detail-hero__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 767px) {

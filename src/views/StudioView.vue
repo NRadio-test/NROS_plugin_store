@@ -19,17 +19,17 @@ const StudioSecurity = defineAsyncComponent(() => import('../components/StudioSe
 
 type PanelKey = 'reviews' | 'overview' | 'plugins' | 'tasks' | 'logs' | 'ai' | 'sources' | 'security'
 
-interface NavItem { key: PanelKey; label: string; icon: IconName; desc: string }
+interface NavItem { key: PanelKey; label: string; icon: IconName }
 
 const NAV: NavItem[] = [
-  { key: 'reviews', label: '审核收件箱', icon: 'shield-check', desc: '查看待审作品，通过或退回修改' },
-  { key: 'overview', label: '总览', icon: 'bar-chart', desc: '整体状态' },
-  { key: 'plugins', label: '插件管理', icon: 'package', desc: '搜索、同步、下架与恢复' },
-  { key: 'tasks', label: '整理任务', icon: 'activity', desc: '任务状态与理由' },
-  { key: 'logs', label: '操作日志', icon: 'history', desc: '管理员操作记录' },
-  { key: 'ai', label: '自动审核配置', icon: 'sparkles', desc: '接口、预算与规则' },
-  { key: 'sources', label: '下载源', icon: 'layers', desc: '官方源与第三方源' },
-  { key: 'security', label: '账号安全', icon: 'lock', desc: '前往留言箱管理密码' },
+  { key: 'reviews', label: '审核收件箱', icon: 'shield-check' },
+  { key: 'overview', label: '总览', icon: 'bar-chart' },
+  { key: 'plugins', label: '插件管理', icon: 'package' },
+  { key: 'tasks', label: '整理任务', icon: 'activity' },
+  { key: 'logs', label: '操作日志', icon: 'history' },
+  { key: 'ai', label: '自动审核配置', icon: 'sparkles' },
+  { key: 'sources', label: '下载源', icon: 'layers' },
+  { key: 'security', label: '账号安全', icon: 'lock' },
 ]
 
 const panel = ref<PanelKey>('reviews')
@@ -86,11 +86,10 @@ function select(key: PanelKey) {
           <span class="studio-login__icon"><AppIcon name="shield" :size="20" /></span>
           <div>
             <h1>管理员登录</h1>
-            <p class="small muted">使用留言箱的管理员账号。</p>
           </div>
         </header>
 
-        <AppField label="用户名" for-id="admin-username" required>
+        <AppField label="留言箱管理员账号" for-id="admin-username" required>
           <input id="admin-username" v-model="username" class="input" autocomplete="username" required maxlength="100" />
         </AppField>
         <AppField label="密码" for-id="admin-password" :error="error" required>
@@ -101,12 +100,7 @@ function select(key: PanelKey) {
           {{ busy ? '正在登录…' : '管理员登录' }}
         </AppButton>
 
-        <AppButton href="https://msg.zdwifi.com/studio" variant="ghost" icon="lock">前往留言箱修改密码</AppButton>
-
-        <div class="notice">
-          <AppIcon name="info" :size="16" />
-          <span>敏感操作会写入审计日志。</span>
-        </div>
+        <AppButton href="https://msg.zdwifi.com/studio" variant="ghost" icon="lock">去留言箱改密</AppButton>
       </form>
     </div>
 
@@ -140,7 +134,7 @@ function select(key: PanelKey) {
             <span class="studio__admin-avatar"><AppIcon name="user" :size="15" /></span>
             <span class="studio__admin-text">
               <span class="studio__admin-name">{{ session.admin.username }}</span>
-              <span class="studio__admin-role">管理员会话</span>
+              <span class="studio__admin-role">管理员</span>
             </span>
           </div>
           <AppButton size="sm" variant="ghost" icon="log-out" block @click="logout">退出管理员</AppButton>
@@ -154,7 +148,6 @@ function select(key: PanelKey) {
               <h1 class="studio__title">{{ current.label }}</h1>
               <AppBadge variant="brand"><AppIcon name="shield" :size="12" />管理员</AppBadge>
             </div>
-            <p class="studio__desc">{{ current.desc }}</p>
           </div>
           <div class="studio__topbar-actions">
             <AppButton
@@ -200,7 +193,7 @@ function select(key: PanelKey) {
 .studio-login__head h1 { font-size: 22px; margin-bottom: 8px; }
 .studio-login__icon { display: inline-flex; color: var(--text-2); padding-top: 5px; }
 
-.studio-shell { display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); gap: 0; width: min(var(--page-max-wide), 100% - 2 * var(--safe-x)); margin-inline: auto; padding: 22px 0 40px; align-items: start; }
+.studio-shell { display: grid; grid-template-columns: var(--sidebar) minmax(0, 1fr); gap: 0; width: min(var(--page-max-wide), 100% - 2 * var(--safe-x)); margin-inline: auto; padding: 32px 0 48px; align-items: start; }
 .studio__sidebar {
   position: sticky;
   top: calc(var(--header-h) + 22px);
@@ -233,7 +226,7 @@ function select(key: PanelKey) {
   transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 .studio__nav-item:hover { background: var(--surface-hover); color: var(--text); }
-.studio__nav-item--active { background: var(--surface-hover); color: var(--text); font-weight: 600; box-shadow: inset 3px 0 var(--signal); }
+.studio__nav-item--active { background: var(--signal-surface); color: var(--signal-text); font-weight: 600; box-shadow: inset 3px 0 var(--signal); }
 .studio__sidebar-foot { display: flex; flex-direction: column; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
 .studio__admin { display: flex; align-items: center; gap: 10px; }
 .studio__admin-avatar { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: var(--r-control); background: var(--surface-raised); color: var(--text-2); flex: none; }
@@ -241,10 +234,9 @@ function select(key: PanelKey) {
 .studio__admin-name { font-size: var(--fs-sm); font-weight: 640; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .studio__admin-role { font-size: var(--fs-cap); color: var(--text-3); }
 
-.studio__main { min-width: 0; padding-inline-start: 26px; }
+.studio__main { min-width: 0; padding-inline-start: 32px; }
 .studio__topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
-.studio__title { font-size: var(--fs-h1); letter-spacing: -0.03em; }
-.studio__desc { margin-top: 5px; font-size: var(--fs-sm); color: var(--text-3); }
+.studio__title { font-size: 28px; letter-spacing: -0.03em; }
 .studio__topbar-actions { display: flex; align-items: center; gap: 10px; }
 .studio__nav-toggle { display: none; }
 .studio__content { display: flex; flex-direction: column; gap: 20px; }

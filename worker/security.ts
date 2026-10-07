@@ -103,8 +103,8 @@ export async function createSession(env: Env, kind: SessionKind, id: string, aut
  await env.DB.prepare('INSERT INTO sessions(token_hash,kind,subject_id,expires_at) VALUES(?,?,?,?)').bind(await hash(token), kind, subject, expiresAt).run();
  return { token, cookie: sessionCookie(env, kind, token, seconds), expiresAt };
 }
-export async function getSession(request: Request, env: Env, kind: SessionKind): Promise<Session | null> {
- if (kind === 'user' && ssoEnabled(env)) return checkSSOSession(request, env);
+export async function getSession(request: Request, env: Env, kind: SessionKind, onExpired?: () => void): Promise<Session | null> {
+ if (kind === 'user' && ssoEnabled(env)) return checkSSOSession(request, env, onExpired);
  const token = cookieToken(request, env, kind);
  if (!token) return null;
  const row = await env.DB.prepare('SELECT subject_id,expires_at FROM sessions WHERE token_hash=? AND kind=? AND expires_at>?').bind(await hash(token), kind, Date.now()).first<{ subject_id: string; expires_at: number }>();

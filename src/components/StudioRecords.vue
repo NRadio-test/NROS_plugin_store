@@ -53,13 +53,6 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
 <template>
   <section class="records">
     <header class="records__head">
-      <div>
-        <p class="records__desc">
-          {{ kind === 'tasks'
-            ? '跟踪提交资料的整理进度。人工审核请前往审核收件箱。'
-            : '记录管理员、动作与目标。' }}
-        </p>
-      </div>
       <AppButton size="sm" icon="refresh" :loading="loading" @click="load">刷新记录</AppButton>
     </header>
 
@@ -70,7 +63,6 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
       skeleton="row"
       :skeleton-count="6"
       :empty-title="kind === 'tasks' ? '暂无整理任务' : '暂无操作日志'"
-      :empty-text="kind === 'tasks' ? '新投稿与定时同步会生成任务。' : '管理员操作会记录在这里。'"
       @retry="load"
     >
       <div v-if="kind === 'tasks'" class="records__list">
@@ -122,9 +114,8 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
 
 <style scoped>
 .records { display: flex; flex-direction: column; gap: 16px; }
-.records__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.records__head { display: flex; justify-content: flex-end; }
 .records__title { font-size: var(--fs-h2); }
-.records__desc { margin-top: 5px; max-width: 80ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
 .records__list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); overflow: hidden; }
 .record {
   display: grid;

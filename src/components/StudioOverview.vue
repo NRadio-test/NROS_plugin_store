@@ -68,7 +68,7 @@ const tiles = () => {
               </span>
               <div class="ov__config-text">
                 <p class="ov__config-title">自动审核（备用）</p>
-                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '已停用，不影响人工审核' }}</p>
+                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '已停用' }}</p>
               </div>
               <AppBadge :variant="data.ai.configured ? 'success' : 'warning'" dot>{{ data.ai.configured ? '已配置' : '待配置' }}</AppBadge>
             </div>
@@ -134,7 +134,6 @@ const tiles = () => {
           <div class="empty" style="border: 0; padding: 28px">
             <span class="empty__icon"><AppIcon name="activity" :size="20" /></span>
             <h3 class="empty__title">还没有整理任务</h3>
-            <p class="empty__text">提交公开仓库后会显示任务。</p>
           </div>
         </div>
         <div v-else class="ov__tasks">

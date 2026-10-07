@@ -1,0 +1,105 @@
+{
+  "date": "2026-10-05",
+  "environment": "local isolated preview; in-app browser",
+  "checks": [
+    {
+      "check": "退回原因校验与焦点",
+      "pass": true
+    },
+    {
+      "check": "改密入口指向留言箱",
+      "pass": true
+    },
+    {
+      "check": "搜索真实结果与高亮",
+      "pass": true
+    },
+    {
+      "check": "未填完资料前禁止选包",
+      "pass": true
+    },
+    {
+      "check": "填完后允许选包但仍需选择文件",
+      "pass": true
+    },
+    {
+      "check": "投稿标签键盘切换与草稿",
+      "pass": true
+    },
+    {
+      "check": "后台没有空说明段落",
+      "pass": true
+    },
+    {
+      "check": "自动审核停用状态和密钥编辑提示保留",
+      "pass": true
+    }
+  ],
+  "layouts": [
+    {
+      "page": "market",
+      "width": 375,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 375,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 375,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 375,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 375,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 1280,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 1280,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 1280,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 1280,
+      "emptyParagraphs": 0,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 1280,
+      "emptyParagraphs": 0,
+      "overflow": false
+    }
+  ],
+  "consoleErrors": [],
+  "frontendTypecheck": "passed",
+  "lint": "passed; zero warnings",
+  "productionBuild": "passed; artifact isolation passed",
+  "e2eNotes": "Updated existing button and field locators; browser flows checked; full Playwright suite not rerun."
+}

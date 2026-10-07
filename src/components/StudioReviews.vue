@@ -64,17 +64,17 @@ void load()
       <AppButton icon="refresh" :loading="loading" @click="load">刷新</AppButton>
     </div>
     <nav class="review-inbox__filters" aria-label="审核队列筛选"><button v-for="item in filters" :key="item.key" class="tabs__item" :aria-pressed="filter === item.key" @click="filter = item.key">{{ item.label }}</button><span class="review-inbox__count">{{ total }} 项</span></nav>
-    <AsyncState :loading="loading" :error="error" :empty="!items.length" skeleton="row" :skeleton-count="4" :empty-title="filter === 'awaiting_review' ? '待审队列已清空' : '这里暂时没有作品'" :empty-text="query ? '试试其他关键词。' : '新投稿和新版本整理完成后会出现在这里。'" @retry="load">
+    <AsyncState :loading="loading" :error="error" :empty="!items.length" skeleton="row" :skeleton-count="4" :empty-title="filter === 'awaiting_review' ? '待审队列已清空' : '暂无作品'" @retry="load">
       <div class="review-list">
         <article v-for="item in items" :key="item.id" class="review-item">
           <span class="review-item__icon"><AppIcon :name="item.source_kind === 'upload' ? 'package' : 'github'" :size="21" /></span>
-          <div class="review-item__content"><button class="review-item__name" @click="open(item.id)">{{ item.full_name }}</button><p>{{ filter === 'rejected' ? item.public_reason : item.description }}</p><div class="review-item__meta"><span>{{ item.source_kind === 'upload' ? 'IPK 直传' : 'GitHub 仓库' }}</span><span v-if="item.version" class="mono">{{ item.version }}</span><time>{{ formatDateTime(item.created_at) }}</time></div></div>
+          <div class="review-item__content"><button class="review-item__name" @click="open(item.id)">{{ item.full_name }}</button><p v-if="filter === 'rejected' ? item.public_reason : item.description">{{ filter === 'rejected' ? item.public_reason : item.description }}</p><div class="review-item__meta"><span>{{ item.source_kind === 'upload' ? 'IPK 直传' : 'GitHub 仓库' }}</span><span v-if="item.version" class="mono">{{ item.version }}</span><time>{{ formatDateTime(item.created_at) }}</time></div></div>
           <AppButton variant="secondary" icon-right="chevron-right" @click="open(item.id)">{{ filter === 'awaiting_review' ? '开始审核' : '查看作品' }}</AppButton>
         </article>
       </div>
       <AppPagination v-if="total > 20" v-model="page" :total="total" :total-pages="Math.ceil(total / 20)" />
     </AsyncState>
-    <AppDrawer :model-value="!!selected" :title="candidate?.name || '作品审核'" description="审核决定只适用于当前展示的版本。" @update:model-value="value => { if (!value && !busy) { selected = ''; detailRequest++ } }">
+    <AppDrawer :model-value="!!selected" :title="candidate?.name || '作品审核'" @update:model-value="value => { if (!value && !busy) { selected = ''; detailRequest++ } }">
       <AsyncState :loading="detailLoading" :error="detailError" skeleton="row" :skeleton-count="4" @retry="open(selected)">
         <template v-if="candidate">
           <div class="review-facts"><AppBadge :variant="candidate.decision === 'pending' ? 'warning' : candidate.decision === 'approved' ? 'success' : 'danger'">{{ candidate.decision === 'pending' ? '等待人工审核' : candidate.decision === 'approved' ? '人工审核通过' : '已退回' }}</AppBadge><span class="mono">{{ candidate.version }}</span><span>{{ candidate.uploaded ? 'IPK 直传' : 'GitHub 仓库' }}</span></div>
@@ -88,13 +88,12 @@ void load()
           <section class="review-section"><h3>本次安装包 <span class="muted">{{ candidate.assets.length }}</span></h3><div v-for="asset in candidate.assets" :key="asset.id" class="review-file"><div><strong>{{ asset.name }}</strong><p>{{ formatSize(asset.size) }} · {{ asset.architecture || '未提供架构' }}</p></div><AppButton v-if="candidate.decision === 'pending'" size="sm" :href="`/api/studio/plugins/${selected}/review/download/${asset.id}`" icon="download">下载检查</AppButton></div></section>
           <section v-if="candidate.decision === 'pending'" class="review-section review-decision">
             <h3>给出审核结论</h3>
-            <AppField label="给作者的反馈" for-id="review-reason" hint="退回时必填，说明具体需要修改的内容；通过时可留空。" :error="decisionError"><textarea id="review-reason" v-model="reason" class="textarea" maxlength="240" rows="3" :disabled="busy" placeholder="例如：请补充支持的路由器型号及卸载步骤。" /></AppField>
-            <details><summary>内部备注</summary><label for="review-internal" class="sr-only">仅管理员可见的内部备注</label><textarea id="review-internal" v-model="internalReason" class="textarea" maxlength="6000" rows="3" :disabled="busy" placeholder="只在后台保存，不会展示给作者。" /></details>
-            <p class="small muted">人工通过表示允许收录；当前未执行自动查毒。</p>
+            <AppField label="给作者的反馈" for-id="review-reason" hint="退回时必填，至少 5 字。" :error="decisionError"><textarea id="review-reason" v-model="reason" class="textarea" maxlength="240" rows="3" :disabled="busy" /></AppField>
+            <details><summary>内部备注</summary><label for="review-internal" class="sr-only">仅管理员可见的内部备注</label><textarea id="review-internal" v-model="internalReason" class="textarea" maxlength="6000" rows="3" :disabled="busy" /></details>
           </section>
-          <section v-else class="review-section"><h3>审核反馈</h3><p>{{ candidate.publicReason }}</p><p v-if="candidate.reviewedAt" class="small muted">{{ formatDateTime(candidate.reviewedAt) }}</p></section>
+          <section v-else class="review-section"><p v-if="candidate.publicReason">{{ candidate.publicReason }}</p><p v-if="candidate.reviewedAt" class="small muted">{{ formatDateTime(candidate.reviewedAt) }}</p></section>
         </template>
-        <div v-else-if="detail" class="notice"><AppIcon name="clock" :size="16" />{{ statusMeta(detail.plugin.task_status).label }}。资料整理完成后才能审核。</div>
+        <div v-else-if="detail" class="notice"><AppIcon name="clock" :size="16" />{{ statusMeta(detail.plugin.task_status).label }}</div>
       </AsyncState>
       <template #footer><template v-if="candidate?.decision === 'pending'"><AppButton variant="secondary" icon="x-circle" :disabled="busy" @click="decide('reject')">退回修改</AppButton><AppButton variant="primary" icon="check-circle" :loading="busy" @click="decide('approve')">通过并上架</AppButton></template><AppButton v-else @click="selected = ''">关闭</AppButton></template>
     </AppDrawer>
@@ -102,16 +101,16 @@ void load()
 </template>
 
 <style scoped>
-.review-inbox { border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); overflow: hidden; }
+.review-inbox { border: 1px solid var(--line); border-top: 2px solid var(--signal); border-radius: var(--r-group); background: var(--surface); overflow: hidden; }
 .review-inbox__toolbar { display: grid; grid-template-columns: minmax(0, 440px) auto; justify-content: space-between; gap: 12px; padding: 16px 20px; }
 .review-inbox__filters { display: flex; align-items: center; border-bottom: 1px solid var(--line); padding: 0 12px; overflow-x: auto; }
 .review-inbox__filters .tabs__item { white-space: nowrap; flex: none; }
 .review-inbox__filters .tabs__item[aria-pressed=true] { color: var(--text); font-weight: 600; border-bottom-color: var(--signal); }
 .review-inbox__count { color: var(--text-3); font-size: var(--fs-cap); margin-left: auto; padding: 0 8px; white-space: nowrap; }
-.review-item { display: flex; align-items: center; gap: 16px; padding: 20px; border-bottom: 1px solid var(--line); }
+.review-item { display: flex; align-items: center; gap: 20px; padding: 24px 20px; border-bottom: 1px solid var(--line); }
 .review-item:last-child { border-bottom: 0; }
 .review-item:hover { background: var(--surface-raised); }
-.review-item__icon { color: var(--text-3); display: flex; flex: none; }
+.review-item__icon { color: var(--signal-text); display: flex; flex: none; }
 .review-item__content { flex: 1; min-width: 0; }
 .review-item__name { display: inline-block; font: inherit; font-size: 15px; font-weight: 600; border: 0; padding: 0; background: transparent; color: var(--text); text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .review-item__name:hover { text-decoration: underline; text-underline-offset: 3px; }

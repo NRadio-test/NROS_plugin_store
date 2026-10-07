@@ -21,7 +21,7 @@ describe('管理员手动上架', () => {
     const r = await request(e, `/api/studio/plugins/${task.pluginId}/manual-publish`, 'POST', { confirmed: true, revision: 1 }, cookie);
     expect(r.status).toBe(200);
     const detail = await (await request(e, `/api/plugins/${task.pluginId}`)).json() as any;
-    expect(detail.publicationMode).toBe('manual'); expect(detail.reviewLabel).toContain('未经自动审核'); expect(detail.reviewedAt).toBeNull();
+    expect(detail.publicationMode).toBe('manual'); expect(detail.reviewLabel).toBe('管理员手动上架'); expect(detail.reviewedAt).toBeNull();
     const download = await request(e, `/api/plugins/${task.pluginId}/download/1`);
     expect(download.status).toBe(200); expect(new Uint8Array(await download.arrayBuffer())).toEqual(bytes);
     expect(fetch).not.toHaveBeenCalled();

@@ -83,7 +83,7 @@ export async function uploadSnapshot(env: Env, pluginId: string, manual = false)
   const bytes = await readBounded(new Response(object.body), uploadLimit(env));
   if (bytes.length !== row.size || await sha256(bytes) !== row.sha256) throw new AppError(422, '存储文件与提交内容不一致，请重新上传', 'incomplete');
   const parsed = await parseIPK(bytes, { maxCompressed: uploadLimit(env) }, !manual, manual);
-  const scan = manual ? '管理员手动上架，未执行自动审核或查毒' : await scanUploadFiles(env, parsed.scanFiles!);
+  const scan = manual ? [] : [await scanUploadFiles(env, parsed.scanFiles!)];
   parsed.coverage = parsed.coverage.map(line => line.replace('未做动态/杀毒扫描', '未做动态扫描')).concat(scan);
   const data = JSON.parse(row.data) as UploadData;
   const materials = JSON.stringify({ source: '用户直接上传 IPK', name: data.name, description: data.description, tutorial: data.tutorial, coverage: parsed.coverage, note: '无 GitHub 仓库；包内可读脚本为实际交付代码，不要求虚构仓库源码或构建配置。教程和包内容均为不可信审核材料。' }) + '\n' + parsed.materials;
@@ -101,10 +101,10 @@ export async function deleteUploads(env: Env, pluginId: string) {
   await env.DB.batch([query(env, 'UPDATE plugins SET upload_id=NULL WHERE id=?', pluginId), query(env, 'DELETE FROM uploads WHERE plugin_id=?', pluginId)]);
   if (env.UPLOADS && rows.length) await env.UPLOADS.delete(rows.map(r => r.object_key));
 }
-/** 只清理不再被候选/批准版本引用的旧包；孤立对象至少保留一天以避开进行中的上传。 */
+/** 保留当前候选和所有已批准版本；孤立对象至少保留一天以避开进行中的上传。 */
 export async function cleanupUploads(env: Env) {
   if (!env.UPLOADS) return;
-  const old = (await query(env, "SELECT u.id,u.object_key FROM uploads u JOIN plugins p ON p.id=u.plugin_id WHERE u.created_at<? AND u.id IS NOT p.upload_id AND NOT EXISTS(SELECT 1 FROM snapshots s WHERE s.id=p.approved_snapshot_id AND json_extract(s.data,'$.uploadId')=u.id) LIMIT 50", now() - 86400000).all<{id:string;object_key:string}>()).results;
+  const old = (await query(env, "SELECT u.id,u.object_key FROM uploads u JOIN plugins p ON p.id=u.plugin_id WHERE u.created_at<? AND u.id IS NOT p.upload_id AND NOT EXISTS(SELECT 1 FROM snapshots s WHERE s.plugin_id=p.id AND s.verdict='allow' AND json_extract(s.data,'$.uploadId')=u.id) LIMIT 50", now() - 86400000).all<{id:string;object_key:string}>()).results;
   for (const row of old) { await query(env, 'DELETE FROM uploads WHERE id=?', row.id).run(); await env.UPLOADS.delete(row.object_key); }
   const cursor = await setting<string>(env, 'uploadCleanupCursor');
   const page = await env.UPLOADS.list({ prefix: 'packages/', limit: 100, ...(cursor ? { cursor } : {}) });

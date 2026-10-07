@@ -12,14 +12,14 @@ export async function prepareReview(env: Env, plugin: { id: string; revision: nu
   }
   const sid = id(), rid = id(), t = now();
   snapshot.materials = '';
-  snapshot.coverage = ['已整理安装包和展示资料，等待人工审核；未执行自动审核或查毒'];
+  snapshot.coverage = [];
   const valid = "EXISTS(SELECT 1 FROM plugins WHERE id=? AND revision=? AND blocked=0) AND EXISTS(SELECT 1 FROM tasks WHERE id=? AND lock_token=? AND lock_until>?)";
   const args = [plugin.id, plugin.revision, taskId, token, t];
-  const statements = [query(env, `INSERT INTO snapshots(id,plugin_id,revision,fingerprint,data,verdict,public_reason,internal_reason,review_version,created_at) SELECT ?,?,?,?,?,'uncertain','等待管理员人工审核','',?,? WHERE ${valid}`, sid, plugin.id, plugin.revision, snapshot.fingerprint, JSON.stringify(snapshot), 'manual-candidate:' + taskId, t, ...args)];
+  const statements = [query(env, `INSERT INTO snapshots(id,plugin_id,revision,fingerprint,data,verdict,public_reason,internal_reason,review_version,created_at) SELECT ?,?,?,?,?,'uncertain','','',?,? WHERE ${valid}`, sid, plugin.id, plugin.revision, snapshot.fingerprint, JSON.stringify(snapshot), 'manual-candidate:' + taskId, t, ...args)];
   for (const asset of snapshot.assets) statements.push(query(env, 'INSERT INTO assets(id,snapshot_id,plugin_id,name,size,sha256,data) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM snapshots WHERE id=?)', asset.id, sid, plugin.id, asset.name, asset.size, asset.sha256 ?? '', JSON.stringify(asset), sid));
-  statements.push(query(env, "INSERT INTO manual_reviews(id,plugin_id,revision,snapshot_id,created_at) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM snapshots WHERE id=?)", rid, plugin.id, plugin.revision, sid, t, sid));
-  statements.push(query(env, `UPDATE plugins SET public_reason='等待管理员人工审核',checked_at=NULL,status=CASE WHEN approved_snapshot_id IS NULL THEN 'awaiting_review' ELSE status END WHERE id=? AND revision=? AND blocked=0 AND EXISTS(SELECT 1 FROM manual_reviews WHERE id=?)`, plugin.id, plugin.revision, rid));
-  statements.push(query(env, "UPDATE tasks SET status=CASE WHEN EXISTS(SELECT 1 FROM manual_reviews WHERE id=?) THEN 'awaiting_review' ELSE 'superseded' END,public_reason='等待管理员人工审核',lock_until=NULL,updated_at=? WHERE id=? AND lock_token=?", rid, t, taskId, token));
+  statements.push(query(env, "INSERT INTO manual_reviews(id,plugin_id,revision,snapshot_id,public_reason,created_at) SELECT ?,?,?,?,'',? WHERE EXISTS(SELECT 1 FROM snapshots WHERE id=?)", rid, plugin.id, plugin.revision, sid, t, sid));
+  statements.push(query(env, `UPDATE plugins SET public_reason='',checked_at=NULL,status=CASE WHEN approved_snapshot_id IS NULL THEN 'awaiting_review' ELSE status END WHERE id=? AND revision=? AND blocked=0 AND EXISTS(SELECT 1 FROM manual_reviews WHERE id=?)`, plugin.id, plugin.revision, rid));
+  statements.push(query(env, "UPDATE tasks SET status=CASE WHEN EXISTS(SELECT 1 FROM manual_reviews WHERE id=?) THEN 'awaiting_review' ELSE 'superseded' END,public_reason='',lock_until=NULL,updated_at=? WHERE id=? AND lock_token=?", rid, t, taskId, token));
   await env.DB.batch(statements);
 }
 
@@ -51,19 +51,18 @@ export async function decideReview(env: Env, pluginId: string, input: { revision
   const approve = input.decision === 'approve';
   if (approve && !await (snapshot.sourceKind === 'upload' ? verifyUpload(env, snapshot) : verifySnapshot(env, snapshot))) throw new AppError(409, '安装包或展示资料已变化，请重新整理后审核', 'changed_candidate');
   const adminId = await authorize(), t = now(), decisionToken = id();
-  const publicReason = reason || '管理员人工审核通过';
   const decision = approve ? 'approved' : 'rejected';
   const owned = 'EXISTS(SELECT 1 FROM manual_reviews WHERE id=? AND decision_token=?)';
-  const statements = [query(env, "UPDATE manual_reviews SET decision=?,public_reason=?,internal_reason=?,reviewed_by=?,reviewed_at=?,decision_token=? WHERE id=? AND decision='pending' AND EXISTS(SELECT 1 FROM plugins WHERE id=? AND revision=? AND blocked=0)", decision, publicReason, input.internalReason ?? '', adminId, t, decisionToken, row.id, pluginId, row.revision)];
+  const statements = [query(env, "UPDATE manual_reviews SET decision=?,public_reason=?,internal_reason=?,reviewed_by=?,reviewed_at=?,decision_token=? WHERE id=? AND decision='pending' AND EXISTS(SELECT 1 FROM plugins WHERE id=? AND revision=? AND blocked=0)", decision, reason, input.internalReason ?? '', adminId, t, decisionToken, row.id, pluginId, row.revision)];
   if (approve) {
     snapshot.publicationMode = 'human-reviewed';
-    snapshot.coverage = ['管理员人工审核通过；未执行自动审核或查毒'];
-    statements.push(query(env, `UPDATE snapshots SET data=?,verdict='allow',public_reason=?,internal_reason=?,review_version='human-reviewed',created_at=? WHERE id=? AND ${owned}`, JSON.stringify(snapshot), publicReason, input.internalReason ?? '', t, row.snapshot_id, row.id, decisionToken));
-    statements.push(query(env, `UPDATE plugins SET approved_snapshot_id=?,status='published',description=?,full_name=?,public_reason=?,updated_at=?,checked_at=? WHERE id=? AND revision=? AND blocked=0 AND ${owned}`, row.snapshot_id, snapshot.description, snapshot.fullName, publicReason, t, t, pluginId, row.revision, row.id, decisionToken));
+    snapshot.coverage = [];
+    statements.push(query(env, `UPDATE snapshots SET data=?,verdict='allow',public_reason=?,internal_reason=?,review_version='human-reviewed',created_at=? WHERE id=? AND ${owned}`, JSON.stringify(snapshot), reason, input.internalReason ?? '', t, row.snapshot_id, row.id, decisionToken));
+    statements.push(query(env, `UPDATE plugins SET approved_snapshot_id=?,status='published',description=?,full_name=?,public_reason=?,updated_at=?,checked_at=? WHERE id=? AND revision=? AND blocked=0 AND ${owned}`, row.snapshot_id, snapshot.description, snapshot.fullName, reason, t, t, pluginId, row.revision, row.id, decisionToken));
   } else {
-    statements.push(query(env, `UPDATE plugins SET status=CASE WHEN approved_snapshot_id IS NULL THEN 'rejected' ELSE status END,public_reason=? WHERE id=? AND revision=? AND ${owned}`, publicReason, pluginId, row.revision, row.id, decisionToken));
+    statements.push(query(env, `UPDATE plugins SET status=CASE WHEN approved_snapshot_id IS NULL THEN 'rejected' ELSE status END,public_reason=? WHERE id=? AND revision=? AND ${owned}`, reason, pluginId, row.revision, row.id, decisionToken));
   }
-  statements.push(query(env, `UPDATE tasks SET status=?,public_reason=?,internal_reason=?,lock_token=NULL,lock_until=NULL,updated_at=? WHERE plugin_id=? AND revision=? AND ${owned}`, approve ? 'done' : 'rejected', publicReason, input.internalReason ?? '', t, pluginId, row.revision, row.id, decisionToken));
+  statements.push(query(env, `UPDATE tasks SET status=?,public_reason=?,internal_reason=?,lock_token=NULL,lock_until=NULL,updated_at=? WHERE plugin_id=? AND revision=? AND ${owned}`, approve ? 'done' : 'rejected', reason, input.internalReason ?? '', t, pluginId, row.revision, row.id, decisionToken));
   statements.push(query(env, `INSERT INTO audit(id,admin_id,action,target,created_at) SELECT ?,?,?,?,? WHERE ${owned}`, id(), adminId, approve ? 'manual-approve' : 'manual-reject', pluginId, t, row.id, decisionToken));
   await env.DB.batch(statements);
   const committed = await query(env, 'SELECT 1 FROM manual_reviews WHERE id=? AND decision_token=?', row.id, decisionToken).first();

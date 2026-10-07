@@ -14,7 +14,7 @@ it('关闭审核后上传直接发布，不调用查毒、AI 或消耗 AI 额度
   expect(task.message).toContain('未审核');
   await processTask(e, task.taskId!);
   const detail = await (await request(e, `/api/plugins/${task.pluginId}`)).json() as any;
-  expect(detail.publicationMode).toBe('unreviewed'); expect(detail.reviewLabel).toContain('审核暂时关闭'); expect(detail.reviewedAt).toBeNull();
+  expect(detail.publicationMode).toBe('unreviewed'); expect(detail.reviewLabel).toBe('未经审核'); expect(detail.reviewedAt).toBeNull();
   const download = await request(e, `/api/plugins/${task.pluginId}/download/1`);
   expect(download.status).toBe(200); expect(new Uint8Array(await download.arrayBuffer())).toEqual(bytes);
   expect(fetch).not.toHaveBeenCalled();

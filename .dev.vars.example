@@ -17,5 +17,5 @@ REVIEW_ENABLED=false
 # Enable after the UV issuer is ready; this is a separate client credential,
 # never the Youzan application secret or relay secret.
 SSO_ENABLED=false
-SSO_ORIGIN=https://uv.zdwifi.com
+SSO_ORIGIN=https://auth.zdwifi.com
 SSO_CLIENT_SECRET=

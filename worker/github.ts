@@ -42,7 +42,7 @@ async function api<T>(env: GitEnv, path: string, fetcher: FetchLike, useCache = 
   if (response.status === 304 && cached) { await response.body?.cancel(); return JSON.parse(cached.value) as T; }
   if (!response.ok) {
     await response.body?.cancel();
-    if (response.status === 404) throw new AppError(404, 'GitHub 官方 API 暂未找到该资源（单次结果不代表删库）', 'github_missing');
+    if (response.status === 404) throw new AppError(404, 'GitHub 暂未找到该资源', 'github_missing');
     if ([401, 403, 429].includes(response.status) || response.status >= 500) throw new AppError(502, `GitHub 临时错误或凭据/配额异常 (${response.status})`, 'github_transient');
     throw new AppError(422, `GitHub 资源读取失败 (${response.status})`, 'incomplete');
   }

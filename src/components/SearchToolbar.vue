@@ -71,6 +71,7 @@ defineExpose({ focus: () => input.value?.focus() })
   border: 0; border-radius: 0; background: transparent; color: var(--text);
   font: inherit; font-size: var(--fs-sm); outline: none;
 }
+.search--lg input { font-size: 16px; }
 .search input::placeholder { color: var(--text-3); }
 .search input::-webkit-search-cancel-button { display: none; }
 .search__clear {

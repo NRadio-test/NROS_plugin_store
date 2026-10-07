@@ -3,12 +3,13 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from './AppIcon.vue'
 import AppButton from './AppButton.vue'
+import HighlightedText from './HighlightedText.vue'
 import { api, errorMessage, put, session, type Detail, type Plugin } from '../lib/api'
 import { downloadAsset } from '../lib/download'
 import { formatNumber, formatRelative } from '../lib/format'
 import { toast } from '../lib/toast'
 
-const props = defineProps<{ plugin: Plugin }>()
+const props = defineProps<{ plugin: Plugin; index?: number; query?: string }>()
 const router = useRouter()
 const busy = ref('')
 const count = ref(props.plugin.favorite_count)
@@ -60,11 +61,13 @@ async function download() {
 </script>
 
 <template>
-  <article class="pkg" :data-plugin-id="plugin.id">
+  <article class="pkg" :class="index !== undefined && 'pkg--indexed'" :data-plugin-id="plugin.id">
+    <span v-if="index !== undefined" class="pkg__index mono" aria-hidden="true">{{ String(index).padStart(2, '0') }}</span>
     <div class="pkg__main">
-      <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`">{{ name }}</RouterLink></h2>
-      <p class="pkg__desc">{{ plugin.description || '暂无描述' }}</p>
+      <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`"><HighlightedText :text="name" :query="query" /></RouterLink></h2>
+      <p class="pkg__desc"><HighlightedText :text="plugin.description || '暂无描述'" :query="query" /></p>
       <div class="pkg__meta">
+        <span class="pkg__source">{{ plugin.source_kind === 'upload' ? 'IPK 直传' : 'GitHub' }}</span>
         <span class="pkg__author">作者 {{ plugin.author || owner }}</span>
         <span aria-hidden="true">·</span>
         <span class="mono">{{ plugin.version || '—' }}</span>
@@ -105,11 +108,14 @@ async function download() {
 </template>
 
 <style scoped>
-.pkg { gap: 20px; }
+.pkg { gap: 24px; position: relative; background: transparent; transition: background-color var(--dur-fast) var(--ease); }
+.pkg:hover { background: var(--surface-raised); }
+.pkg__index { width: 32px; flex: none; color: var(--text-3); font-size: 12px; align-self: flex-start; padding-top: 5px; }
 .pkg__main { position: relative; }
-.pkg__name { font-size: 16px; font-weight: 600; letter-spacing: 0; }
-.pkg__desc { color: var(--text-2); margin-top: 1px; }
-.pkg__meta { margin-top: 4px; font-size: 12px; }
+.pkg__name { font-size: 21px; font-weight: 600; letter-spacing: -0.025em; }
+.pkg__desc { color: var(--text-2); margin-top: 6px; font-size: 14px; }
+.pkg__meta { margin-top: 12px; font-size: 11px; gap: 8px; }
+.pkg__source { color: var(--signal-text); padding-right: 9px; border-right: 1px solid var(--line-strong); }
 .pkg__stats { width: 130px; flex: none; display: flex; gap: 12px; font-size: 13px; color: var(--text-3); }
 .pkg__stats b { font-weight: 400; color: var(--text-2); }
 .pkg__actions { width: 152px; flex: none; justify-content: flex-end; }
@@ -121,8 +127,13 @@ async function download() {
 .pkg__stats, .pkg__actions { position: relative; z-index: 1; }
 .pkg__actions [aria-pressed='true'] { color: var(--signal-text); background: var(--signal-surface); }
 @media(max-width:640px) {
-  .pkg { padding: 16px !important; gap: 12px; }
-  .pkg__stats { width: auto; flex: 1; }
+  .pkg { padding: 20px 0 !important; gap: 12px; }
+  .pkg__index { width: 24px; padding-top: 3px; }
+  .pkg__main { flex-basis: 100%; min-width: 0; }
+  .pkg--indexed .pkg__main { flex-basis: calc(100% - 36px); }
+  .pkg__name { font-size: 19px; }
+  .pkg--indexed .pkg__stats { margin-left: 36px; }
+  .pkg__stats { width: auto; flex: 1; gap: 6px; font-size: 12px; white-space: nowrap; }
   .pkg__stats .sr-only { position: static; width: auto; height: auto; clip-path: none; margin-left: 5px; }
   .pkg__actions { width: auto; }
 }

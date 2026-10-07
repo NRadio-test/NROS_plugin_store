@@ -11,12 +11,12 @@ export async function manualPublish(env: Env, pluginId: string, revision: number
   const snapshot = plugin.source_kind === 'upload' ? await uploadSnapshot(env, pluginId, true) : await getSnapshot(env, plugin.repository_id, fetch, true);
   snapshot.publicationMode = 'manual';
   snapshot.materials = '';
-  snapshot.coverage = ['管理员手动上架，未经过自动审核或查毒'];
+  snapshot.coverage = [];
   if (!await (snapshot.sourceKind === 'upload' ? verifyUpload(env, snapshot) : verifySnapshot(env, snapshot))) throw new AppError(409, '安装包或展示内容已变化，请重新操作');
   // 外部读取后重新校验会话，防止改密、退出或账号撤销后的迟到请求发布。
   const adminId = await authorize();
   const sid = id(), taskId = id(), timestamp = now();
-  const reason = '管理员手动上架，未经过自动审核或查毒';
+  const reason = '管理员手动上架';
   const statements = [query(env, "INSERT INTO snapshots(id,plugin_id,revision,fingerprint,data,verdict,public_reason,internal_reason,review_version,created_at) SELECT ?,id,revision+1,?,?,'allow',?,?,?,? FROM plugins WHERE id=? AND revision=?", sid, snapshot.fingerprint, JSON.stringify(snapshot), reason, reason, `manual:${sid}`, timestamp, pluginId, revision)];
   for (const asset of snapshot.assets) statements.push(query(env, 'INSERT INTO assets(id,snapshot_id,plugin_id,name,size,sha256,data) SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM snapshots WHERE id=?)', asset.id, sid, pluginId, asset.name, asset.size, asset.sha256 ?? '', JSON.stringify(asset), sid));
   statements.push(query(env, "UPDATE plugins SET approved_snapshot_id=?,revision=revision+1,blocked=0,status='published',description=?,full_name=?,public_reason=?,updated_at=?,checked_at=NULL,missing_count=0,missing_since=NULL WHERE id=? AND revision=? AND EXISTS(SELECT 1 FROM snapshots WHERE id=?)", sid, snapshot.description, snapshot.fullName, reason, timestamp, pluginId, revision, sid));

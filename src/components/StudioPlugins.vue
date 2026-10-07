@@ -33,7 +33,7 @@ const FILTERS = [
 ]
 
 const ACTION_META: Record<Action, { label: string; title: string; confirm: string; danger: boolean; hint: string }> = {
-  'manual-publish': { label: '手动上架', title: '手动上架当前版本', confirm: '确认手动上架', danger: false, hint: '跳过 AI 审核和查毒，直接公开当前版本并开放下载。页面将标明手动上架；新版本仍需单独审核或手动上架。' },
+  'manual-publish': { label: '手动上架', title: '手动上架当前版本', confirm: '确认手动上架', danger: false, hint: '公开当前版本并开放下载。' },
   sync: { label: '同步', title: '同步原仓库', confirm: '开始同步', danger: false, hint: '重新读取 GitHub 快照。' },
   retry: { label: '重新整理', title: '重新整理', confirm: '重新整理', danger: false, hint: '重新整理当前版本，之后进入人工审核。' },
   unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，不可自动恢复。' },
@@ -161,7 +161,6 @@ void load()
       skeleton="row"
       :skeleton-count="6"
       empty-title="没有匹配的插件"
-      empty-text="换个关键词或筛选条件试试。"
       @retry="load"
     >
       <div class="card sp__table-card">
@@ -248,7 +247,7 @@ void load()
           <div><dt>当前状态</dt><dd><AppBadge :variant="statusMeta(pending.plugin.status).tone">{{ statusMeta(pending.plugin.status).label }}</AppBadge></dd></div>
           <div><dt>已批准版本</dt><dd class="mono small">{{ pending.plugin.version || '尚无' }}</dd></div>
         </dl>
-        <AppField label="操作原因（对用户可见）" for-id="studio-reason" hint="填写本次操作的说明，供作者查看。">
+        <AppField label="操作原因（对用户可见）" for-id="studio-reason">
           <textarea id="studio-reason" v-model="reason" class="textarea" maxlength="300" rows="3" :disabled="!!busy" />
         </AppField>
       </template>
@@ -329,7 +328,6 @@ void load()
                   <tr v-for="asset in detail.assets" :key="asset.id">
                     <td>
                       <span class="mono small">{{ asset.name }}</span>
-                      <span class="sp__asset-sub mono">{{ shortId(asset.sha256, 16) }}</span>
                     </td>
                     <td class="small">{{ asset.architecture || '—' }}</td>
                     <td class="tnumsmall small">{{ formatSize(asset.size) }}</td>
@@ -435,7 +433,6 @@ void load()
   max-height: 300px;
   overflow: auto;
 }
-.sp__asset-sub { display: block; font-size: var(--fs-cap); color: var(--text-3); }
 .sp__task-card { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-control); background: var(--surface); }
 .sp__task-card details { margin-top: 8px; }
 .sp__task-card summary { font-size: var(--fs-sm); color: var(--signal-text); }

@@ -7,7 +7,7 @@ export const router = createRouter({
   routes: [
     { path: '/', component: () => import('./views/MarketView.vue'), meta: { title: '插件市场' } },
     { path: '/plugins/:id', component: () => import('./views/DetailView.vue'), meta: { title: '插件详情' } },
-    { path: '/login', component: () => import('./views/LoginView.vue'), meta: { title: '手机号识别', private: true } },
+    { path: '/login', component: () => import('./views/LoginView.vue'), meta: { title: '登录', private: true } },
     { path: '/submit', component: () => import('./views/SubmitView.vue'), meta: { title: '提交插件', private: true } },
     { path: '/me', component: () => import('./views/MeView.vue'), meta: { title: '个人中心', private: true } },
     { path: '/studio', component: () => import('./views/StudioView.vue'), meta: { title: 'Studio', private: true } },

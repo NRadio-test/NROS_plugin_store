@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { session, api, errorMessage, post, put } from '../lib/api'
 import { toast } from '../lib/toast'
 import AsyncState from './AsyncState.vue'
@@ -23,10 +23,6 @@ const loading = ref(true)
 const error = ref('')
 const feedback = ref<{ ok: boolean; message: string } | null>(null)
 const busy = ref('')
-
-const keyHint = computed(() =>
-  mask.value ? `已保存 ${mask.value}，留空表示不修改。` : '只显示掩码，留空表示不修改。',
-)
 
 async function load() {
   loading.value = true
@@ -79,15 +75,8 @@ onMounted(load)
 
 <template>
   <section class="ai">
-    <p v-if="session.reviewMode === 'manual'" class="notice">当前采用人工审核；此处配置保留备用，不参与上架。</p>
-    <p v-else-if="session.reviewEnabled === false" class="notice">自动审核已停用；已保存的配置保留。</p>
+    <p v-if="session.reviewMode === 'manual' || session.reviewEnabled === false" class="notice">自动审核已停用。</p>
     <header class="ai__head">
-      <div>
-        <h2 class="ai__title">AI 审核设置</h2>
-        <p class="ai__desc">
-          OpenAI 兼容接口。配置缺失或调用失败时不会放行插件。
-        </p>
-      </div>
       <AppBadge :variant="config.model && mask ? 'success' : 'warning'" dot>
         {{ config.model && mask ? '已配置' : '待配置' }}
       </AppBadge>
@@ -109,7 +98,7 @@ onMounted(load)
               <input id="ai-model" v-model="config.model" class="input" required maxlength="150" placeholder="模型 ID" />
             </AppField>
             <div class="full">
-              <AppField label="API Key" for-id="ai-key" :hint="keyHint">
+              <AppField label="API Key" for-id="ai-key" :hint="mask ? '已保存' : ''">
                 <input id="ai-key" v-model="apiKey" class="input" type="password" autocomplete="new-password" placeholder="留空则不修改" />
               </AppField>
             </div>
@@ -126,7 +115,7 @@ onMounted(load)
             <AppField label="请求超时（毫秒）" for-id="ai-timeout" required>
               <input id="ai-timeout" v-model.number="config.timeoutMs" class="input" type="number" required min="1000" max="120000" step="1000" />
             </AppField>
-            <AppField label="最大重试次数" for-id="ai-retry" required hint="429 与 5xx 会重试。">
+            <AppField label="最大重试次数" for-id="ai-retry" required>
               <input id="ai-retry" v-model.number="config.maxRetries" class="input" type="number" min="0" max="3" required />
             </AppField>
             <AppField label="输入预算（字符）" for-id="ai-input" required>
@@ -141,8 +130,6 @@ onMounted(load)
                 <span class="switch__track" aria-hidden="true" />
                 <span>提供商支持 JSON Schema 结构化输出</span>
               </label>
-              <p class="field__hint" style="margin-top: 8px">
-              </p>
             </div>
           </div>
         </article>
@@ -155,7 +142,7 @@ onMounted(load)
           </header>
           <div class="card__body">
             <AppField label="补充审核规则" for-id="ai-rules" optional>
-              <textarea id="ai-rules" v-model="config.rules" class="textarea" rows="7" maxlength="12000" placeholder="结合插件用途识别垃圾、欺骗和恶意行为；不要仅因正常网络与系统操作拒绝。" />
+              <textarea id="ai-rules" v-model="config.rules" class="textarea" rows="7" maxlength="12000" />
             </AppField>
           </div>
         </article>
@@ -163,7 +150,6 @@ onMounted(load)
         <div class="ai__actions">
           <AppButton variant="primary" type="submit" icon="check" :loading="busy === 'save'">{{ busy === 'save' ? '正在保存…' : '保存设置' }}</AppButton>
           <AppButton type="button" icon="zap" :disabled="session.reviewEnabled === false" :loading="busy === 'test'" @click="test">测试已保存配置</AppButton>
-          <span class="ai__note">测试不会发布插件。</span>
         </div>
 
         <div v-if="feedback" class="notice" :class="feedback.ok ? 'notice--success' : 'notice--danger'" role="status">
@@ -177,10 +163,7 @@ onMounted(load)
 
 <style scoped>
 .ai { display: flex; flex-direction: column; gap: 16px; }
-.ai__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.ai__title { font-size: var(--fs-h2); }
-.ai__desc { margin-top: 5px; max-width: 88ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
+.ai__head { display: flex; justify-content: flex-end; }
 .ai__form { display: flex; flex-direction: column; gap: 16px; }
 .ai__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.ai__note { font-size: var(--fs-sm); color: var(--text-3); }
 </style>

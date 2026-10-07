@@ -6,7 +6,7 @@ export async function loginAdmin(page: Page) {
   if (!session.admin) {
     // Isolated browser clients must not share the fixture server's loopback IP limit.
     await page.context().setExtraHTTPHeaders({ 'CF-Connecting-IP': `198.51.100.${clientNumber++}` });
-    await page.getByLabel('用户名', { exact: true }).fill('e2e-admin');
+    await page.getByLabel('留言箱管理员账号', { exact: true }).fill('e2e-admin');
     await page.getByLabel('密码', { exact: true }).fill('E2e-Only!Fixture-2468');
     await page.getByRole('button',{name:'管理员登录',exact:true}).click();
   }

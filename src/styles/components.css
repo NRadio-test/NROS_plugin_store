@@ -8,21 +8,21 @@
 /* ---------- 顶栏 ---------- */
 .top {
   position: sticky; top: 0; z-index: 20;
-  background: var(--surface);
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
-.top__in { display: flex; align-items: center; gap: var(--sp-4); min-height: 60px; }
+.top__in { display: flex; align-items: center; gap: var(--sp-4); min-height: var(--header-h); }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); font-weight: 600; }
-.brand__name { font-size: var(--fs-body); letter-spacing: -0.01em; }
+.brand__name { font-size: var(--fs-sm); letter-spacing: 0.02em; padding-left: 12px; border-left: 1px solid var(--line-strong); }
 
-.nav { display: flex; align-items: center; gap: 2px; margin-inline-start: var(--sp-4); }
+.nav { display: flex; align-items: center; gap: 8px; margin-inline-start: var(--sp-8); }
 .nav a {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 0 12px; min-height: 44px; border-radius: var(--r-control);
   color: var(--text-2); font-size: var(--fs-sm);
 }
 .nav a:hover { color: var(--text); background: var(--surface-hover); text-decoration: none; }
-.nav a[aria-current] { color: var(--text); background: var(--surface-raised); font-weight: 600; }
+.nav a[aria-current] { color: var(--signal-text); background: var(--signal-surface); font-weight: 600; }
 
 .top__end { display: flex; align-items: center; gap: var(--sp-2); margin-inline-start: auto; }
 

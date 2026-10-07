@@ -1,9 +1,13 @@
 import { AppError, type Asset, type DownloadSource, type Env, type Snapshot } from './contracts';
 import { GITHUB_HOSTS, readBounded, safeFetch, validatePublicHttpsUrl } from './network';
-import { publicationFilter } from './review-mode';
+import { publishedSnapshotFilter } from './versions';
 import { hash, hmac, rateLimit } from './security';
 
-interface Approved { snapshotId: string; snapshot: Snapshot; asset: Asset }
+interface Approved { snapshotId: string; snapshot: Snapshot; asset: Asset; historical?: boolean }
+function publicAssetSource(env: Env, currentOnly = false) {
+ return ' FROM plugins p JOIN snapshots s ON s.plugin_id=p.id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND s.id=COALESCE(?,p.approved_snapshot_id) AND a.id=? AND a.disabled=0 AND '
+  + publishedSnapshotFilter(env) + (currentOnly ? ' AND s.id=p.approved_snapshot_id' : '');
+}
 export const OFFICIAL_SOURCE: DownloadSource = { id: 'github', name: 'GitHub 官方', template: 'https://api.github.com/repos/{owner}/{repo}/releases/assets/{assetId}', allowedHosts: GITHUB_HOSTS, enabled: true, trusted: true, priority: 0, timeoutMs: 60000 };
 const githubHeaders = (env: Env) => ({ Accept: 'application/vnd.github+json', 'User-Agent': 'Zhangdao-Plugin-Store', 'X-GitHub-Api-Version': '2022-11-28', ...(env.GITHUB_TOKEN ? { Authorization: `Bearer ${env.GITHUB_TOKEN}` } : {}) });
 async function officialJSON(env: Env, path: string): Promise<Record<string, unknown>> {
@@ -12,13 +16,14 @@ async function officialJSON(env: Env, path: string): Promise<Record<string, unkn
  try { return JSON.parse(new TextDecoder().decode(await readBounded(response, 2 * 1024 * 1024))) as Record<string, unknown>; }
  catch (error) { if (error instanceof AppError) throw error; throw new AppError(502, 'GitHub 元数据格式错误'); }
 }
-async function approved(env: Env, pluginId: string, assetId: number): Promise<Approved> {
+async function approved(env: Env, pluginId: string, assetId: number, snapshotId?: string): Promise<Approved> {
  if (!Number.isSafeInteger(assetId) || assetId <= 0 || !/^[A-Za-z0-9_-]{1,100}$/.test(pluginId)) throw new AppError(400, '下载标识无效');
- const row = await env.DB.prepare("SELECT p.approved_snapshot_id,s.data AS snapshot_data,a.data AS asset_data FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0 AND s.verdict='allow'" + publicationFilter(env)).bind(pluginId, assetId).first<{ approved_snapshot_id: string; snapshot_data: string; asset_data: string }>();
+ if (snapshotId !== undefined && !/^[A-Za-z0-9_-]{1,100}$/.test(snapshotId)) throw new AppError(400, '版本标识无效');
+ const row = await env.DB.prepare('SELECT s.id AS snapshot_id,s.data AS snapshot_data,a.data AS asset_data' + publicAssetSource(env)).bind(pluginId, snapshotId ?? null, assetId).first<{ snapshot_id: string; snapshot_data: string; asset_data: string }>();
  if (!row) throw new AppError(404, '该安装包尚未通过审核或已停用', 'unapproved_asset');
  const snapshot = JSON.parse(row.snapshot_data) as Snapshot, asset = JSON.parse(row.asset_data) as Asset;
  if (asset.id !== assetId || !snapshot.assets.some(a => a.id === assetId) || !asset.name.toLowerCase().endsWith('.ipk') || !Number.isSafeInteger(asset.size) || asset.size < 1 || asset.size > (Number(env.MAX_IPK_BYTES) || 32 * 1024 * 1024)) throw new AppError(409, '资产快照不完整');
- return { snapshotId: row.approved_snapshot_id, snapshot, asset };
+ return { snapshotId: row.snapshot_id, snapshot, asset, historical: snapshotId !== undefined };
 }
 async function verifyOfficial(env: Env, selected: Approved): Promise<string> {
  const { snapshot, asset } = selected;
@@ -114,18 +119,19 @@ export async function forwardReviewDownload(request: Request, env: Env, pluginId
  if (!asset) throw new AppError(404, '待审附件不存在');
  return streamDownload(request, env, pluginId, {snapshotId:row.snapshot_id,snapshot,asset}, true);
 }
-export async function forwardDownload(request: Request, env: Env, pluginId: string, assetId: number | string): Promise<Response> {
+export async function forwardDownload(request: Request, env: Env, pluginId: string, assetId: number | string, snapshotId?: string): Promise<Response> {
  if (!['GET','HEAD'].includes(request.method)) throw new AppError(405, '下载仅支持 GET/HEAD');
  if ([...new URL(request.url).searchParams.keys()].length > 0) throw new AppError(400, '下载地址不接受目标 URL 或来源参数');
- const selected = await approved(env, pluginId, Number(assetId));
+ const selected = await approved(env, pluginId, Number(assetId), snapshotId);
  return streamDownload(request, env, pluginId, selected);
 }
 async function streamDownload(request: Request, env: Env, pluginId: string, selected: Approved, reviewOnly = false): Promise<Response> {
  let range;
  try { range = parseRange(request.headers.get('Range'), selected.asset.size); }
  catch (error) { if (error instanceof AppError && error.status === 416) return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${selected.asset.size}`, 'Cache-Control': 'no-store' } }); throw error; }
- const identity = await hmac(env.PHONE_HMAC_KEY, `download:${request.headers.get('CF-Connecting-IP') || 'local'}:${(request.headers.get('User-Agent') || '').slice(0,256)}`);
- await rateLimit(env, 'download:' + identity, 120, 60);
+ const visitor = await hmac(env.PHONE_HMAC_KEY, `download:${request.headers.get('CF-Connecting-IP') || 'local'}:${(request.headers.get('User-Agent') || '').slice(0,256)}`);
+ await rateLimit(env, 'download:' + visitor, 120, 60);
+ const identity = await hmac(env.PHONE_HMAC_KEY, `${visitor}:${selected.snapshotId}`);
  let upstream: Response | undefined;
  if (selected.snapshot.sourceKind === 'upload') {
   if (!env.UPLOADS || !selected.asset.objectKey || !selected.asset.objectEtag) throw new AppError(503, '直传文件存储不可用');
@@ -145,7 +151,14 @@ async function streamDownload(request: Request, env: Env, pluginId: string, sele
  const headers = new Headers({ 'Content-Type': 'application/octet-stream', 'Content-Disposition': disposition(selected.asset.name), 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store', 'Accept-Ranges': 'bytes', 'Content-Length': String(expected) });
  if (range) headers.set('Content-Range', `bytes ${range.start}-${range.end}/${selected.asset.size}`);
  if (selected.asset.sha256) headers.set('X-Reviewed-SHA256', selected.asset.sha256);
- if (request.method === 'HEAD') { await upstream.body?.cancel(); return new Response(null, { status: range ? 206 : 200, headers }); }
+ const stillAvailable = () => reviewOnly
+  ? env.DB.prepare("SELECT 1 FROM manual_reviews r JOIN plugins p ON p.id=r.plugin_id AND p.revision=r.revision JOIN assets a ON a.snapshot_id=r.snapshot_id WHERE p.id=? AND r.snapshot_id=? AND r.decision='pending' AND p.blocked=0 AND a.id=? AND a.disabled=0").bind(pluginId, selected.snapshotId, selected.asset.id).first()
+  : env.DB.prepare('SELECT 1' + publicAssetSource(env, !selected.historical)).bind(pluginId, selected.snapshotId, selected.asset.id).first();
+ if (request.method === 'HEAD') {
+  await upstream.body?.cancel();
+  if (!await stillAvailable()) throw new AppError(409, '安装包状态已改变，请刷新页面');
+  return new Response(null, { status: range ? 206 : 200, headers });
+ }
  if (!upstream.body) throw new AppError(502, '下载源没有返回文件');
  const reader = upstream.body.getReader();
  let first: ReadableStreamReadResult<Uint8Array>;
@@ -162,15 +175,13 @@ async function streamDownload(request: Request, env: Env, pluginId: string, sele
   }
   if ((expected >= 8 && !ipkMagic(prefix)) || prefix.length > expected) { await reader.cancel(); throw new AppError(502, '下载源没有返回支持的 IPK 内容'); }
  }
- const stillApproved = reviewOnly
-  ? await env.DB.prepare("SELECT 1 FROM manual_reviews r JOIN plugins p ON p.id=r.plugin_id AND p.revision=r.revision JOIN assets a ON a.snapshot_id=r.snapshot_id WHERE p.id=? AND r.snapshot_id=? AND r.decision='pending' AND p.blocked=0 AND a.id=? AND a.disabled=0").bind(pluginId, selected.snapshotId, selected.asset.id).first()
-  : await env.DB.prepare("SELECT 1 FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id JOIN assets a ON a.snapshot_id=s.id AND a.plugin_id=p.id WHERE p.id=? AND p.approved_snapshot_id=? AND p.status='published' AND p.blocked=0 AND a.id=? AND a.disabled=0" + publicationFilter(env)).bind(pluginId, selected.snapshotId, selected.asset.id).first();
+ const stillApproved = await stillAvailable();
  if (!stillApproved) { await reader.cancel(); throw new AppError(409, '安装包状态已改变，请刷新页面'); }
  if (!reviewOnly) {
  const now = Date.now(), bucket = Math.floor(now / (10 * 60 * 1000));
  try {
   await env.DB.batch([
-   env.DB.prepare("INSERT OR IGNORE INTO download_attempts(identity,plugin_id,asset_id,bucket,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM download_attempts WHERE identity=? AND plugin_id=? AND asset_id=? AND created_at>?) AND EXISTS(SELECT 1 FROM plugins WHERE id=? AND approved_snapshot_id=? AND status='published' AND blocked=0)").bind(identity,pluginId,selected.asset.id,bucket,now,identity,pluginId,selected.asset.id,now-10*60*1000,pluginId,selected.snapshotId),
+   env.DB.prepare('INSERT OR IGNORE INTO download_attempts(identity,plugin_id,asset_id,bucket,created_at) SELECT ?,?,?,?,? WHERE NOT EXISTS(SELECT 1 FROM download_attempts WHERE identity=? AND plugin_id=? AND asset_id=? AND created_at>?) AND EXISTS(SELECT 1' + publicAssetSource(env, !selected.historical) + ')').bind(identity,pluginId,selected.asset.id,bucket,now,identity,pluginId,selected.asset.id,now-10*60*1000,pluginId,selected.snapshotId,selected.asset.id),
    env.DB.prepare('UPDATE plugins SET download_count=download_count+1 WHERE id=? AND changes()=1').bind(pluginId),
   ]);
  } catch { await reader.cancel(); throw new AppError(503, '暂时无法记录下载尝试'); }

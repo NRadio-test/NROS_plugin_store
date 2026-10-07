@@ -9,10 +9,11 @@ import { manualPublish } from './manual-publication';
 import { loadAI, saveAI } from './settings';
 import { manualReview, publicationFilter, reviewEnabled, UNREVIEWED_REASON } from './review-mode';
 import { testAI } from './ai';
-import { ssoEnabled, startSSO, finishSSO, ssoCookie, bindLegacyAccount } from './sso';
+import { ssoEnabled, startSSO, finishSSO, ssoCookie, bindLegacyAccount, syncSSOProfile } from './sso';
 import { readBounded } from './network';
 import { forwardReviewDownload, forwardDownload, testSource, OFFICIAL_SOURCE, validateSource } from './download';
 import { listPlugins, overview, pluginDetail, sourceCandidates } from './studio';
+import { listVersions } from './versions';
 type Variables = {
     userId: string;
     adminId: string;
@@ -24,7 +25,10 @@ const app = new Hono<{
 app.use('*', async (c, next) => { if (c.env.APP_ENV === 'production' && (!c.env.APP_ORIGIN.startsWith('https://') || !c.env.MASTER_KEY || !c.env.PHONE_HMAC_KEY))
     return c.json({ error: '服务端配置未完成', code: 'configuration' }, 503); if (!['GET', 'HEAD', 'OPTIONS'].includes(c.req.method))
     assertOrigin(c.req.raw, c.env); await next(); c.header('X-Content-Type-Options', 'nosniff'); c.header('Referrer-Policy', 'no-referrer'); c.header('Cache-Control', 'no-store'); c.header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"); });
-app.onError((e, c) => c.json({ error: e instanceof AppError ? e.message : '服务暂不可用，请稍后重试', code: e instanceof AppError ? e.code : 'internal' }, (e instanceof AppError ? e.status : 500) as 400));
+app.onError((e, c) => {
+    if (ssoEnabled(c.env) && e instanceof AppError && e.code === 'session_expired') c.header('Set-Cookie', ssoCookie(c.env, 'user', '', 0), { append: true });
+    return c.json({ error: e instanceof AppError ? e.message : '服务暂不可用，请稍后重试', code: e instanceof AppError ? e.code : 'internal', ...(c.req.path === '/api/session' ? { ssoEnabled: ssoEnabled(c.env) } : {}) }, (e instanceof AppError ? e.status : 500) as 400);
+});
 async function body(c: any) { const text = new TextDecoder().decode(await readBounded(new Response(c.req.raw.body), 50000)); try {
     const parsed = JSON.parse(text);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
@@ -39,16 +43,22 @@ app.use('/api/studio/*', async (c, next) => { if (c.req.path === '/api/studio/lo
     return next(); const session = await getSession(c.req.raw, c.env, 'admin'); if (!session)
     throw new AppError(401, '请先登录 Studio'); c.set('adminId', session.subjectId); if (c.req.method !== 'GET')
     await limit(c, 'studio', 60); await next(); });
-async function requireUser(c: any) { const s = await getSession(c.req.raw, c.env, 'user'); if (!s)
+const userSession = (c: any) => getSession(c.req.raw, c.env, 'user', () => c.header('Set-Cookie', ssoCookie(c.env, 'user', '', 0), { append: true }));
+async function requireUser(c: any) { const s = await userSession(c); if (!s)
     throw new AppError(401, ssoEnabled(c.env) ? '请先通过统一账号登录' : '请先填写手机号进入'); return s.subjectId; }
-app.get('/api/session', async (c) => { const u = await getSession(c.req.raw, c.env, 'user'), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ reviewMode: manualReview(c.env) ? 'manual' : 'automatic', reviewEnabled: reviewEnabled(c.env), ...(ssoEnabled(c.env) ? { ssoEnabled: true } : {}), user: u ? u.user || await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
+app.get('/api/session', async (c) => { const u = await userSession(c), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ reviewMode: manualReview(c.env) ? 'manual' : 'automatic', reviewEnabled: reviewEnabled(c.env), ...(ssoEnabled(c.env) ? { ssoEnabled: true } : {}), user: u ? u.user || await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
+app.post('/api/account/profile/sync', async c => {
+ if (!ssoEnabled(c.env)) throw new AppError(409, '当前账号不使用有赞登录');
+ const uid = await requireUser(c); await rateLimit(c.env, `profile:${uid}`, 3, 300);
+ return c.json({ user: await syncSSOProfile(c.req.raw, c.env) });
+});
 app.post('/api/login', async (c) => { const shared = ssoEnabled(c.env); await limit(c, shared ? 'sso-entry' : 'login', shared ? 60 : 10, shared ? 60 : 600); const b = await body(c); if (shared) { if (b.silent !== true) await limit(c, 'sso-login', 10, 600); const result = await startSSO(c.env, b.next, b.silent !== true); c.header('Set-Cookie', result.cookie); return c.json({ authorizationUrl: result.authorizationUrl }); } const phone = normalizePhone(b.phone); const index = await hmac(c.env.PHONE_HMAC_KEY, phone); const uid = id(); await query(c.env, 'INSERT OR IGNORE INTO users(id,phone_index,phone_mask,created_at) VALUES(?,?,?,?)', uid, index, `${phone.slice(0, 4)}****${phone.slice(-4)}`, now()).run(); const user = await query(c.env, 'SELECT id,phone_mask FROM users WHERE phone_index=?', index).first<{
     id: string;
     phone_mask: string;
 }>(); const session = await createSession(c.env, 'user', user!.id); c.header('Set-Cookie', session.cookie); return c.json({ user }); });
 app.get('/api/auth/callback', async c => {
     try { const result = await finishSSO(c.req.raw, c.env); c.header('Set-Cookie', ssoCookie(c.env, 'sso_attempt', '', 0), { append: true }); if (result.cookie) c.header('Set-Cookie', result.cookie, { append: true }); return c.redirect(c.env.APP_ORIGIN + result.next, 303); }
-    catch { c.header('Set-Cookie', ssoCookie(c.env, 'sso_attempt', '', 0)); return c.redirect(c.env.APP_ORIGIN + '/login?login_error=1', 303); }
+    catch (error) { c.header('Set-Cookie', ssoCookie(c.env, 'sso_attempt', '', 0)); return c.redirect(c.env.APP_ORIGIN + '/login?login_error=' + (error instanceof AppError && error.status >= 500 ? 'service' : '1'), 303); }
 });
 app.post('/api/studio/legacy-link', async c => c.json(await bindLegacyAccount(c.env, c.get('adminId'), await body(c))));
 app.post('/api/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'user')); return c.json({ ok: true }); });
@@ -77,20 +87,29 @@ function publicPlugin(row: Record<string, unknown> | null) {
 const marketSorts: Record<string, string> = { updated: 'p.updated_at DESC,p.id', downloads: 'p.download_count DESC,p.updated_at DESC,p.id', favorites: 'favorite_count DESC,p.updated_at DESC,p.id' };
 app.get('/api/plugins', async (c) => { const term = (c.req.query('q') ?? '').slice(0, 200), page = Math.max(1, Math.min(10000, Math.floor(Number(c.req.query('page'))) || 1)); const requested = c.req.query('sort') ?? ''; const sort = Object.hasOwn(marketSorts, requested) ? requested : 'updated'; const where = " WHERE p.status='published' AND p.blocked=0 AND (p.full_name LIKE ? ESCAPE '\\' OR p.description LIKE ? ESCAPE '\\')"; const like = '%' + term.replace(/[\\%_]/g, '\\$&') + '%'; const visible = where + " AND EXISTS(SELECT 1 FROM snapshots s WHERE s.id=p.approved_snapshot_id" + publicationFilter(c.env) + ')'; const items = await query(c.env, publicSelect + visible + ' ORDER BY ' + marketSorts[sort] + ' LIMIT 12 OFFSET ?', like, like, (page - 1) * 12).all(); const total = await query(c.env, 'SELECT COUNT(*) total FROM plugins p' + visible, like, like).first<{
     total: number;
-}>(); const session = await getSession(c.req.raw, c.env, 'user'); const favorites = session ? (await query(c.env, 'SELECT plugin_id FROM favorites WHERE user_id=?', session.subjectId).all<{
+}>(); const session = await userSession(c); const favorites = session ? (await query(c.env, 'SELECT plugin_id FROM favorites WHERE user_id=?', session.subjectId).all<{
     plugin_id: string;
 }>()).results : []; return c.json({ items: items.results.map(p => ({ ...publicPlugin(p), favorited: favorites.some(f => f.plugin_id === p.id) })), total: total?.total ?? 0, page, pageSize: 12, sort }); });
 app.get('/api/plugins/:id', async (c) => { const snapshot = await getApproved(c.env, c.req.param('id')); if (!snapshot)
-    throw new AppError(404, '插件未上架或已下架'); const plugin = await query(c.env, publicSelect + ' WHERE p.id=?', c.req.param('id')).first(); const user = await getSession(c.req.raw, c.env, 'user'); const favorite = user ? !!await query(c.env, 'SELECT 1 FROM favorites WHERE user_id=? AND plugin_id=?', user.subjectId, c.req.param('id')).first() : false; const disabled = await query(c.env, 'SELECT id FROM assets WHERE snapshot_id=(SELECT approved_snapshot_id FROM plugins WHERE id=?) AND disabled=1', c.req.param('id')).all<{
+    throw new AppError(404, '插件未上架或已下架'); const plugin = await query(c.env, publicSelect + ' WHERE p.id=?', c.req.param('id')).first(); const user = await userSession(c); const favorite = user ? !!await query(c.env, 'SELECT 1 FROM favorites WHERE user_id=? AND plugin_id=?', user.subjectId, c.req.param('id')).first() : false; const disabled = await query(c.env, 'SELECT id FROM assets WHERE snapshot_id=(SELECT approved_snapshot_id FROM plugins WHERE id=?) AND disabled=1', c.req.param('id')).all<{
     id: number;
 }>();
 // 只回显已批准快照的公开理由与时间；internal_reason 永不进入公共接口。
 const review = await query(c.env, 'SELECT created_at,public_reason FROM snapshots WHERE id=(SELECT approved_snapshot_id FROM plugins WHERE id=?)', c.req.param('id')).first<{
     created_at: number;
     public_reason: string;
-}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...publicPlugin(plugin), favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'human-reviewed' ? '人工审核通过' : snapshot.publicationMode === 'unreviewed' ? UNREVIEWED_REASON : snapshot.publicationMode === 'manual' ? '管理员手动上架，未经自动审核或查毒' : '通过自动审核，不保证无病毒', reviewedAt: snapshot.publicationMode && snapshot.publicationMode !== 'human-reviewed' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
+}>(); const publishedAt = plugin && typeof plugin.updated_at === 'number' ? plugin.updated_at : null; return c.json({ plugin: { ...publicPlugin(plugin), favorited: favorite }, readme: snapshot.readme, readmePath: snapshot.readmePath, readmeCommit: snapshot.readmeCommit, sourceCommit: snapshot.sourceCommit, license: snapshot.license, assets: snapshot.assets.filter(a => !disabled.results.some(d => d.id === a.id)).map(({ id, name, size, sha256, packageName, architecture }) => ({ id, name, size, sha256, packageName, architecture })), publicationMode: snapshot.publicationMode ?? 'automatic', reviewLabel: snapshot.publicationMode === 'human-reviewed' ? '人工审核通过' : snapshot.publicationMode === 'unreviewed' ? UNREVIEWED_REASON : snapshot.publicationMode === 'manual' ? '管理员手动上架' : '通过自动审核', reviewedAt: snapshot.publicationMode && snapshot.publicationMode !== 'human-reviewed' ? null : review ? review.created_at : null, reviewPublicReason: review ? review.public_reason : '', publishedAt }); });
 app.on(['GET', 'HEAD'], '/api/plugins/:id/download/:assetId', async (c) => { await limit(c, 'download', 60); if (!/^\d+$/.test(c.req.param('assetId')))
     throw new AppError(400, '附件编号无效'); return forwardDownload(c.req.raw, c.env, c.req.param('id'), Number(c.req.param('assetId'))); });
+app.get('/api/plugins/:id/versions', async (c) => {
+    const page = Math.max(1, Math.min(10000, Math.floor(Number(c.req.query('page'))) || 1));
+    return c.json(await listVersions(c.env, c.req.param('id'), page));
+});
+app.on(['GET', 'HEAD'], '/api/plugins/:id/versions/:snapshotId/download/:assetId', async (c) => {
+    await limit(c, 'download', 60);
+    if (!/^\d+$/.test(c.req.param('assetId'))) throw new AppError(400, '附件编号无效');
+    return forwardDownload(c.req.raw, c.env, c.req.param('id'), Number(c.req.param('assetId')), c.req.param('snapshotId'));
+});
 app.put('/api/plugins/:id/favorite', async (c) => { const uid = await requireUser(c); await rateLimit(c.env, `favorite:${uid}`, 60, 60); const b = await body(c); if (typeof b.active !== 'boolean')
     throw new AppError(400, '收藏状态错误'); if (!await getApproved(c.env, c.req.param('id')))
     throw new AppError(404, '插件未上架'); if (b.active)
@@ -177,7 +196,7 @@ app.put('/api/studio/sources', async (c) => { const b = await body(c); if (!Arra
     }
 } await setSetting(c.env, 'sources', b.items); await audit(c.env, c.get('adminId'), 'download-sources', 'sources'); return c.json({ ok: true }); });
 app.post('/api/studio/sources/:id/test', async (c) => { await limit(c, 'source-test', 10, 600); const b = await body(c); const source = (await setting<DownloadSource[]>(c.env, 'sources') ?? [officialSource]).find(s => s.id === c.req.param('id')); if (!source || typeof b.pluginId !== 'string' || !Number.isInteger(Number(b.assetId)))
-    throw new AppError(400, '下载源或附件无效'); await testSource(c.env, source, b.pluginId, Number(b.assetId)); await setSetting(c.env, `source-tested:${source.id}`, JSON.stringify({ ...source, enabled: false })); await audit(c.env, c.get('adminId'), 'source-test', source.id); return c.json({ ok: true, message: '指定附件可访问；流式检测不代表整包逐字节预验证' }); });
+    throw new AppError(400, '下载源或附件无效'); await testSource(c.env, source, b.pluginId, Number(b.assetId)); await setSetting(c.env, `source-tested:${source.id}`, JSON.stringify({ ...source, enabled: false })); await audit(c.env, c.get('adminId'), 'source-test', source.id); return c.json({ ok: true, message: '附件响应正常' }); });
 app.get('/robots.txt', c => c.text('User-agent: *\nDisallow: /studio\nDisallow: /me\nDisallow: /login\nDisallow: /api/\nSitemap: ' + c.env.APP_ORIGIN + '/sitemap.xml'));
 app.get('/sitemap.xml', async (c) => { const rows = await query(c.env, "SELECT id FROM plugins WHERE status='published' AND blocked=0 ORDER BY id LIMIT 10000").all<{
     id: string;

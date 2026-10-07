@@ -56,7 +56,7 @@ export async function scanUploadFiles(env: Env, files: ScanFile[]): Promise<stri
     // 供应商返回内容不写入日志、公开原因或 AI 提示，避免泄露和注入。
     if (result.FoundViruses?.length) throw new AppError(422, '安装包查毒检出已知恶意代码，未通过审核', 'malware_detected');
     if (!result.CleanResult || result.ContainsInvalidFile || result.ContainsPasswordProtectedFile || result.ContainsUnsafeArchive) throw new AppError(422, '查毒服务未确认扫描通过，可能包含无法检查的内容', 'incomplete');
-    return `Cloudmersive：已扫描包内全部 ${files.length} 个普通文件，未检出已知恶意代码；不代表绝对安全，未执行动态沙箱。`;
+    return `Cloudmersive：已扫描包内全部 ${files.length} 个普通文件，未检出已知恶意代码。`;
   } catch (error) {
     if (error instanceof AppError && ['antivirus_unconfigured', 'antivirus_transient', 'incomplete', 'malware_detected'].includes(error.code)) throw error;
     throw new AppError(503, 'Cloudmersive 请求超时、连接失败或返回结果无效', 'antivirus_transient');

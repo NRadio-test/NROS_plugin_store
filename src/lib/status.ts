@@ -7,18 +7,16 @@ export interface StatusMeta {
   label: string
   tone: StatusTone
   icon: IconName
-  /** 仅在 Studio 内部展示的补充说明。 */
-  hint?: string
 }
 
 const STATUS: Record<string, StatusMeta> = {
-  awaiting_review: { label: '待人工审核', tone: 'warning', icon: 'clock', hint: '资料已就绪，等待管理员审核当前版本' },
-  pending: { label: '资料整理中', tone: 'info', icon: 'clock', hint: '已进入队列，等待后台读取仓库快照' },
+  awaiting_review: { label: '待人工审核', tone: 'warning', icon: 'clock' },
+  pending: { label: '资料整理中', tone: 'info', icon: 'clock' },
   queued: { label: '资料整理中', tone: 'info', icon: 'clock' },
-  running: { label: '检查中', tone: 'brand', icon: 'loader', hint: '正在整理资料和安装包，完成后进入人工审核' },
+  running: { label: '检查中', tone: 'brand', icon: 'loader' },
   processing: { label: '检查中', tone: 'brand', icon: 'loader' },
   reviewing: { label: '审核中', tone: 'brand', icon: 'loader' },
-  retry: { label: '等待重试', tone: 'warning', icon: 'refresh', hint: '外部服务暂时不可用，将按退避策略重试' },
+  retry: { label: '等待重试', tone: 'warning', icon: 'refresh' },
   done: { label: '已完成', tone: 'success', icon: 'check-circle' },
   complete: { label: '已完成', tone: 'success', icon: 'check-circle' },
   allow: { label: '通过自动审核', tone: 'success', icon: 'shield-check' },

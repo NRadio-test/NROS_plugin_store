@@ -11,7 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const phone = ref('')
 const busy = ref(false)
-const error = ref(route.query.login_error ? '统一登录未完成，请重新登录。' : '')
+const error = ref(route.query.login_error === 'service' ? '统一登录暂不可用，请稍后重试。' : route.query.login_error ? '统一登录未完成，请重新登录。' : '')
 
 async function login() {
   busy.value = true
@@ -45,17 +45,15 @@ async function login() {
         <header class="auth__form-head">
           <AppIcon name="user" :size="22" />
           <h1>登录插件商店</h1>
-          <p class="auth__lead">收藏插件，查看投稿进度。</p>
         </header>
 
-        <p v-if="session.ssoEnabled" class="auth__lead">使用与 UV 站相同的账号，登录状态在参与网站间通用。</p>
-        <p v-if="session.ssoEnabled && error" role="alert">{{ error }}</p>
+        <p v-if="session.error || (session.ssoEnabled && error)" role="alert">{{ error || session.error }}</p>
         <AppField
-          v-if="!session.ssoEnabled"
+          v-if="session.loaded && !session.error && !session.ssoEnabled"
           label="张导小店绑定手机号"
           for-id="phone"
           :error="error"
-          hint="内地手机号可直接填写 11 位；其他地区请加国际区号。"
+          hint="非内地号码需加国际区号。"
         >
           <input
             id="phone"
@@ -70,7 +68,8 @@ async function login() {
           />
         </AppField>
 
-        <AppButton variant="primary" size="lg" type="submit" block :loading="busy" icon-right="arrow-right">
+        <AppButton v-if="session.error && session.ssoEnabled === undefined" block @click="loadSession()">重试</AppButton>
+        <AppButton v-else variant="primary" size="lg" type="submit" block :loading="busy" :disabled="!session.loaded" icon-right="arrow-right">
           {{ busy ? '正在进入…' : session.ssoEnabled ? '使用有赞账号登录' : '进入' }}
         </AppButton>
 
@@ -89,7 +88,6 @@ async function login() {
 .auth__form { display: flex; flex-direction: column; gap: 24px; padding: 32px; border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); }
 .auth__form-head > svg { color: var(--text-2); margin-bottom: 12px; }
 .auth__form-head h1 { font-size: 22px; }
-.auth__lead { color: var(--text-2); font-size: var(--fs-sm); line-height: 1.7; margin-top: 8px; }
 .auth__foot { display: flex; align-items: center; gap: 12px; font-size: var(--fs-sm); color: var(--text-2); }
 [role=alert] { color: var(--danger); font-size: var(--fs-sm); }
 @media (max-width: 560px) { .auth { padding-top: 24px; } .auth__form { padding: 24px 20px; } }

@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-06",
+  "environment": "isolated local SSO fixture; no production Youzan verification",
+  "checks": [
+    {
+      "name": "头像菜单直接打开我的收藏",
+      "passed": true
+    },
+    {
+      "name": "刷新保持身份和收藏分区",
+      "passed": true
+    },
+    {
+      "name": "等待审核数字筛选出待审作品",
+      "passed": true
+    },
+    {
+      "name": "键盘切换分区",
+      "passed": true
+    },
+    {
+      "name": "同步资料成功且无需离开个人中心",
+      "passed": true
+    },
+    {
+      "name": "账号菜单支持方向键",
+      "passed": true
+    },
+    {
+      "name": "Escape关闭菜单并归还焦点",
+      "passed": true
+    },
+    {
+      "name": "个人中心布局 375px",
+      "passed": true
+    },
+    {
+      "name": "账号菜单可见 375px",
+      "passed": true
+    },
+    {
+      "name": "个人中心布局 768px",
+      "passed": true
+    },
+    {
+      "name": "账号菜单可见 768px",
+      "passed": true
+    },
+    {
+      "name": "个人中心布局 1280px",
+      "passed": true
+    },
+    {
+      "name": "账号菜单可见 1280px",
+      "passed": true
+    },
+    {
+      "name": "头像加载失败时回退昵称字标",
+      "passed": true
+    },
+    {
+      "name": "头像失败仍显示已登录",
+      "passed": true
+    },
+    {
+      "name": "统一退出后当前与关联页面不再显示已登录账号",
+      "passed": true
+    },
+    {
+      "name": "再次登录保留原投稿和收藏",
+      "passed": true
+    },
+    {
+      "name": "普通有赞用户菜单不显示管理后台",
+      "passed": true
+    }
+  ],
+  "layouts": [
+    {
+      "overflow": false,
+      "profileImages": true,
+      "width": 375
+    },
+    {
+      "overflow": false,
+      "profileImages": true,
+      "width": 768
+    },
+    {
+      "overflow": false,
+      "profileImages": true,
+      "width": 1280
+    }
+  ],
+  "consoleErrors": []
+}

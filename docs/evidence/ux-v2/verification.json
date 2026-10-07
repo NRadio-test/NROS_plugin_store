@@ -1,0 +1,315 @@
+{
+  "date": "2026-10-05",
+  "environment": "127.0.0.1:8789; isolated preview fixtures; in-app browser",
+  "unitTests": {
+    "files": 15,
+    "passed": 166
+  },
+  "contrast": {
+    "pairs": 34,
+    "passed": 34
+  },
+  "checks": [
+    {
+      "test": "搜索快捷键",
+      "pass": true
+    },
+    {
+      "test": "搜索真实结果与匹配高亮",
+      "pass": true
+    },
+    {
+      "test": "清空后搜索焦点保留",
+      "pass": true
+    },
+    {
+      "test": "特殊字符搜索和空结果",
+      "pass": true
+    },
+    {
+      "test": "刷新保留排序（页面就绪后）",
+      "pass": true
+    },
+    {
+      "test": "IPK 资料填完前禁用选包、填完后启用",
+      "pass": true
+    },
+    {
+      "test": "投稿标签键盘切换和草稿保留",
+      "pass": true
+    },
+    {
+      "test": "审核抽屉16次Tab焦点留在窗口内",
+      "pass": true
+    },
+    {
+      "test": "手机审核抽屉在视口内",
+      "pass": true
+    },
+    {
+      "test": "Escape关闭并恢复审核按钮焦点",
+      "pass": true
+    },
+    {
+      "test": "退回未填原因时提示并聚焦反馈",
+      "pass": true
+    },
+    {
+      "test": "个人收藏正确展示、无目录编号偏移",
+      "pass": true
+    },
+    {
+      "test": "详情安装包与人工审核信息可查看",
+      "pass": true
+    },
+    {
+      "test": "真实收藏切换和取消",
+      "pass": true
+    },
+    {
+      "test": "目录按钮触发真实IPK下载",
+      "pass": true
+    },
+    {
+      "test": "市场搜索16px输入字号",
+      "pass": true
+    },
+    {
+      "test": "320px统计数值和标签保持同一行",
+      "pass": true
+    }
+  ],
+  "layouts": [
+    {
+      "page": "market",
+      "width": 375,
+      "headings": 1,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 375,
+      "headings": 2,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 375,
+      "headings": 1,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 375,
+      "headings": 1,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 375,
+      "headings": 1,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 1280,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 1280,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 1280,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 1280,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 1280,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 320,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 320,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 320,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 320,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 320,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 768,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 768,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 768,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 768,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 768,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 1440,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 1440,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 1440,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 1440,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 1440,
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 375,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 375,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 375,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 375,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 375,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "market",
+      "width": 1280,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "detail",
+      "width": 1280,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "submit",
+      "width": 1280,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "me",
+      "width": 1280,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    },
+    {
+      "page": "studio",
+      "width": 1280,
+      "theme": "dark",
+      "logo": true,
+      "overflow": false
+    }
+  ],
+  "consoleErrors": [],
+  "notes": [
+    "Functionality tests completed before the contrast failure; contrast and build were repaired and rerun successfully.",
+    "Browser proof uses fixture data and does not verify production Youzan OAuth, production performance or award eligibility.",
+    "Site business logic, server auth, manual review rules and production configuration were not changed."
+  ]
+}
