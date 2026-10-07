@@ -3,7 +3,7 @@ import { makeIPK } from '../adapters/fixtures';
 
 test('关闭自动引擎仍须人工审核，作者能看到等待状态且不会被引向不存在的详情',async({page})=>{
   await page.goto('/login?next=/submit');
-  await page.getByLabel('张导小店绑定手机号').fill('13700137000');
+  await page.getByRole('textbox',{name:'手机号',exact:true}).fill('13700137000');
   await page.getByRole('button',{name:'进入',exact:true}).click();
   await page.getByRole('tab',{name:'直接上传 IPK',exact:true}).click();
   await expect(page.getByRole('tab',{name:'直接上传 IPK',exact:true})).toHaveAttribute('aria-selected','true');
@@ -16,7 +16,7 @@ test('关闭自动引擎仍须人工审核，作者能看到等待状态且不�
   await page.getByRole('tab',{name:'直接上传 IPK',exact:true}).click();
   await expect(page.getByLabel('插件名称',{exact:true})).toHaveValue('作者待审作品');
   await page.getByRole('button',{name:'提交审核',exact:true}).click();
-  await expect(page.getByRole('status').filter({hasText:'交由管理员人工审核'})).toBeVisible();
+  await expect(page.getByRole('status').filter({hasText:'已提交，等待审核'})).toBeVisible();
   await page.goto('/me');
   await page.getByRole('button',{name:'等待审核',exact:true}).click();
   const row=page.locator('.submission-row').filter({hasText:'作者待审作品'});

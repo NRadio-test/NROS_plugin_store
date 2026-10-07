@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { api, errorMessage, type StudioTask } from '../lib/api'
-import { statusMeta, isActive } from '../lib/status'
+import { statusMeta, isActive, auditActionLabel } from '../lib/status'
 import { formatDateTime, shortId } from '../lib/format'
 import AsyncState from './AsyncState.vue'
 import AppPagination from './AppPagination.vue'
@@ -25,15 +25,6 @@ const total = computed(() => (props.kind === 'tasks' ? tasks.value.length : logs
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
 const visibleTasks = computed(() => tasks.value.slice((page.value - 1) * pageSize, page.value * pageSize))
 const visibleLogs = computed(() => logs.value.slice((page.value - 1) * pageSize, page.value * pageSize))
-
-const ACTION_LABELS: Record<string, string> = {
-  login: '管理员登录', logout: '退出登录', submit: '提交仓库', sync: '同步仓库', retry: '重新整理资料',
-  unlist: '下架插件', delete: '删除插件', restore: '显式恢复', 'ai-settings': '更新 AI 设置',
-  'ai-test': '测试 AI 接口', 'download-sources': '更新下载源', 'source-test': '测试下载源',
-  'manual-publish': '手动上架',
-  'manual-approve': '人工审核通过', 'manual-reject': '退回作者修改',
-  'password-change': '修改管理员密码',
-}
 
 async function load() {
   loading.value = true
@@ -72,10 +63,10 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
               <AppBadge :variant="statusMeta(task.status).tone" :dot="isActive(task.status)" :pulse="isActive(task.status)">
                 <AppIcon :name="statusMeta(task.status).icon" :size="12" />{{ statusMeta(task.status).label }}
               </AppBadge>
-              <span class="record__rev">revision {{ task.revision }}</span>
+              <span class="record__rev">版本记录 #{{ task.revision }}</span>
               <span class="record__attempts">尝试 {{ task.attempts }} 次</span>
             </div>
-            <p class="record__reason">{{ task.public_reason || '—' }}</p>
+            <p v-if="task.public_reason" class="record__reason">{{ task.public_reason }}</p>
             <p class="record__meta">
               <span class="mono">任务 {{ shortId(task.id) }}</span>
               <span aria-hidden="true">·</span>
@@ -95,7 +86,7 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
         <article v-for="log in visibleLogs" :key="log.id" class="record record--log">
           <span class="record__icon"><AppIcon name="history" :size="15" /></span>
           <div class="record__main">
-            <p class="record__action">{{ ACTION_LABELS[log.action] || log.action }}</p>
+            <p class="record__action">{{ auditActionLabel(log.action) }}</p>
             <p class="record__meta">
               <span class="mono">{{ shortId(log.target, 12) }}</span>
               <span aria-hidden="true">·</span>
@@ -115,7 +106,6 @@ watch(() => props.kind, () => { page.value = 1; expanded.value = ''; void load()
 <style scoped>
 .records { display: flex; flex-direction: column; gap: 16px; }
 .records__head { display: flex; justify-content: flex-end; }
-.records__title { font-size: var(--fs-h2); }
 .records__list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-group); background: var(--surface); overflow: hidden; }
 .record {
   display: grid;

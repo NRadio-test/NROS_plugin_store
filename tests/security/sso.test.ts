@@ -42,6 +42,33 @@ async function login(f: ReturnType<typeof fixture>) {
 }
 
 describe('统一用户和站点会话', () => {
+ it.each(['profile_unavailable', 'invalid_client', 'network', 'timeout', 'invalid_response'] as const)('资料失败准确区分 %s，诊断不包含敏感响应', async failure => {
+  const f = fixture(), { cookie } = await login(f), service = f.e.AUTH_SERVICE!;
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  f.e.AUTH_SERVICE = { async fetch(input: Request) {
+   if (!input.url.endsWith('/profile')) return service.fetch(input);
+   if (failure === 'network') throw Error('private transport detail');
+   if (failure === 'timeout') throw new DOMException('private timeout detail', 'TimeoutError');
+   if (failure === 'invalid_response') return new Response('private malformed response');
+   return Response.json({ code: failure, error: 'private upstream detail' }, { status: failure === 'invalid_client' ? 401 : 503 });
+  } } as Fetcher;
+  const response = await request(f.e, '/api/account/profile/sync', 'POST', {}, cookie);
+  const expected = { profile_unavailable: 'profile_unavailable', invalid_client: 'invalid_client', network: 'auth_unavailable', timeout: 'auth_timeout', invalid_response: 'auth_invalid_response' }[failure];
+  expect(response.status).toBe(503); expect(response.headers.get('Set-Cookie')).toBeNull();
+  expect((await response.json() as any).code).toBe(expected);
+  expect(warn).toHaveBeenCalledTimes(1);
+  const log = warn.mock.calls[0]![0] as string;
+  expect(JSON.parse(log)).toMatchObject({ event: 'sso_profile_failed', code: expected });
+  expect(log).not.toMatch(/private|Bearer|isolated-site|SSSS|11223344/);
+ });
+ it('每分钟一次的自动同步不会触发旧的五分钟三次限额', async () => {
+  const f = fixture(), { cookie } = await login(f);
+  const start = Date.now(); const now = vi.spyOn(Date, 'now');
+  for (let minute = 0; minute < 5; minute++) {
+   now.mockReturnValue(start + minute * 60000);
+   expect((await request(f.e, '/api/account/profile/sync', 'POST', {}, cookie)).status).toBe(200);
+  }
+ });
  it.each([[401, 'invalid_client'], [503, 'configuration_error'], [503, 'auth_unavailable'], [404, 'not_found'], [401, undefined]] as const)('中央 %s %s 不伪装成退出或过期，不清除本站 Cookie', async (status, code) => {
   const f = fixture(), { cookie } = await login(f), service = f.e.AUTH_SERVICE;
   f.e.AUTH_SERVICE = { async fetch() { return Response.json({ code, error: 'private upstream detail' }, { status }); } } as Fetcher;

@@ -23,7 +23,7 @@ function assetField(data: string | null, key: string): string | null {
  catch { return null; }
 }
 
-/** Studio 插件列表：真正的服务端分页、状态筛选与转义后的关键词搜索。 */
+/** Studio 插件列表：服务端分页、状态筛选与转义后的关键词搜索。 */
 export async function listPlugins(env: Env, input: { q?: string; status?: string; page?: string; pageSize?: string }) {
  const term = likeTerm((input.q ?? '').slice(0, 200));
  const status = input.status && Object.hasOwn(STATUS_FILTERS, input.status) ? input.status : 'all';

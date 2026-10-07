@@ -17,6 +17,7 @@ const ua = 'Mozilla/5.0 PluginAuthContract/1.0';
 const sites = { plugin: 'https://plugin.zdwifi.com', second: 'https://second.example.test' };
 const keys = { plugin: 'isolated-plugin-auth-contract-key-000000000', second: 'isolated-second-auth-contract-key-000000000' };
 const upstreamCalls = [];
+let profileAvailable = true, profileName = '联调用户';
 const cookie = (response, name) => response.headers.getSetCookie().find(v => v.startsWith(name + '=') && !v.startsWith(name + '=;'))?.split(';')[0];
 let mf;
 try {
@@ -37,7 +38,7 @@ try {
      return Response.json({ code: 0, data: { openId: 'isolated-contract-buyer', scope: 'auth_user', expiresIn: 7200, accessToken: 'isolated-unused-token' } });
     }
     if (body.route === 'shop-token') return Response.json({ code: 200, success: true, data: { access_token: 'isolated-shop-token', authority_id: '12345', expires: Date.now() + 86400000 } });
-    if (body.route === 'buyer-profile') return Response.json({ code: 0, data: { openId: 'isolated-contract-buyer', nickName: '联调用户', avatar: 'https://img.yzcdn.cn/contract-avatar.png' } });
+    if (body.route === 'buyer-profile') return profileAvailable ? Response.json({ code: 0, data: { openId: 'isolated-contract-buyer', nickName: profileName, avatar: 'https://img.yzcdn.cn/contract-avatar.png' } }) : Response.json({ code: 500, data: null });
     throw Error('Unexpected network request in isolated contract test');
  };
  mf = new Miniflare(convertV4MiniflareOptions({ workers: [
@@ -98,6 +99,21 @@ try {
  assert.equal((await call('plugin', '/api/studio/overview', 'GET', pluginCookie)).status, 401);
  const profile = await call('plugin', '/api/account/profile/sync', 'POST', pluginCookie, {}); assert.equal(profile.status, 200);
  assert.equal((await profile.json()).user.avatar_url, 'https://img.yzcdn.cn/contract-avatar.png');
+ // An upstream profile outage must not revoke identity; a later background request repairs both sites' display data.
+ const authDb = await mf.getD1Database('AUTH_DB', 'zdwifi-auth');
+ await authDb.prepare('UPDATE global_user_profiles SET synced_at=?').bind(Date.now() - 61000).run();
+ profileAvailable = false;
+ const unavailable = await call('plugin', '/api/account/profile/sync', 'POST', pluginCookie, {});
+ assert.equal(unavailable.status, 503); assert.equal((await unavailable.json()).code, 'profile_unavailable');
+ assert.equal(unavailable.headers.get('Set-Cookie'), null);
+ assert.equal((await (await call('plugin', '/api/session', 'GET', pluginCookie)).json()).user.display_name, '联调用户');
+ profileAvailable = true; profileName = '自动更新资料';
+ const recovered = await call('plugin', '/api/account/profile/sync', 'POST', pluginCookie, {});
+ assert.equal(recovered.status, 200); assert.equal((await recovered.json()).user.display_name, profileName);
+ for (const [id, session] of [['plugin', pluginCookie], ['second', otherCookie]]) {
+  const current = await (await call(id, '/api/session', 'GET', session)).json();
+  assert.equal(current.user.id, first.user.id); assert.equal(current.user.display_name, profileName);
+ }
  const wrongSite = await call('plugin', '/api/me', 'GET', otherCookie); assert.equal(wrongSite.status, 401);
  assert.match(wrongSite.headers.get('Set-Cookie'), /Max-Age=0/);
  for (const id of Object.keys(sites)) {
@@ -105,7 +121,7 @@ try {
   assert.equal((await db.prepare("SELECT id FROM users WHERE identity_kind='sso'").first()).id, first.user.id);
   assert.equal((await db.prepare("SELECT COUNT(*) n FROM sessions WHERE kind='user'").first()).n, 0);
  }
- assert.deepEqual(upstreamCalls, ['buyer-token', 'shop-token', 'buyer-profile']);
+ assert.deepEqual(upstreamCalls, ['buyer-token', 'shop-token', 'buyer-profile', 'buyer-profile', 'buyer-profile']);
  assert.equal((await call('plugin', '/api/logout', 'POST', pluginCookie, {})).status, 200);
  for (const [id, session] of [['plugin', pluginCookie], ['second', otherCookie]]) {
   const response = await call(id, '/api/me', 'GET', session); assert.equal(response.status, 401); assert.match(response.headers.get('Set-Cookie'), /Max-Age=0/);

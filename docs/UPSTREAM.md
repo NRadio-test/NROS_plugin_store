@@ -1,30 +1,25 @@
 # 上游复用与对应源码
 
-## 已核对来源
+来源：[AstrBotDevs/Astrbot_Plugins_Market](https://github.com/AstrBotDevs/Astrbot_Plugins_Market)，参考 commit `fcfc2d00795156cc3db8750af6f938e0c282cc49`。初次改编日期为 2026-09-10，后续变更见 Git 历史。项目采用 GPL-3.0-only，原文保留在根 `LICENSE` 和 `public/LICENSE.txt`。
 
-- 仓库：https://github.com/AstrBotDevs/Astrbot_Plugins_Market
-- 本次读取 commit：`fcfc2d00795156cc3db8750af6f938e0c282cc49`。
-- 上游 `LICENSE`：GNU General Public License version 3；原文保留于项目根 `LICENSE` 和 `public/LICENSE.txt`。
-- 修改日期：2026-09-10。此项目是独立 IPK 市场，不是 AstrBot 官方插件市场。
+## 复用关系
 
-## 实际复用与改动
-
-| 上游文件 | 本项目文件 | 保留与改动 |
+| 上游文件 | 当前实现 | 内容 |
 | --- | --- | --- |
-| `src/components/SearchToolbar.vue` | `src/components/SearchToolbar.vue` | 保留受控输入、清空、搜索变化重置页码的事件逻辑；界面在第二轮重新设计（图标、快捷键提示、焦点环），仍为原生可访问控件。去掉 Star、随机推荐和标签排序，改接本项目服务端名称/描述搜索。 |
-| `src/components/AppPagination.vue` | `src/components/AppPagination.vue` | 保留 480/768 断点下 3/5/7 页码槽、resize 注册/清理以及双向页码事件；改为原生按钮并新增省略号窗口，移除 Naive UI 与快跳 DOM 修补。 |
-| `src/stores/plugins.js` | `src/lib/theme.ts` | 保留 `theme-preference` 持久化与 `isDarkMode` / `toggleTheme` 逻辑；增加系统主题默认值、`theme-color` 同步与存储不可用降级，不引入 Pinia。市场数据改接同源 Worker API。 |
-| `src/components/PluginCard.vue` | `src/components/PluginCard.vue` | 保留卡片「身份 + 版本 + 描述 + 统计 + 操作」的浏览结构；整卡可点与两个独立操作按钮的可访问性划分沿用。替换 Star 等字段为收藏/下载统计，删除安装、社交、复制仓库、评论和详情弹层。视觉为第二轮重新设计。 |
-| `src/assets/theme.css` | `src/styles/tokens.css` 等 | 第一轮沿用上游的语义令牌组织方式与浅/深主题切换思路。第二轮界面重做后**不再使用上游配色**：调色板、圆角、阴影、动效与全部页面布局均为本项目自建（见 `DESIGN_SYSTEM.md`），`src/style.css` 仅作为分层样式的入口。 |
+| `src/components/SearchToolbar.vue` | `src/components/SearchToolbar.vue` | 受控搜索、清空和重置分页；接本站搜索接口 |
+| `src/components/AppPagination.vue` | `src/components/AppPagination.vue` | 响应式页码窗口和事件；使用原生按钮 |
+| `src/stores/plugins.js` | `src/lib/theme.ts` | 主题偏好持久化与切换；增加系统主题默认值及存储降级 |
+| `src/components/PluginCard.vue` | `src/components/PluginRow.vue` | 插件身份、版本、描述、统计与操作的浏览结构，改为目录行 |
+| `src/assets/theme.css` | `src/styles/tokens.css` | 语义令牌和浅深主题组织；当前配色、布局见设计系统 |
 
-未复制上游 logo、Lexend 字体、OFL 字体文件、AstrBot 主程序、原站 API、Issue 投稿入口、评论系统、安装功能或整套组件库。未采用上游 README 作为市场插件说明。第二轮的视觉设计（配色、图标、组件样式、页面布局）为本项目原创，不来自上游。
+未引入上游 logo、字体、原站 API、Issue 投稿、安装或评论功能。商店与 AstrBot 无安装或运行时依赖。
 
-`src/lib/readme.ts` 是新增的真实仓库 README 安全渲染适配器：marked 解析、DOMPurify 允许列表净化、commit/path 相对 URL 解析、HTTPS 外链与 GitHub 内容图片允许列表。仓库内容永远不能成为脚本或管理指令。
+仓库 README 和上传教程由 `src/lib/readme.ts` 渲染，使用 marked、DOMPurify 与 URL 校验，不执行作者代码。
 
-## 构建与公开要求
+## 对应源码
 
-对应源码是本项目完整源码、迁移、构建脚本、配置示例、锁文件与上述许可证。依赖按锁文件安装；构建见根 `README.md`，运行统一 `pnpm run check`。新业务代码采用 TypeScript，项目整体采用 GPL-3.0-only。
+项目仓库：https://github.com/NRadio-test/NROS_plugin_store
 
-当前交付仅在本地，未创建远程仓库或部署。运营者在对外提供前端构建产物前，需要提供本版本完整对应源码的公开获取方式，将地址填入 `public/SOURCE.txt` 并保留页脚许可入口。源码必须排除真实密钥、手机号索引、会话、管理员验证数据及生产数据库。商店源码的 GPL 不会替代作者仓库自己的插件许可证。
+发布前确认 `public/SOURCE.txt` 指向可获取当前发布版本的完整对应源码，包括迁移、构建脚本、配置示例和锁文件。排除真实凭据、用户数据、会话及生产数据库。构建步骤见 [README](../README.md)，依赖许可见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) 和 `public/licenses/`。
 
-第三方运行时依赖及许可证原文见 `THIRD_PARTY_NOTICES.md` 与 `public/licenses/`。构建工具依赖随包管理器安装保留各自许可证；锁文件记录实际版本。
+商店源码的 GPL 不替代作者插件自己的许可证。

@@ -1,6 +1,6 @@
 // Test-only identity service for the isolated loopback preview. Never shipped in Worker builds.
 export function previewAuth(origin){
- let active=true;
+ let active=true, profileUnavailable=false, profilePending=false, profileCalls=0;
  const attempts=new Map(),sessions=new Set();
  const user={id:'11223344-5566-4778-8990-aabbccddeeff',display_name:'Dawn（本地预览）',avatar_url:origin+'/assets/preview-avatar.svg',profile_updated_at:Date.now()};
  const token=()=>Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
@@ -13,6 +13,11 @@ export function previewAuth(origin){
    return back.href;
   },
   avatarFailure(value){user.avatar_url=origin+(value?'/assets/unavailable-avatar.svg':'/assets/preview-avatar.svg')},
+  profileScenario(value){
+   profileUnavailable=value==='unavailable';profilePending=true;profileCalls=0;
+   Object.assign(user,{display_name:'有赞用户',avatar_url:undefined,profile_updated_at:undefined});
+  },
+  profileStats(){return {calls:profileCalls,unavailable:profileUnavailable}},
   service:{async fetch(request){
    const op=new URL(request.url).pathname.split('/').at(-1),body=await request.json();
    if(op==='start'){const id=token();attempts.set(id,body);return Response.json({authorizationUrl:origin+'/api/auth/authorize?request='+id})}
@@ -26,7 +31,13 @@ export function previewAuth(origin){
    if(!['check','profile','logout'].includes(op))return Response.json({code:'not_found'}, {status:404});
    if(!active||!sessions.has(body.token))return Response.json({code:'session_expired',user:null}, {status:401});
    if(op==='logout'){active=false;sessions.clear();return Response.json({ok:true})}
-   if(op==='profile'){user.profile_updated_at=Date.now();return Response.json({user,expiresAt:Date.now()+7200000})}
+   if(op==='profile'){
+    profileCalls++;
+    if(profileUnavailable)return Response.json({code:'profile_unavailable'},{status:503});
+    if(profilePending){Object.assign(user,{display_name:'Dawn（本地预览）',avatar_url:origin+'/assets/preview-avatar.svg'});profilePending=false;}
+    user.profile_updated_at=Date.now();
+    return Response.json({user,expiresAt:Date.now()+7200000});
+   }
    return Response.json({user,expiresAt:Date.now()+7200000,sessionId:'preview-root'});
   }},
  };

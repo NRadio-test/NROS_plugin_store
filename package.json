@@ -12,14 +12,13 @@
     "dev": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false vite --host 127.0.0.1",
     "typecheck": "vue-tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
     "lint": "eslint src worker tests scripts *.ts",
-    "test": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false vitest run && node --test scripts/admin.test.mjs",
+    "test": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false vitest run",
     "build": "node scripts/build.mjs",
     "check": "node scripts/check.mjs",
     "test:e2e": "node scripts/e2e.mjs",
     "db:migrate:local": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "WRANGLER_LOG_PATH=.wrangler/logs WRANGLER_SEND_METRICS=false wrangler d1 migrations apply DB --remote",
     "deploy": "node scripts/build.mjs && wrangler deploy",
-    "admin": "node scripts/admin.mjs",
     "setup:local": "node scripts/setup-local.mjs"
   },
   "dependencies": {

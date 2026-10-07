@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { api, ApiError, errorMessage, loadSession, post, session, type Plugin, type Session, type Submission } from '../lib/api'
+import { api, ApiError, errorMessage, loadSession, post, session, type Plugin, type Submission } from '../lib/api'
 import { statusMeta } from '../lib/status'
 import { formatDateTime, formatNumber } from '../lib/format'
 import { toast } from '../lib/toast'
@@ -32,7 +32,6 @@ const submissions = ref<Submission[]>([])
 const favorites = ref<Plugin[]>([])
 
 const accountName = computed(() => session.user?.display_name || session.user?.phone_mask || '已登录用户')
-const syncing = ref(false)
 const loggingOut = ref(false)
 const activeCount = computed(() => submissions.value.filter(item => ['pending','running','retry','awaiting_review'].includes(submissionState(item))).length)
 
@@ -54,17 +53,6 @@ async function load() {
   }
 }
 
-async function syncProfile() {
-  const userId = session.user?.id
-  syncing.value = true
-  try {
-    const result = await post<{ user: Session['user'] }>('/api/account/profile/sync')
-    if (session.user?.id !== userId) return
-    session.user = result.user
-    toast.success('有赞资料已同步')
-  } catch (caught) { toast.error('同步失败', errorMessage(caught)); await loadSession() }
-  finally { syncing.value = false }
-}
 async function reload() { await loadSession(); await load() }
 function showSection(section: TabKey, filter = 'all') { void router.replace({ query: { tab: section, ...(filter !== 'all' ? { filter } : {}) } }) }
 
@@ -72,7 +60,7 @@ async function refresh(id: string, name: string) {
   busy.value = id
   try {
     await post(`/api/plugins/${id}/refresh`)
-    toast.success('已请求重新检查', name)
+    toast.success('已提交处理', name)
     await load()
   } catch (caught) {
     toast.error('请求未生效', errorMessage(caught))
@@ -104,7 +92,7 @@ watch(() => session.user?.id, load, { immediate: true })
         <div class="me__profile-text">
           <h1 class="me__profile-name">个人中心</h1>
           <p class="me__account-name">{{ accountName }}</p>
-          <div class="me__account-status"><AppBadge variant="success" dot>已登录</AppBadge><span v-if="session.ssoEnabled">有赞账号</span><AppButton v-if="session.ssoEnabled" size="sm" variant="ghost" icon="refresh" :loading="syncing" @click="syncProfile">同步有赞资料</AppButton></div>
+          <div class="me__account-status"><AppBadge variant="success" dot>已登录</AppBadge><span v-if="session.ssoEnabled">有赞账号</span></div>
         </div>
         <div class="me__profile-actions">
           <AppButton to="/submit" variant="primary" icon="upload">提交插件</AppButton>
@@ -147,7 +135,7 @@ watch(() => session.user?.id, load, { immediate: true })
                   <RouterLink v-if="item.status === 'published'" :to="`/plugins/${item.id}`" class="submission-row__name">{{ item.full_name }}</RouterLink><h3 v-else class="submission-row__name">{{ item.full_name }}</h3>
                   <AppBadge :variant="statusMeta(submissionState(item)).tone" dot>{{ statusMeta(submissionState(item)).label }}</AppBadge>
                   <AppBadge v-if="item.status === 'published' && submissionState(item) !== 'published'" variant="neutral">
-                    <AppIcon :name="'check-circle'" :size="12" />{{ '旧版本仍已上架' }}
+                    <AppIcon name="check-circle" :size="12" />旧版本可下载
                   </AppBadge>
                 </div>
                 <p v-if="item.review_reason || item.public_reason" class="submission-row__reason">{{ item.review_reason || item.public_reason }}</p>

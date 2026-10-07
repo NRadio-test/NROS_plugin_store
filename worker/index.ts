@@ -49,7 +49,7 @@ async function requireUser(c: any) { const s = await userSession(c); if (!s)
 app.get('/api/session', async (c) => { const u = await userSession(c), a = await getSession(c.req.raw, c.env, 'admin'); return c.json({ reviewMode: manualReview(c.env) ? 'manual' : 'automatic', reviewEnabled: reviewEnabled(c.env), ...(ssoEnabled(c.env) ? { ssoEnabled: true } : {}), user: u ? u.user || await query(c.env, 'SELECT id,phone_mask FROM users WHERE id=?', u.subjectId).first() : null, admin: a ? { id: a.subjectId, username: a.username } : null }); });
 app.post('/api/account/profile/sync', async c => {
  if (!ssoEnabled(c.env)) throw new AppError(409, '当前账号不使用有赞登录');
- const uid = await requireUser(c); await rateLimit(c.env, `profile:${uid}`, 3, 300);
+ const uid = await requireUser(c); await rateLimit(c.env, `profile:${uid}`, 10, 60);
  return c.json({ user: await syncSSOProfile(c.req.raw, c.env) });
 });
 app.post('/api/login', async (c) => { const shared = ssoEnabled(c.env); await limit(c, shared ? 'sso-entry' : 'login', shared ? 60 : 10, shared ? 60 : 600); const b = await body(c); if (shared) { if (b.silent !== true) await limit(c, 'sso-login', 10, 600); const result = await startSSO(c.env, b.next, b.silent !== true); c.header('Set-Cookie', result.cookie); return c.json({ authorizationUrl: result.authorizationUrl }); } const phone = normalizePhone(b.phone); const index = await hmac(c.env.PHONE_HMAC_KEY, phone); const uid = id(); await query(c.env, 'INSERT OR IGNORE INTO users(id,phone_index,phone_mask,created_at) VALUES(?,?,?,?)', uid, index, `${phone.slice(0, 4)}****${phone.slice(-4)}`, now()).run(); const user = await query(c.env, 'SELECT id,phone_mask FROM users WHERE phone_index=?', index).first<{
@@ -68,7 +68,7 @@ app.post('/api/studio/login', async (c) => { await limit(c, 'admin-login', 5, 60
 app.post('/api/studio/logout', async (c) => { c.header('Set-Cookie', await logoutSession(c.req.raw, c.env, 'admin')); return c.json({ ok: true }); });
 // Derive the display label from the UUID reference without requiring the SSO migration while disabled.
 const publicSelect = `SELECT p.id,p.source_kind,p.full_name,p.description,p.updated_at,p.download_count, json_extract(s.data,'$.tag') version,u.phone_mask submitter_mask,CASE WHEN u.phone_index=('sso:' || u.id) THEN 'sso' ELSE 'legacy' END submitter_kind,(SELECT COUNT(*) FROM favorites f WHERE f.plugin_id=p.id) favorite_count FROM plugins p JOIN snapshots s ON s.id=p.approved_snapshot_id LEFT JOIN users u ON u.id=p.submitter_id`;
-/** 直传作者名：内地号码显示 1**********，其他地区保留首字符掩码；profile 上线后替换。 */
+/** 直传作者名：内地号码显示 1**********，其他地区保留首字符掩码。 */
 function maskSubmitter(mask: unknown) {
     const value = typeof mask === 'string' ? mask : '';
     if (!value) return '匿名';
@@ -76,7 +76,7 @@ function maskSubmitter(mask: unknown) {
     const visible = value.startsWith('+86') ? value.slice(3) : value;
     return visible.slice(0, 1) + '*'.repeat(Math.max(1, visible.length - 1));
 }
-/** 公开作者：GitHub 投稿取仓库所属者，直传取提交者掩码。掩码原文不外发。 */
+/** 公开作者：GitHub 投稿取仓库所属者，直传取身份标签或提交者掩码。掩码原文不外发。 */
 function publicPlugin(row: Record<string, unknown> | null) {
     if (!row) return row;
     const { submitter_mask, submitter_kind, ...rest } = row;

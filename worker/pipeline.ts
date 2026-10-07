@@ -46,14 +46,14 @@ export async function submit(env: Env, url: string, userId: string | null) {
     if (p?.id !== pluginId)
         return { pluginId: p?.id, taskId: null, status: p?.status, message: '该仓库已收录或正在处理' };
     await enqueue(env, taskId);
-    return { pluginId, taskId, status: 'pending', message: manualReview(env) ? '投稿已保存，资料整理后交由管理员人工审核' : reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
+    return { pluginId, taskId, status: 'pending', message: manualReview(env) ? '已提交，等待审核' : reviewEnabled(env) ? '投稿已保存，自动审核将在后台进行' : '投稿已保存，后台整理完成后直接上架（未审核）' };
 }
 export async function refresh(env: Env, pluginId: string, force = false) {
     const p = await query(env, 'SELECT * FROM plugins WHERE id=?', pluginId).first<Plugin>();
     if (!p)
         throw new AppError(404, '插件不存在');
     if (p.blocked)
-        throw new AppError(409, '插件已被管理员停用，需显式恢复');
+        throw new AppError(409, '插件已停用，请管理员恢复后再提交');
     const active = await query(env, "SELECT id,status FROM tasks WHERE plugin_id=? AND revision=? AND status IN ('pending','running','retry')", pluginId, p.revision).first<{
         id: string;
         status: string;

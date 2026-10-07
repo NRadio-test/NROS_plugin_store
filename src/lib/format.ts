@@ -1,4 +1,4 @@
-/** 展示格式化工具：统一数字、体积、时间与手机号掩码的输出。 */
+/** 数字、文件大小与时间的显示格式。 */
 
 const numberFormat = new Intl.NumberFormat('zh-CN')
 const dateFormat = new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
@@ -32,9 +32,6 @@ export function formatRelative(value: number | string | null | undefined): strin
   if (diff < 7 * day) return `${Math.floor(diff / day)} 天前`
   return formatDateTime(time)
 }
-
-export const shortHash = (value: string | null | undefined, length = 12): string =>
-  value ? (value.length > length ? `${value.slice(0, length)}…` : value) : '—'
 
 export const shortId = (value: string | null | undefined, length = 8): string =>
   value ? `${value.slice(0, length)}` : '—'

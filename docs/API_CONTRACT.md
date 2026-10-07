@@ -1,66 +1,92 @@
-## 当前人工审核接口（2026-10-04）
+# 接口约定
 
-- `GET /api/session` 增加 `reviewMode=manual`；此模式 `reviewEnabled=false` 表示自动引擎停用，不表示免审。
-- `GET /api/studio/plugins?status=awaiting_review` 返回当前版本的待审队列，支持原有搜索与分页；`overview.counts.awaitingReview` 是待人工处理数量。
-- `GET /api/studio/plugins/:id` 增加 `candidate`，包括 revision、decision、冻结的名称/简介/说明、版本与附件。仅管理员可读取。
-- `GET|HEAD /api/studio/plugins/:id/review/download/:assetId` 下载当前待审附件，需有效管理员会话；不接受目标 URL，不使用第三方下载源，不计入市场下载统计。
-- `POST /api/studio/plugins/:id/review`：`{revision,decision: "approve"|"reject",reason?,internalReason?}`。退回 reason 至少 5 字，最多 240 字；内部备注最多 6000 字。决定绑定当前待审版本、管理员和时间，重复/并发或失效版本返回 409。
-- 通过后公共 `publicationMode=human-reviewed`、`reviewLabel=人工审核通过`，`reviewedAt` 为实际人工批准时间。退回不公开候选，已有批准版本继续可用。
-- 人工模式下旧 `/manual-publish` 只批准现有待审记录，无法在候选尚未准备时免审发布。下面旧自动/免审契约只供保留引擎参考。
+除上传使用 `multipart/form-data`、下载返回文件流外，接口使用 JSON；错误返回 `{error, code}`。写请求要求同源 Origin 和对应 Cookie 权限。公共接口不返回内部审核备注、会话 token、对象路径或密钥。
 
-# 前后端接口约定
-除上传使用 multipart/form-data、下载返回附件流外，接口使用 JSON，错误 `{error, code}`。写入请求需要同源 Origin（浏览器自动提供），cookie 会话。字段 snake_case 用于数据库对象。
-GET /api/session → {user: {id,phone_mask}|null, admin:{id,username}|null}
-POST /api/login {phone} → {user}; POST /api/logout；管理员 POST /api/studio/login {username,password}, POST /api/studio/logout。
-GET /api/plugins?q=&page=1&sort=updated|downloads|favorites → {items:[Plugin],total,page,pageSize,sort}。Plugin: id,source_kind(github|upload),full_name,description,version,favorite_count,download_count,favorited,updated_at,author。
-author 是公开作者标识：GitHub 投稿取仓库所属者，直传取提交者手机号掩码（内地为 1**********）；掩码原文与 phone_index 不出现在公开响应里。profile 上线后由用户自设昵称取代。
-`sort` 缺省或非法值一律按 `updated`（p.updated_at DESC,p.id）；`downloads` → p.download_count DESC,p.updated_at DESC,p.id；`favorites` → favorite_count DESC,p.updated_at DESC,p.id。只使用该白名单，绝不把用户输入拼接进 SQL。`total` 与 `items` 口径一致：同样要求 status='published'、blocked=0 且存在已批准快照。
-GET /api/plugins/:id → {plugin:Plugin,readme,readmePath,readmeCommit,sourceCommit,license,assets:[{id,name,size,sha256,packageName,architecture}],reviewLabel,reviewedAt,reviewPublicReason,publishedAt}
-新增字段（其余字段不变）：`reviewedAt` 已批准快照的 snapshots.created_at（number|null）、`reviewPublicReason` 已批准快照的 public_reason（string，可能为空串）、`publishedAt` 插件最近一次上架时间，取 plugins.updated_at（number|null）。公共接口永不返回 snapshots.internal_reason / tasks.internal_reason。
-GET/HEAD /api/plugins/:id/download/:assetId → 附件流。
-PUT /api/plugins/:id/favorite {active:boolean} → {favorite_count,favorited}
-POST /api/submit {url} → {pluginId,taskId,status,message}; POST /api/plugins/:id/refresh → {taskId,status}
-GET /api/me → {submissions:[{id,full_name,status,public_reason,task_status}],favorites:[Plugin]}
-GET /api/studio/plugins?q=&status=all|published|in_review|waiting|rejected|removed|blocked&page=1&pageSize=20 → {items:[StudioPlugin],total,page,pageSize}
-`total` 为满足条件的总数；`page` 从 1 开始；`pageSize` 默认 20，合法范围 10–100（越界按边界收敛）。`q` 按 full_name/description LIKE 匹配，`% _ \` 已转义并显式 `ESCAPE '\'`。`status` 非法值按 `all` 处理；`in_review` = 存在 pending/running/retry 任务；`waiting` = waiting_package/waiting_config/incomplete。
-StudioPlugin: id,source_kind(github|upload),full_name,repository_id,description,status,blocked,revision,version(可空),favorite_count,download_count,public_reason,created_at,updated_at,checked_at,approved_snapshot_id,submitter_id(可空),task_status(可空),task_attempts(可空),last_task_at(可空)。
-GET /api/studio/plugins/:id → {plugin:StudioPlugin,snapshot,assets,tasks,audits}；插件不存在返回 404。
-snapshot: null | {id,revision,verdict,public_reason,internal_reason,review_version,created_at}（取 approved_snapshot_id 指向的快照）。
-assets: [{id,name,size,sha256,disabled,package_name,architecture}]，package_name/architecture 取自附件 data，缺失为 null。
-tasks: 最多 20 条，按 revision DESC，字段 id,revision,status,attempts,public_reason,internal_reason,created_at,updated_at,queued_at,lock_until。
-audits: 最多 20 条，按 created_at DESC，只含 target 等于该插件 id 的记录，字段 id,action,target,created_at,admin_id。
-GET /api/studio/overview → {counts,ai,sources,recentTasks}
-counts: plugins,published,inReview,waiting,rejected,removed,blocked,favorites,downloads,users,tasksActive,tasksFailed（均为数字）；ai: {configured,model,baseUrl}，`configured` 当且仅当已保存配置同时有 model 与非空 apiKey，apiKey 的明文与密文都不返回；sources: {total,enabled}；recentTasks 最多 8 条按 created_at DESC：id,plugin_id,full_name(LEFT JOIN plugins，无插件时为空串),status,public_reason,attempts,created_at，不含 internal_reason。
-POST /api/studio/password → 已登录返回 403，code=password_managed_externally，提示前往留言箱改密；不读取或转发请求里的密码，不写入账号库。
-管理员登录只查询 ADMIN_AUTH_DB；密码匹配但 must_change_password 非 0 时返回 403 / password_change_required。登录和会话响应只返回 id、username。共享库缺少绑定返回 503，故障时不回退到商店账号。管理员每次请求检查共享账号与会话中的凭据版本，改密、删除或强制改密使旧商店会话失效。
-POST /api/studio/submit {url}; POST /api/studio/plugins/:id/:action {reason?} actions sync,retry,unlist,delete,restore
-GET /api/studio/tasks → {items:[{id,plugin_id,status,public_reason,internal_reason,attempts,created_at}]}
-GET /api/studio/logs → {items:[{id,action,target,created_at}]}
-GET /api/studio/ai → AIConfig（apiKey 掩码）；PUT 同路径 AIConfig；POST /api/studio/ai/test → {ok,message}
-GET /api/studio/sources → {items:DownloadSource[]}; PUT /api/studio/sources {items:DownloadSource[]}; POST /api/studio/sources/:id/test {pluginId,assetId} → {ok,message}
-GET /api/studio/sources/candidates → {items:[{pluginId,fullName,version,assets:[{id,name,size,architecture,disabled}]}]}。只含 status='published' AND blocked=0 且有已批准快照的插件，最多 50 个（updated_at DESC），每个插件最多 10 个附件，供 Studio 下拉选择而非手填 ID。
-所有设置写入必须先登录管理员。公共页面不放 Studio 链接。多附件通过详情选择，不选默认第一个。
+## 登录与会话
 
-## IPK 直传接口
+| 接口 | 请求 / 返回 |
+| --- | --- |
+| `POST /api/login` | SSO 模式：`{next?,silent?}` → `{authorizationUrl}`，设置浏览器绑定 Cookie |
+| `GET /api/auth/callback` | 校验 state、绑定 Cookie、期限及一次性票据，换取本站会话并跳转 |
+| `GET /api/session` | `{user,admin,reviewMode,reviewEnabled,ssoEnabled?}` |
+| `POST /api/account/profile/sync` | `{user}`；登录后由页面自动调用 |
+| `POST /api/logout` | 撤销中央及关联站点会话，成功后清除本站用户 Cookie |
+| `POST /api/studio/login` | `{username,password}` → `{admin}` |
+| `POST /api/studio/logout` | 清除本站管理员会话 |
 
-- `POST /api/submit/upload`：普通用户会话投稿。
-- `POST /api/plugins/:id/upload`：原提交用户上传新版本；只允许未被管理员停用的直传插件。
-- `POST /api/studio/submit/upload`：管理员投稿，仍经过审核并记审计。
-- `POST /api/studio/plugins/:id/upload`：管理员给已有直传插件上传新版本；管理员权限由 Studio 中间件校验，以 userId=null 跳过提交者归属检查，记 `upload-update` 审计。
-- 上传请求为 `multipart/form-data`，四个必填字段：`name`（1–80 字符，无路径分隔符或控制字符）、`description`（1–500）、`tutorial`（1–20000，Markdown）、`file`（单个非空 `.ipk`）。拒绝重复或未知字段。默认文件上限 32 MiB，`MAX_IPK_BYTES` 可降低，直传硬上限 32 MiB；每个识别档案累计存储限额 128 MiB，管理员投稿合并计算。
-- 返回 202 `{pluginId,taskId,status,message}`；相同提交者、相同文件及资料不再创建任务，`taskId=null,status=duplicate`，不改变提交归属或解除下架。并发冲突/额度不足返回 409；文件过大返回 413（请求封装超预算为受控错误）；无存储绑定返回 503/upload_unconfigured。
-- `GET /api/me` 的 submissions 增加 `source_kind` 和仅本人可见的 `upload_name/upload_description/upload_tutorial`，用于新版本表单预填。不返回对象路径或其他人的待审核教程。
-- `GET /api/studio/plugins/:id` 增加 `upload`（仅直传插件非空）：`{name,description,tutorial}`，供 Studio 更新版本时回填表单。
-- `GET /api/plugins/:id` 对直传包返回已批准教程作为 `readme`；`readmePath/readmeCommit/sourceCommit` 为空，`license=null`（未提供许可，不能推断）。公共附件不暴露对象路径、ETag 或内部材料。
-- 下载接口不变：直传包经私有 R2 读取，支持原有 HEAD/Range、状态复核和去重统计；不接受外部 URL 或对象 key。GitHub 下载源设置/测试候选仅用于 GitHub 包。
-- Studio 下架保留最新私有候选包供显式恢复重审；删除额外清除直传文件及元数据。删除后的显式恢复进入等待安装包，原提交用户需重新上传。
+SSO `user` 为 `{id,display_name,avatar_url?,profile_updated_at?}`，ID 是全局 UUID；`admin` 为 `{id,username}`，未登录时各自为 null。管理员权限不会由普通用户身份推导。
 
-### 管理员手动上架
+当前 `reviewMode=manual`、`reviewEnabled=false`，后者表示自动引擎停用，不表示免审。关闭 SSO 的隔离开发环境保留 `{phone}` 登录与 `{id,phone_mask}` 用户响应；生产不使用此身份方式。
 
-`POST /api/studio/plugins/:id/manual-publish`，请求 `{ "confirmed": true, "revision": 当前插件revision }`。仅管理员会话、同源请求可调用；外部读取后再次校验会话。成功返回 `{ok:true,status:"published",message:...}`。版本变化返回 409，缺少安装包/结构不可处理时不发布。
+只有 `401/session_expired` 确认会话失效。配置、网络或资料服务错误不得当作退出；资料失败保留已有昵称头像并自动重试。协议、Cookie 和旧账号核实绑定见[统一登录](shared-auth.md)。
 
-跳过源码内容、AI 与 Cloudmersive 查毒，仍验证安装包身份、摘要、结构和下载所需信息。原子保存手动发布快照、附件、任务记录与 `manual-publish` 审计，增加 revision，取消旧活动审核任务；可显式恢复已下架但文件仍可用的插件。仅绑定当前候选，新版本仍进入原有自动审核。公共详情新增 `publicationMode`（manual/automatic），手动发布 `reviewedAt=null`，`reviewLabel` 明确标识未经自动审核或查毒。
+## 市场与下载
 
-### 历史：审核暂停开关（仅保留的 automatic 模式适用）
+| 接口 | 返回与规则 |
+| --- | --- |
+| `GET /api/plugins?q=&page=1&sort=updated` | `{items,total,page,pageSize,sort}`，每页 12 条；排序支持 `updated/downloads/favorites`，其他值回落 `updated` |
+| `GET /api/plugins/:id` | `{plugin,readme,readmePath,readmeCommit,sourceCommit,license,assets,publicationMode,reviewLabel,reviewedAt,reviewPublicReason,publishedAt}` |
+| `GET /api/plugins/:id/versions?page=1` | `{items,total,page,pageSize}`，每页 20 条，仅此前批准版本，不重复当前版本 |
+| `GET/HEAD /api/plugins/:id/download/:assetId` | 当前批准附件流 |
+| `GET/HEAD /api/plugins/:id/versions/:snapshotId/download/:assetId` | 指定历史批准附件流 |
+| `PUT /api/plugins/:id/favorite` | `{active:boolean}` → `{favorite_count,favorited}`，需要普通用户会话 |
 
-`GET /api/session` 新增布尔字段 `reviewEnabled`，用于提交页、Studio 与按钮文案显示。关闭时，新处理快照的 `publicationMode` 为 `unreviewed`，`reviewedAt` 为 null，`reviewLabel` 如实标记未经自动审核或查毒；这是正常发布记录而非管理员手动批准。`POST /api/studio/ai/test` 在关闭时返回 409/review_disabled，不发出外部请求。开关只来自服务端 REVIEW_ENABLED 环境配置，客户端不能修改。
+`Plugin` 包含 `id,source_kind,full_name,description,version,favorite_count,download_count,updated_at,author,favorited?`。公开作者目前取 GitHub 所属者；直传 SSO 投稿显示「有赞用户」，旧手机号投稿使用掩码，不返回原号码。
+
+附件字段为 `{id,name,size,sha256,packageName?,architecture?}`；历史条目为 `{id,version,publishedAt,assets}`，附件另有 `available`。摘要保留在协议中供校验，页面不显示。文件不可用时 `available=false`；实际下载仍会核验来源，列表状态不能绕过下载检查。
+
+人工模式的公开记录必须为 `human-reviewed`；`reviewedAt` 是批准快照记录的审核时间，`publishedAt` 取插件更新时间。新候选不出现在公共接口，旧批准版本可继续使用。插件下架或停用会同时阻断当前和历史下载。
+
+下载支持 HEAD、单 Range 和连接取消；只接受站内 ID，不允许传入目标 URL。成功开始的下载按短期身份去重计数，HEAD 和失败不计数。
+
+## 投稿与个人中心
+
+| 接口 | 请求 / 返回 |
+| --- | --- |
+| `POST /api/submit` | `{url}` → 202 `{pluginId,taskId,status,message}` |
+| `POST /api/plugins/:id/refresh` | 重新整理本人 GitHub 投稿 → 202 `{taskId,status}` |
+| `POST /api/submit/upload` | 首次 IPK 投稿 |
+| `POST /api/plugins/:id/upload` | 本人直传插件的新版本 |
+| `GET /api/me` | `{submissions,favorites}` |
+
+上传字段仅允许 `name`（1–80 字符）、`description`（1–500）、`tutorial`（1–20000，Markdown）和一个非空 `.ipk` `file`；四项必填，拒绝重复或未知字段。默认文件上限 32 MiB，`MAX_IPK_BYTES` 可降低；每账号存储上限 128 MiB。
+
+成功返回 202 `{pluginId,taskId,status,message}`。同一提交者的相同资料与文件返回 `status=duplicate,taskId=null`，不抢占归属、不解除下架。并发冲突/存储额度返回 409，文件超限 413，缺少存储配置 503。
+
+本人 `submissions` 含 `source_kind,status,revision,review_status,review_reason,public_reason,task_status,updated_at`；直传额外返回 `upload_name/upload_description/upload_tutorial` 预填新版本表单。内部审核理由和对象地址不返回。
+
+## Studio
+
+除登录外均要求有效管理员会话。账号与权限只读 `ADMIN_AUTH_DB`，检查 `must_change_password`；缺绑定或故障不回退本地账号。留言箱改密、删号或强制改密使旧商店会话失效。
+
+| 接口 | 请求 / 返回 |
+| --- | --- |
+| `GET /api/studio/overview` | `{counts,ai,sources,recentTasks}`；`counts.awaitingReview` 为待人工处理数量 |
+| `GET /api/studio/plugins` | `q,status,page,pageSize` → `{items,total,page,pageSize}`；默认每页 20，范围 10–100 |
+| `GET /api/studio/plugins/:id` | `{plugin,candidate,snapshot,assets,tasks,audits,upload}` |
+| `POST /api/studio/submit` | `{url}`；管理员投稿仍需审核 |
+| `POST /api/studio/submit/upload` | 管理员 IPK 投稿 |
+| `POST /api/studio/plugins/:id/upload` | 管理员更新直传插件 |
+| `POST /api/studio/plugins/:id/review` | `{revision,decision:"approve"\|"reject",reason?,internalReason?}` |
+| `GET/HEAD /api/studio/plugins/:id/review/download/:assetId` | 当前待审附件；不接受查询参数，不计入市场下载数 |
+| `POST /api/studio/plugins/:id/:action` | action 为 `sync/retry/unlist/delete/restore`，请求可含 `reason` |
+| `GET /api/studio/tasks` | 最近 200 条任务及内部依据 |
+| `GET /api/studio/logs` | 最近 100 条操作记录 |
+
+列表状态支持 `all/awaiting_review/published/in_review/waiting/rejected/removed/blocked`。`awaiting_review` 依据当前 revision 的待审记录筛选，因此旧版已上架而新版待审的插件也会进入收件箱。
+
+`candidate` 包含冻结的名称、简介、README/教程、版本、附件、revision、decision、公开及内部理由、创建和处理时间。插件详情附最近 20 条任务及 20 条相关审计；不存在返回 404。
+
+批准前再次核验文件与管理员会话。退回 `reason` 要求 5–240 字，内部备注最多 6000 字；重复、并发、已停用或版本变化返回 409。通过后 `publicationMode=human-reviewed`，退回不影响此前批准版本。
+
+兼容接口 `/manual-publish` 接受 `{confirmed:true,revision}`；人工模式只批准已准备的候选，不能免审读取新文件。`POST /api/studio/password` 返回 403/`password_managed_externally`，改密在留言箱完成。
+
+## 后台配置与保留引擎
+
+- `GET/PUT /api/studio/sources` 读取或保存 `{items:DownloadSource[]}`。
+- `GET /api/studio/sources/candidates` 返回已批准 GitHub 插件和附件供测试；不包含直传包。
+- `POST /api/studio/sources/:id/test` 接收 `{pluginId,assetId}`。第三方源须信任、停用保存、测试通过后才能启用；变更配置需重测。
+- `GET/PUT /api/studio/ai` 读取或保存 AI 设置；Key 读取仅返回掩码。
+- `POST /api/studio/ai/test` 在当前人工模式返回 409/`review_disabled`，不请求外部模型。
+
+自动与旧免审模式仅供保留实现的开发测试，配置含义见[工程决策](DECISIONS.md)。

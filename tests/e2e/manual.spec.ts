@@ -19,7 +19,7 @@ test('管理员投稿也要打开审核收件箱，先查看版本再通过上�
   const downloadWait=page.waitForEvent('download');
   await drawer.getByRole('link',{name:'下载检查',exact:true}).click();
   const file=await downloadWait; expect(file.suggestedFilename()).toBe('manual-demo.ipk');
-  await page.screenshot({path:'docs/evidence/manual-review-drawer-1280.png',fullPage:true});
+  await page.screenshot({path:test.info().outputPath('manual-review-drawer-1280.png'),fullPage:true});
   await drawer.getByRole('button',{name:'通过并上架',exact:true}).click();
   await expect(drawer).not.toBeVisible();
   expect((await request.get(`/api/plugins/${pluginId}`)).status()).toBe(200);
@@ -43,7 +43,7 @@ test('退回反馈必填、不会上架，窄屏审核抽屉可操作',async({pa
   await drawer.getByLabel('给作者的反馈').fill('请补充支持的路由器型号及卸载方法');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   const box=await drawer.boundingBox(); expect(box?.y).toBe(0); expect((box?.y||0)+(box?.height||0)).toBeLessThanOrEqual(812);
-  await page.screenshot({path:'docs/evidence/manual-review-drawer-375.png'});
+  await page.screenshot({path:test.info().outputPath('manual-review-drawer-375.png')});
   await drawer.getByRole('button',{name:'退回修改',exact:true}).click();
   await expect(drawer).not.toBeVisible();
   expect((await request.get(`/api/plugins/${pluginId}`)).status()).toBe(404);

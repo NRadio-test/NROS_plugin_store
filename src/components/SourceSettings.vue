@@ -2,7 +2,6 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { api, errorMessage, post, put, type DownloadSource, type SourceCandidate } from '../lib/api'
 import { formatSize } from '../lib/format'
-import { toast } from '../lib/toast'
 import AsyncState from './AsyncState.vue'
 import AppIcon from './AppIcon.vue'
 import AppBadge from './AppBadge.vue'
@@ -71,7 +70,6 @@ async function save() {
     await load()
   } catch (caught) {
     feedback.value = { ok: false, message: errorMessage(caught) }
-    toast.error('保存未生效', errorMessage(caught))
   } finally {
     busy.value = ''
   }

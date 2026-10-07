@@ -18,7 +18,6 @@ const props = withDefaults(defineProps<{
   title?: string
 }>(), { variant: 'secondary', size: 'md', type: 'button', icon: undefined, iconRight: undefined, to: '', href: '', title: '' })
 
-/** 变体映射到设计系统的按钮层级：主操作用信号青，其余靠表面层级区分。 */
 const VARIANT_CLASS: Record<string, string> = {
   primary: 'btn--signal',
   secondary: 'btn--raised',

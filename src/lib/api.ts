@@ -1,12 +1,11 @@
 /** 前端 API 客户端：统一请求、错误与共享视图状态。 */
 import { reactive } from 'vue'
-import { statusMeta } from './status'
 
 export interface Plugin {
   id: string
   full_name: string
   source_kind?: 'github' | 'upload'
-  /** 公开作者：GitHub 投稿取仓库所属者，直传取提交者掩码（profile 上线后替换）。 */
+  /** 公开作者标签。 */
   author?: string
   description: string | null
   version: string | null
@@ -164,10 +163,42 @@ export const put = <T>(path: string, body: unknown) => api<T>(path, { method: 'P
 
 export const session = reactive<Session & { loaded: boolean; error: string }>({ user: null, admin: null, loaded: false, error: '' })
 
+let sessionRevision = 0
+let profileSync: { userId: string; nextAt: number; pending?: Promise<void> } | undefined
+
+/** Presentation refresh never becomes a replacement for checking the shared session. */
+export function syncAccountProfile(): Promise<void> {
+  const userId = session.user?.id
+  if (!session.ssoEnabled || !userId || session.error) return Promise.resolve()
+  if (profileSync?.userId !== userId) profileSync = { userId, nextAt: 0 }
+  const state = profileSync
+  if (state.pending) return state.pending
+  if (Date.now() < state.nextAt) return Promise.resolve()
+  state.nextAt = Date.now() + 60000
+  const revision = sessionRevision
+  state.pending = (async () => {
+    try {
+      const result = await post<{ user: Session['user'] }>('/api/account/profile/sync')
+      if (revision !== sessionRevision || session.user?.id !== userId || result.user?.id !== userId) return
+      session.user = result.user
+    } catch (error) {
+      // A failed profile lookup leaves the last verified identity and presentation intact.
+      // Only confirmed expiry triggers another session check and the signed-out UI.
+      if (revision === sessionRevision && session.user?.id === userId && error instanceof ApiError && error.code === 'session_expired') await loadSession()
+    } finally { state.pending = undefined }
+  })()
+  return state.pending
+}
+
 export async function loadSession(autoSSO = false) {
+  const revision = ++sessionRevision
   try {
-    Object.assign(session, { ssoEnabled: false }, await api<Session>('/api/session'))
+    const result = await api<Session>('/api/session')
+    if (revision !== sessionRevision) return
+    Object.assign(session, { ssoEnabled: false }, result)
     session.error = ''
+    if (!session.user) profileSync = undefined
+    else void syncAccountProfile()
     if (session.user) sessionStorage.removeItem('plugin-sso-checked')
     if (autoSSO && session.ssoEnabled && !session.user && !location.pathname.startsWith('/studio') && !sessionStorage.getItem('plugin-sso-checked')) {
       sessionStorage.setItem('plugin-sso-checked', String(Date.now()))
@@ -175,16 +206,14 @@ export async function loadSession(autoSSO = false) {
       location.assign(result.authorizationUrl)
     }
   } catch (error) {
+    if (revision !== sessionRevision) return
     if (error instanceof ApiError && typeof error.ssoEnabled === 'boolean') session.ssoEnabled = error.ssoEnabled
     if (session.ssoEnabled) session.user = null
     session.error = errorMessage(error)
   } finally {
-    session.loaded = true
+    if (revision === sessionRevision) session.loaded = true
   }
 }
 
 export const errorMessage = (error: unknown) =>
   error instanceof Error && error.message ? error.message : '请求失败，请稍后重试。'
-
-/** 兼容旧调用点：状态中文文案统一由 lib/status.ts 提供。 */
-export const statusLabel = (status?: string) => statusMeta(status).label

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { api, errorMessage, type StudioOverview } from '../lib/api'
+import { api, errorMessage, session, type StudioOverview } from '../lib/api'
 import { statusMeta } from '../lib/status'
 import { formatNumber, formatRelative } from '../lib/format'
 import AsyncState from './AsyncState.vue'
@@ -31,12 +31,12 @@ onMounted(load)
 const tiles = () => {
   const counts = data.value?.counts
   return [
-    { key: 'plugins', label: '收录插件', value: counts?.plugins ?? 0, icon: 'package' as const, tone: '' },
-    { key: 'published', label: '已上架', value: counts?.published ?? 0, icon: 'check-circle' as const, tone: 'success' },
-    { key: 'awaitingReview', label: '等待人工审核', value: counts?.awaitingReview ?? 0, icon: 'activity' as const, tone: '' },
-    { key: 'waiting', label: '等待材料或配置', value: counts?.waiting ?? 0, icon: 'clock' as const, tone: 'warning' },
-    { key: 'rejected', label: '已退回', value: counts?.rejected ?? 0, icon: 'x-circle' as const, tone: 'danger' },
-    { key: 'blocked', label: '已停用', value: counts?.blocked ?? 0, icon: 'ban' as const, tone: 'danger' },
+    { key: 'plugins', label: '全部插件', value: counts?.plugins ?? 0 },
+    { key: 'published', label: '已上架', value: counts?.published ?? 0 },
+    { key: 'awaitingReview', label: '等待人工审核', value: counts?.awaitingReview ?? 0 },
+    { key: 'waiting', label: '待处理', value: counts?.waiting ?? 0 },
+    { key: 'rejected', label: '已退回', value: counts?.rejected ?? 0 },
+    { key: 'blocked', label: '已停用', value: counts?.blocked ?? 0 },
   ]
 }
 </script>
@@ -62,13 +62,18 @@ const tiles = () => {
             <AppButton size="sm" icon="refresh" @click="load">刷新</AppButton>
           </header>
           <div class="card__body ov__config">
-            <div class="ov__config-row">
+            <div v-if="session.reviewMode === 'manual' || session.reviewEnabled === false" class="ov__config-row">
+              <span class="ov__config-icon ov__config-icon--ok"><AppIcon name="shield-check" :size="16" /></span>
+              <div class="ov__config-text"><p class="ov__config-title">审核方式</p></div>
+              <AppBadge variant="neutral">{{ session.reviewMode === 'manual' ? '人工审核' : '审核已关闭' }}</AppBadge>
+            </div>
+            <div v-else class="ov__config-row">
               <span class="ov__config-icon" :class="data.ai.configured ? 'ov__config-icon--ok' : 'ov__config-icon--warn'">
                 <AppIcon :name="data.ai.configured ? 'sparkles' : 'settings'" :size="16" />
               </span>
               <div class="ov__config-text">
-                <p class="ov__config-title">自动审核（备用）</p>
-                <p class="ov__config-sub">{{ data.ai.configured ? `${data.ai.model} · ${data.ai.baseUrl}` : '已停用' }}</p>
+                <p class="ov__config-title">自动审核</p>
+                <p v-if="data.ai.configured" class="ov__config-sub">{{ data.ai.model }}</p>
               </div>
               <AppBadge :variant="data.ai.configured ? 'success' : 'warning'" dot>{{ data.ai.configured ? '已配置' : '待配置' }}</AppBadge>
             </div>
@@ -107,16 +112,15 @@ const tiles = () => {
               <span class="stat__value">{{ formatNumber(data.counts.favorites) }}</span>
             </div>
             <div class="stat">
-              <span class="stat__label">下载尝试</span>
+              <span class="stat__label">下载次数</span>
               <span class="stat__value">{{ formatNumber(data.counts.downloads) }}</span>
-              <span class="stat__meta">成功开始的下载</span>
             </div>
             <div class="stat">
-              <span class="stat__label">识别档案</span>
+              <span class="stat__label">用户数</span>
               <span class="stat__value">{{ formatNumber(data.counts.users) }}</span>
             </div>
             <div class="stat">
-              <span class="stat__label">已下架 / 已删除</span>
+              <span class="stat__label">已下架</span>
               <span class="stat__value">{{ formatNumber(data.counts.removed) }}</span>
             </div>
           </div>
@@ -140,7 +144,7 @@ const tiles = () => {
           <div v-for="task in data.recentTasks" :key="task.id" class="ov__task">
             <AppBadge :variant="statusMeta(task.status).tone" dot>{{ statusMeta(task.status).label }}</AppBadge>
             <span class="ov__task-name">{{ task.full_name || task.plugin_id }}</span>
-            <span class="ov__task-reason">{{ task.public_reason || '暂无公开理由' }}</span>
+            <span class="ov__task-reason">{{ task.public_reason }}</span>
             <span class="ov__task-time">{{ formatRelative(task.created_at) }}</span>
           </div>
         </div>

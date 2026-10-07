@@ -26,7 +26,7 @@ async function login() {
     await post('/api/login', { phone: phone.value })
     phone.value = ''
     await loadSession()
-    toast.success('已进入插件档案')
+    toast.success('已登录')
     const next = String(route.query.next || '/me')
     const safe = next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')
     await router.replace(safe ? next : '/me')
@@ -50,7 +50,7 @@ async function login() {
         <p v-if="session.error || (session.ssoEnabled && error)" role="alert">{{ error || session.error }}</p>
         <AppField
           v-if="session.loaded && !session.error && !session.ssoEnabled"
-          label="张导小店绑定手机号"
+          label="手机号"
           for-id="phone"
           :error="error"
           hint="非内地号码需加国际区号。"

@@ -11,7 +11,7 @@ export function publicHttps(value: string): URL | null {
   } catch { return null }
 }
 
-/** 只渲染已审核的 GitHub 展示快照，不执行仓库 HTML。图片限 GitHub 内容域名。 */
+/** 净化仓库 README 与上传教程；图片限 GitHub 内容域名，不执行作者 HTML。 */
 export function renderReadme(markdown: string, fullName: string, commit: string, path: string, uploaded = false): string {
   const repository = fullName.split('/').map(encodeURIComponent).join('/')
   const snapshotPath = path.split('/').map(encodeURIComponent).join('/')

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-const DEFAULT_DESCRIPTION = '浏览并下载通过自动静态审核的 GitHub Release IPK 插件；源码与安装包始终由作者发布在 GitHub。'
+const DEFAULT_DESCRIPTION = '浏览、下载和提交 IPK 插件。'
 
 export const router = createRouter({
   history: createWebHistory(),

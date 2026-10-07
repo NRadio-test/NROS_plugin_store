@@ -8,7 +8,7 @@
 
 认证服务的站点 ID 为 `plugin`，登记回调为 `https://plugin.zdwifi.com/api/auth/callback`，`identity_fields=[]`。本站不请求 openId、手机号或商家权限，不需要中央用户库绑定、有赞密钥或中转密钥。
 
-部署前需确认插件站 Worker Secret `SSO_CLIENT_SECRET` 与中央 `SSO_CLIENT_KEYS.plugin` 一致。密钥只保存在服务端 Secret 或被 Git 忽略的本地配置中，不能放进 vars、前端或 Git。此次本地适配没有读取或更改实际密钥，也没有验证生产密钥是否匹配。
+部署前需确认插件站 Worker Secret `SSO_CLIENT_SECRET` 与中央 `SSO_CLIENT_KEYS.plugin` 一致。密钥只保存在服务端 Secret 或被 Git 忽略的本地配置中，不能放进 vars、前端或 Git。
 
 ## 本站接口
 
@@ -17,7 +17,7 @@
 | `POST /api/login` | `{next,silent?}`；映射到中央 `start` 的 `interactive: !silent`，返回授权地址并设置十分钟浏览器绑定 Cookie |
 | `GET /api/auth/callback` | 校验浏览器 Cookie、state、期限及唯一参数；由后端使用 PKCE 交换一次性票据，设置本站 Cookie |
 | `GET /api/session` | 实时中央 `check`，返回公开资料及独立管理员状态；不向前端提供会话 token |
-| `POST /api/account/profile/sync` | 调用中央 `profile` 获取昵称、头像；资料失败不撤销有效身份 |
+| `POST /api/account/profile/sync` | 页面自动调用中央 `profile` 获取昵称、头像；资料失败不撤销有效身份 |
 | `POST /api/logout` | 撤销当前中央会话及关联的站点会话；成功后清除本站用户 Cookie |
 | `POST /api/studio/legacy-link` | 保留人工核实后绑定旧档案的管理接口，目标必须是本站已有的已验证全局用户引用 |
 
@@ -25,9 +25,13 @@
 
 每次受保护请求实时验证中央会话，不缓存成功结果，不另行签发独立于中央会话的长效用户会话。首次打开和重新激活页面会尝试静默复用中央登录；用户退出后，关联网站的后续验证会失败。管理员密码会话仍独立管理。
 
+确认登录后，前端自动刷新资料并同时更新导航栏和个人中心。可见页面每分钟重新验证会话并尝试同步，同一页面一分钟内合并重复资料请求；后台标签页停止轮询，重新激活时继续。没有手动同步按钮或同步提示弹窗。资料请求失败保留已有资料，下一轮自动重试；退出或切换账号后的迟到响应不得覆盖当前用户。接口限流为每个用户每分钟 10 次，中央服务仍按协议复用 60 秒内的资料。
+
 ## 错误与数据边界
 
-只有中央 `401 session_expired` 才表示会话已失效，本站清除对应用户 Cookie。`401 invalid_client`、配置错误、404、服务中断均作为服务不可用处理，不误报退出成功、不清除仍可能有效的 Cookie。退出只有 `{ok:true}` 或确认会话过期才视为完成。资料同步的 `503 profile_unavailable` 保留登录，允许稍后重试。
+只有中央 `401 session_expired` 才表示会话已失效，本站清除对应用户 Cookie。`401 invalid_client`、配置错误、404、服务中断均作为服务不可用处理，不误报退出成功、不清除仍可能有效的 Cookie。退出只有 `{ok:true}` 或确认会话过期才视为完成。资料同步的 `503 profile_unavailable` 保留登录并自动重试。
+
+`profile_unavailable` 仅用于中央明确返回的资料读取失败；网络失败、超时、无效响应和凭据配置异常保留各自错误码。插件 Worker 输出 `sso_profile_failed` 事件、错误码和上游 HTTP 状态，不记录 Cookie、密钥、请求体或有赞响应。若中央明确返回 `profile_unavailable`，进一步原因需在认证服务的店铺令牌、中转资料查询及资料存储链路中排查；插件站没有有赞密钥，不自行查询有赞或补造昵称头像。
 
 收藏、投稿、文件、审核继续使用原商店 DB、R2 和队列。`users` 的 SSO 行只是中央 UUID 的业务外键引用，已有全局 ID 和业务关联原样保留；不按手机号合并、不生成替代身份。
 
@@ -37,7 +41,7 @@ Studio 继续从 `ADMIN_AUTH_DB` 只读认证留言箱管理员，不接收有�
 
 ## 迁移与本地验证
 
-本次适配复用现有 `0003_shared_auth.sql`，没有新增数据库迁移。已有 SSO 数据无需重建。旧中央服务签发且新服务不认可的会话会被视为过期，重新登录即可；账号数据不随 Cookie 清除。
+统一用户引用使用 `0003_shared_auth.sql`；已有 SSO 数据无需重建。旧中央服务签发且新服务不认可的会话会被视为过期，重新登录即可；账号数据不随 Cookie 清除。
 
 常规验证：`pnpm typecheck`、`pnpm lint`、`pnpm test`、`pnpm build`。独立认证 Worker 与插件 Worker 的本地协议联调：
 

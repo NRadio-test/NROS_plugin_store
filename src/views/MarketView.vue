@@ -36,7 +36,6 @@ let sequence = 0
 let timer: ReturnType<typeof setTimeout>
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)))
 const searching = computed(() => search.value.trim().length > 0)
-const sortLabel = computed(() => SORTS.find(item => item.key === sort.value)!.label)
 
 async function load() {
   const current = ++sequence
@@ -100,8 +99,7 @@ void load()
         <template v-else-if="error">加载失败。</template>
         <template v-else>
           <span><b>{{ formatNumber(total) }}</b> 个插件</span>
-          <span aria-hidden="true">·</span>
-          <span>{{ searching ? `匹配「${search.trim()}」` : `按${sortLabel}排序` }}</span>
+          <template v-if="searching"><span aria-hidden="true">·</span><span>匹配「{{ search.trim() }}」</span></template>
         </template>
       </div>
       <div v-if="!loading && !error && plugins.length" class="market__columns" aria-hidden="true"><span>编号 / 插件</span><span>收藏 / 下载</span><span>操作</span></div>

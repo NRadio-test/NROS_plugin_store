@@ -65,7 +65,7 @@ async function download() {
     <span v-if="index !== undefined" class="pkg__index mono" aria-hidden="true">{{ String(index).padStart(2, '0') }}</span>
     <div class="pkg__main">
       <h2 class="pkg__name"><RouterLink :to="`/plugins/${plugin.id}`"><HighlightedText :text="name" :query="query" /></RouterLink></h2>
-      <p class="pkg__desc"><HighlightedText :text="plugin.description || '暂无描述'" :query="query" /></p>
+      <p v-if="plugin.description" class="pkg__desc"><HighlightedText :text="plugin.description" :query="query" /></p>
       <div class="pkg__meta">
         <span class="pkg__source">{{ plugin.source_kind === 'upload' ? 'IPK 直传' : 'GitHub' }}</span>
         <span class="pkg__author">作者 {{ plugin.author || owner }}</span>

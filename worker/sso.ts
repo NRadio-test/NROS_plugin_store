@@ -26,9 +26,13 @@ function issuer(env: Env) {
 type AuthOperation = 'start' | 'exchange' | 'check' | 'profile' | 'logout';
 export async function authCall(env: Env, operation: AuthOperation, body: unknown, allowExpired = false) {
  if (!env.SSO_CLIENT_SECRET || env.SSO_CLIENT_SECRET.length < 32 || env.SSO_CLIENT_SECRET.length > 512 || [...env.SSO_CLIENT_SECRET].some(c => /\s/.test(c) || c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127)) throw new AppError(503, '统一登录服务端凭据尚未配置', 'configuration_error');
+ let upstreamStatus: number | undefined;
+ let readingResponse = false;
  try {
   const request = new Request(issuer(env) + '/api/auth/internal/' + operation, { method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(operation === 'profile' ? 45000 : 8000), headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + env.SSO_CLIENT_SECRET }, body: JSON.stringify(body) });
   const response = env.AUTH_SERVICE ? await env.AUTH_SERVICE.fetch(request) : await fetch(request);
+  upstreamStatus = response.status;
+  readingResponse = true;
   const reader = response.body?.getReader(); let size = 0; const chunks: Uint8Array[] = [];
   if (reader) try { while (true) { const { done, value } = await reader.read(); if (done) break; size += value.length; if (size > 8192) { await reader.cancel(); throw Error('body'); } chunks.push(value); } } finally { reader.releaseLock(); }
   const bytes = new Uint8Array(size); let offset = 0; for (const value of chunks) { bytes.set(value, offset); offset += value.length; }
@@ -42,10 +46,17 @@ export async function authCall(env: Env, operation: AuthOperation, body: unknown
    if (result.code === 'invalid_client' || result.code === 'configuration_error') throw new AppError(503, '统一登录配置异常，请联系管理员', result.code);
    if (response.status === 404 || result.code === 'not_found') throw new AppError(503, '统一登录接口不可用，请联系管理员', 'auth_unavailable');
    if (response.status === 400 && ['invalid_ticket', 'login_request_expired'].includes(result.code)) throw new AppError(400, '登录请求已失效，请重新登录', result.code);
-   throw new AppError(503, operation === 'profile' ? '有赞资料暂不可用，请稍后重试' : '统一登录暂不可用，请稍后重试', operation === 'profile' ? 'profile_unavailable' : 'auth_unavailable');
+   if (operation === 'profile' && response.status === 503 && result.code === 'profile_unavailable') throw new AppError(503, '统一登录服务未能获取有赞昵称和头像', 'profile_unavailable');
+   throw new AppError(503, '统一登录暂不可用，请稍后重试', 'auth_unavailable');
   }
   return result;
- } catch (error) { if (error instanceof AppError) throw error; throw new AppError(503, operation === 'profile' ? '有赞资料暂不可用，请稍后重试' : '统一登录暂不可用，请稍后重试', operation === 'profile' ? 'profile_unavailable' : 'auth_unavailable'); }
+ } catch (error) {
+  const code = error instanceof Error && ['TimeoutError', 'AbortError'].includes(error.name) ? 'auth_timeout' : readingResponse ? 'auth_invalid_response' : 'auth_unavailable';
+  const failure = error instanceof AppError ? error : new AppError(503, '统一登录暂不可用，请稍后重试', code);
+  // Only fixed error codes and HTTP status. Never include requests, tokens or upstream messages.
+  if (operation === 'profile' && failure.status >= 500) console.warn(JSON.stringify({ event: 'sso_profile_failed', code: failure.code, upstreamStatus: upstreamStatus ?? null }));
+  throw failure;
+ }
 }
 export function ssoCookie(env: Env, kind: 'user' | 'sso_attempt', value: string, age: number) {
  return (env.APP_ENV === 'production' ? '__Host-' : '') + 'plugin_store_' + kind + '=' + value + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + age + (env.APP_ENV === 'production' ? '; Secure' : '');

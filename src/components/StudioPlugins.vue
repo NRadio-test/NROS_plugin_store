@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { api, errorMessage, post, session, type StudioPlugin, type StudioPluginDetail } from '../lib/api'
-import { statusMeta, isActive } from '../lib/status'
+import { statusMeta, isActive, auditActionLabel } from '../lib/status'
 import { formatDateTime, formatNumber, formatSize, formatRelative, shortId } from '../lib/format'
 import { toast } from '../lib/toast'
 import AsyncState from './AsyncState.vue'
@@ -27,7 +27,7 @@ const FILTERS = [
   { key: 'awaiting_review', label: '待人工审核' },
   { key: 'in_review', label: '整理中' },
   { key: 'waiting', label: '等待处理' },
-  { key: 'rejected', label: '已拒绝' },
+  { key: 'rejected', label: '已退回' },
   { key: 'removed', label: '已下架' },
   { key: 'blocked', label: '已停用' },
 ]
@@ -38,7 +38,7 @@ const ACTION_META: Record<Action, { label: string; title: string; confirm: strin
   retry: { label: '重新整理', title: '重新整理', confirm: '重新整理', danger: false, hint: '重新整理当前版本，之后进入人工审核。' },
   unlist: { label: '下架', title: '下架插件', confirm: '确认下架', danger: true, hint: '立即移出市场并禁止下载，不可自动恢复。' },
   delete: { label: '删除', title: '删除插件', confirm: '确认删除', danger: true, hint: '清理快照、附件与收藏，仅保留提交状态与原因。' },
-  restore: { label: '显式恢复', title: '显式恢复', confirm: '恢复并提交审核', danger: false, hint: '重新进入审核，通过后上架。' },
+  restore: { label: '恢复插件', title: '恢复插件', confirm: '恢复并提交审核', danger: false, hint: '重新进入审核，通过后上架。' },
 }
 
 const items = ref<StudioPlugin[]>([])
@@ -184,7 +184,7 @@ void load()
                     <span class="sp__repo-meta">
                       <span>{{ plugin.source_kind === 'upload' ? 'IPK 直传' : 'GitHub 仓库' }}</span>
                     </span>
-                    <span class="sp__repo-reason">{{ plugin.public_reason || '—' }}</span>
+                    <span v-if="plugin.public_reason" class="sp__repo-reason">{{ plugin.public_reason }}</span>
                   </div>
                 </td>
                 <td>
@@ -192,7 +192,7 @@ void load()
                     <AppBadge :variant="statusMeta(plugin.status).tone" :dot="isActive(plugin.status)" :pulse="isActive(plugin.status)">
                       <AppIcon :name="statusMeta(plugin.status).icon" :size="12" />{{ statusMeta(plugin.status).label }}
                     </AppBadge>
-                    <AppBadge v-if="plugin.blocked" variant="danger"><AppIcon name="ban" :size="12" />禁止自动恢复</AppBadge>
+                    <AppBadge v-if="plugin.blocked" variant="danger"><AppIcon name="ban" :size="12" />已停用</AppBadge>
                     <span v-if="plugin.task_status && isActive(plugin.task_status) && plugin.task_status !== plugin.status" class="sp__task">
                       任务：{{ statusMeta(plugin.task_status).label }}
                     </span>
@@ -213,7 +213,7 @@ void load()
                       <button type="button" class="menu__item menu__item--danger" role="menuitem" @click="ask(plugin, 'delete')"><AppIcon name="trash" :size="15" />删除</button>
                       <template v-if="plugin.blocked || ['deleted', 'unlisted', 'removed'].includes(plugin.status || '')">
                         <div class="menu__sep" />
-                        <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'restore')"><AppIcon name="rotate-ccw" :size="15" />显式恢复</button>
+                        <button type="button" class="menu__item" role="menuitem" @click="ask(plugin, 'restore')"><AppIcon name="rotate-ccw" :size="15" />恢复插件</button>
                       </template>
                     </AppMenu>
                   </div>
@@ -245,7 +245,7 @@ void load()
         </div>
         <dl class="sp__confirm">
           <div><dt>当前状态</dt><dd><AppBadge :variant="statusMeta(pending.plugin.status).tone">{{ statusMeta(pending.plugin.status).label }}</AppBadge></dd></div>
-          <div><dt>已批准版本</dt><dd class="mono small">{{ pending.plugin.version || '尚无' }}</dd></div>
+          <div><dt>已上架版本</dt><dd class="mono small">{{ pending.plugin.version || '尚无' }}</dd></div>
         </dl>
         <AppField label="操作原因（对用户可见）" for-id="studio-reason">
           <textarea id="studio-reason" v-model="reason" class="textarea" maxlength="300" rows="3" :disabled="!!busy" />
@@ -282,26 +282,26 @@ void load()
 
       <template v-else-if="detail">
         <div class="sp__drawer-facts">
-          <div><span>来源</span><span class="mono">{{ detail.plugin.source_kind === 'upload' ? '直接上传 IPK' : 'repository ID ' + detail.plugin.repository_id }}</span></div>
-          <div><span>revision</span><span class="mono">{{ detail.plugin.revision }}</span></div>
+          <div><span>来源</span><span class="mono">{{ detail.plugin.source_kind === 'upload' ? '直接上传 IPK' : 'GitHub 仓库' }}</span></div>
+          <div><span>版本记录</span><span class="mono">{{ detail.plugin.revision }}</span></div>
           <div><span>提交者</span><span class="mono">{{ detail.plugin.submitter_id ? shortId(detail.plugin.submitter_id) : '管理员' }}</span></div>
           <div><span>创建时间</span><span>{{ formatDateTime(detail.plugin.created_at) }}</span></div>
           <div><span>最近检查</span><span>{{ detail.plugin.checked_at ? formatDateTime(detail.plugin.checked_at) : '尚未检查' }}</span></div>
           <div><span>收藏 / 下载</span><span class="tnum">{{ formatNumber(detail.plugin.favorite_count) }} / {{ formatNumber(detail.plugin.download_count) }}</span></div>
         </div>
 
-        <p class="sp__drawer-reason">{{ detail.plugin.public_reason || '—' }}</p>
+        <p v-if="detail.plugin.public_reason" class="sp__drawer-reason">{{ detail.plugin.public_reason }}</p>
 
         <nav class="tabs sp__drawer-tabs" role="tablist" aria-label="插件管理详情" @keydown="navigateTabs">
           <button id="studio-tab-snapshot" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'snapshot'" :tabindex="detailTab === 'snapshot' ? 0 : -1" aria-controls="studio-panel-snapshot" @click="detailTab = 'snapshot'">
-            <AppIcon name="shield-check" :size="15" />已批准快照
+            <AppIcon name="shield-check" :size="15" />已上架版本
           </button>
           <button id="studio-tab-tasks" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'tasks'" :tabindex="detailTab === 'tasks' ? 0 : -1" aria-controls="studio-panel-tasks" @click="detailTab = 'tasks'">
             <AppIcon name="activity" :size="15" />任务记录
             <span class="tabs__count">{{ detail.tasks.length }}</span>
           </button>
           <button id="studio-tab-audits" type="button" role="tab" class="tabs__item" :aria-selected="detailTab === 'audits'" :tabindex="detailTab === 'audits' ? 0 : -1" aria-controls="studio-panel-audits" @click="detailTab = 'audits'">
-            <AppIcon name="history" :size="15" />审计
+            <AppIcon name="history" :size="15" />操作记录
           </button>
         </nav>
 
@@ -309,16 +309,19 @@ void load()
           <template v-if="detail.snapshot">
             <div class="sp__kv">
               <div><span>结论</span><span><AppBadge :variant="statusMeta(detail.snapshot.verdict).tone">{{ statusMeta(detail.snapshot.verdict).label }}</AppBadge></span></div>
-              <div><span>审核版本</span><span class="mono small">{{ detail.snapshot.review_version }}</span></div>
-              <div><span>快照时间</span><span>{{ formatDateTime(detail.snapshot.created_at) }}</span></div>
-              <div><span>快照 revision</span><span class="mono">{{ detail.snapshot.revision }}</span></div>
+              <div><span>批准时间</span><span>{{ formatDateTime(detail.snapshot.created_at) }}</span></div>
+              <div><span>版本记录</span><span class="mono">{{ detail.snapshot.revision }}</span></div>
             </div>
-            <p class="sp__block-title">公开理由</p>
-            <p class="sp__block-text">{{ detail.snapshot.public_reason || '—' }}</p>
-            <p class="sp__block-title">内部依据（仅管理员可见）</p>
-            <pre class="sp__internal">{{ detail.snapshot.internal_reason || '—' }}</pre>
+            <template v-if="detail.snapshot.public_reason">
+              <p class="sp__block-title">公开理由</p>
+              <p class="sp__block-text">{{ detail.snapshot.public_reason }}</p>
+            </template>
+            <template v-if="detail.snapshot.internal_reason">
+              <p class="sp__block-title">内部备注</p>
+              <pre class="sp__internal">{{ detail.snapshot.internal_reason }}</pre>
+            </template>
 
-            <p class="sp__block-title">已批准附件</p>
+            <p class="sp__block-title">安装包</p>
             <div class="table-wrap">
               <table class="table">
                 <thead>
@@ -330,50 +333,50 @@ void load()
                       <span class="mono small">{{ asset.name }}</span>
                     </td>
                     <td class="small">{{ asset.architecture || '—' }}</td>
-                    <td class="tnumsmall small">{{ formatSize(asset.size) }}</td>
+                    <td class="tnum small">{{ formatSize(asset.size) }}</td>
                     <td>
                       <AppBadge :variant="asset.disabled ? 'danger' : 'success'">{{ asset.disabled ? '已停用' : '可下载' }}</AppBadge>
                     </td>
                   </tr>
-                  <tr v-if="!detail.assets.length"><td colspan="4" class="muted">—</td></tr>
+                  <tr v-if="!detail.assets.length"><td colspan="4" class="muted">暂无安装包</td></tr>
                 </tbody>
               </table>
             </div>
           </template>
-          <p v-else class="muted small">—</p>
+          <p v-else class="muted small">暂无已上架版本</p>
         </section>
 
         <section v-else-if="detailTab === 'tasks'" :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
           <article v-for="task in detail.tasks" :key="task.id" class="sp__task-card">
             <div class="row gap-2 wrap">
               <AppBadge :variant="statusMeta(task.status).tone" dot>{{ statusMeta(task.status).label }}</AppBadge>
-              <span class="mono micro muted">revision {{ task.revision }} · 尝试 {{ task.attempts }} 次</span>
+              <span class="mono micro muted">版本记录 #{{ task.revision }} · 尝试 {{ task.attempts }} 次</span>
             </div>
-            <p class="small" style="margin-top: 8px">{{ task.public_reason || '—' }}</p>
+            <p v-if="task.public_reason" class="small" style="margin-top: 8px">{{ task.public_reason }}</p>
             <details v-if="task.internal_reason">
               <summary>内部依据</summary>
               <pre class="sp__internal">{{ task.internal_reason }}</pre>
             </details>
             <p class="micro muted" style="margin-top: 6px">{{ formatDateTime(task.created_at) }} · 更新于 {{ formatDateTime(task.updated_at) }}</p>
           </article>
-          <p v-if="!detail.tasks.length" class="muted small">—</p>
+          <p v-if="!detail.tasks.length" class="muted small">暂无任务记录</p>
         </section>
 
         <section v-else :id="`studio-panel-${detailTab}`" class="sp__drawer-section" role="tabpanel" :aria-labelledby="`studio-tab-${detailTab}`">
           <article v-for="entry in detail.audits" :key="entry.id" class="sp__audit">
             <AppIcon name="history" :size="15" />
-            <span class="grow">{{ entry.action }}</span>
+            <span class="grow">{{ auditActionLabel(entry.action) }}</span>
             <span class="mono micro muted">{{ shortId(entry.admin_id || '', 8) }}</span>
             <span class="micro muted">{{ formatDateTime(entry.created_at) }}</span>
           </article>
-          <p v-if="!detail.audits.length" class="muted small">—</p>
+          <p v-if="!detail.audits.length" class="muted small">暂无操作记录</p>
         </section>
       </template>
 
       <template #footer>
         <AppButton v-if="detail" variant="ghost" icon="refresh" @click="openDetail(detail.plugin.id)">重新读取</AppButton>
         <AppButton v-if="detail?.plugin.source_kind === 'upload'" variant="primary" icon="upload" @click="uploadOpen = true">上传新版本</AppButton>
-        <AppButton v-if="detail" variant="secondary" icon="external-link" :href="`/plugins/${detail.plugin.id}`">打开公开页</AppButton>
+        <AppButton v-if="detail?.plugin.status === 'published' && !detail.plugin.blocked" variant="secondary" icon="external-link" :href="`/plugins/${detail.plugin.id}`">打开公开页</AppButton>
       </template>
     </AppDrawer>
   </section>
@@ -382,8 +385,6 @@ void load()
 <style scoped>
 .sp { display: flex; flex-direction: column; gap: 16px; }
 .sp__head { display: flex; align-items: flex-start; justify-content: flex-end; gap: 16px; flex-wrap: wrap; }
-.sp__title { font-size: var(--fs-h2); }
-.sp__desc { margin-top: 5px; max-width: 88ch; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.65; }
 .sp__toolbar { display: grid; grid-template-columns: minmax(0, 440px) auto; justify-content: space-between; gap: 10px; align-items: center; }
 .sp__search { min-width: 0; }
 .sp__filters { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -399,8 +400,6 @@ void load()
 .sp__repo-reason { font-size: var(--fs-sm); color: var(--text-3); max-width: 46ch; }
 .sp__status { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .sp__task { font-size: var(--fs-cap); color: var(--text-3); }
-.sp__menu-wrap { position: relative; }
-.sp__menu { top: calc(100% + 6px); right: 0; }
 .sp__pager { margin-top: 14px; }
 .sp__confirm { display: flex; flex-direction: column; gap: 0; margin: 14px 0 4px; }
 .sp__confirm > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: center; }

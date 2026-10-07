@@ -10,12 +10,12 @@ CLOUDMERSIVE_API_KEY=
 # 标准 TAR 扫描请求上限；免费套餐先按 3.5 MB 限制。
 CLOUDMERSIVE_MAX_SCAN_BYTES=3500000
 
-# false 暂停 AI / 查毒；true 恢复自动审核。
+# 人工审核；自动引擎需同时设置 REVIEW_MODE=automatic 和 REVIEW_ENABLED=true。
 REVIEW_MODE=manual
 REVIEW_ENABLED=false
 
-# Enable after the UV issuer is ready; this is a separate client credential,
-# never the Youzan application secret or relay secret.
+# 本地默认关闭 SSO；联调独立认证 Worker 时启用并配置站点凭据。
+# SSO_CLIENT_SECRET 不是有赞应用密钥或中转密钥。
 SSO_ENABLED=false
 SSO_ORIGIN=https://auth.zdwifi.com
 SSO_CLIENT_SECRET=

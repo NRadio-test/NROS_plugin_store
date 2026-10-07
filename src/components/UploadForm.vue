@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
 import { api, errorMessage } from '../lib/api'
-import { toast } from '../lib/toast'
 import AppField from './AppField.vue'
 import AppButton from './AppButton.vue'
 import { formatSize } from '../lib/format'
@@ -33,7 +32,7 @@ async function submit() {
     file.value = null
     if (fileInput.value) fileInput.value.value = ''
     emit('submitted')
-  } catch (caught) { error.value = errorMessage(caught); toast.error('上传未成功', error.value) }
+  } catch (caught) { error.value = errorMessage(caught) }
   finally { busy.value = false }
 }
 </script>

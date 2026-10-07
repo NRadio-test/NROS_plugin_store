@@ -26,28 +26,16 @@ img, svg { display: block; max-width: 100%; }
 :focus:not(:focus-visible) { outline: none; }
 
 .icon { width: 19px; height: 19px; flex: none; fill: currentColor; }
-.icon--nav { width: 16px; height: 16px; }
-.icon--sm { width: 15px; height: 15px; }
 
 .mono { font-family: var(--font-mono); font-size: var(--fs-sm); }
-.cap { font-size: var(--fs-cap); color: var(--text-3); }
 .muted { color: var(--text-2); }
-.dim { color: var(--text-3); }
-.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); }
-
-
-/* 应用沿用旧类名的等价写法 */
 .container { width: min(var(--page-max), 100% - 2 * var(--safe-x)); margin-inline: auto; }
-.container-wide { width: min(84rem, 100% - 2 * var(--safe-x)); margin-inline: auto; }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip-link { position: fixed; left: 16px; top: 12px; z-index: 200; padding: 10px 14px; border-radius: var(--r-control); background: var(--surface-raised); color: var(--text); transform: translateY(-200%); transition: transform var(--dur) var(--ease); }
 .skip-link:focus { transform: translateY(0); }
 .small { font-size: var(--fs-sm); }
 .micro { font-size: var(--fs-cap); }
 .strong { font-weight: 600; }
-.eyebrow { font-size: var(--fs-cap); color: var(--text-3); }
 
 html { scroll-padding-top: calc(var(--header-h) + 16px); }
 #app { display: flex; flex-direction: column; min-height: 100svh; }

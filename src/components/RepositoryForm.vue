@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { errorMessage, post } from '../lib/api'
-import { toast } from '../lib/toast'
 import AppIcon from './AppIcon.vue'
 import AppButton from './AppButton.vue'
 import AppField from './AppField.vue'
@@ -24,11 +23,9 @@ async function submit() {
     const value = await post<SubmitResult>(props.studio ? '/api/studio/submit' : '/api/submit', { url: url.value })
     result.value = value
     url.value = ''
-    toast.success('投稿已保存')
     emit('submitted', value)
   } catch (caught) {
     error.value = errorMessage(caught)
-    toast.error('提交未成功', error.value)
   } finally {
     busy.value = false
   }
@@ -70,8 +67,8 @@ async function submit() {
       <AppIcon name="check-circle" :size="17" />
       <div>
         <p class="notice__title">{{ result.message }}</p>
-        <p class="repo-form__result-line">
-          <RouterLink v-if="!studio" to="/me">查看我的提交 →</RouterLink>
+        <p v-if="!studio" class="repo-form__result-line">
+          <RouterLink to="/me">查看我的提交 →</RouterLink>
         </p>
       </div>
     </div>

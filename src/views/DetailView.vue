@@ -5,7 +5,7 @@ import { api, errorMessage, put, session, type Detail } from '../lib/api'
 import { renderReadme } from '../lib/readme'
 import { downloadAsset } from '../lib/download'
 import { setMetadata } from '../router'
-import { formatDateTime, formatNumber, formatSize, shortHash } from '../lib/format'
+import { formatDateTime, formatNumber, formatSize } from '../lib/format'
 import { toast } from '../lib/toast'
 import AsyncState from '../components/AsyncState.vue'
 import AppIcon from '../components/AppIcon.vue'
@@ -13,7 +13,6 @@ import AppBadge from '../components/AppBadge.vue'
 import AppButton from '../components/AppButton.vue'
 import MonogramAvatar from '../components/MonogramAvatar.vue'
 import { navigateTabs } from '../composables/tabs'
-import CopyButton from '../components/CopyButton.vue'
 import VersionHistory from '../components/VersionHistory.vue'
 
 type TabKey = 'readme' | 'versions' | 'review'
@@ -43,7 +42,7 @@ async function load() {
   error.value = ''
   try {
     detail.value = await api<Detail>(`/api/plugins/${encodeURIComponent(String(route.params.id))}`)
-    setMetadata(detail.value.plugin.full_name, detail.value.plugin.description || '查看仓库说明与安装包。')
+    setMetadata(detail.value.plugin.full_name, detail.value.plugin.description || '查看使用说明、下载插件。')
   } catch (caught) {
     error.value = errorMessage(caught)
   } finally {
@@ -112,7 +111,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <p class="detail-hero__owner">
                   <AppIcon :name="uploaded ? 'user' : 'git-branch'" :size="14" />{{ uploaded ? `作者 ${detail.plugin.author || '匿名'}` : detail.plugin.full_name }}
                 </p>
-                <p class="detail-hero__desc">{{ detail.plugin.description || '暂无描述' }}</p>
+                <p v-if="detail.plugin.description" class="detail-hero__desc">{{ detail.plugin.description }}</p>
               </div>
             </div>
 
@@ -142,9 +141,9 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                 <dt class="stat__label">下载</dt>
                 <dd class="stat__value">{{ formatNumber(detail.plugin.download_count) }}</dd>
               </div>
-              <div class="stat">
+              <div v-if="detail.license" class="stat">
                 <dt class="stat__label">许可证</dt>
-                <dd class="stat__value stat__value--text">{{ detail.license || '—' }}</dd>
+                <dd class="stat__value stat__value--text">{{ detail.license }}</dd>
               </div>
             </dl>
           </header>
@@ -171,13 +170,11 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
               <section v-if="tab === 'readme'" :id="`detail-panel-${tab}`" class="card detail__panel" role="tabpanel" :aria-labelledby="`detail-tab-${tab}`">
                 <header v-if="!uploaded" class="detail__panel-head">
                   <div>
-                    <p v-if="!uploaded" class="detail__panel-sub">
-                      <AppIcon name="file-text" :size="13" />{{ detail.readmePath || '未找到 README' }}
-                      <span class="detail__panel-dot" aria-hidden="true">·</span>commit {{ shortHash(detail.readmeCommit) }}
+                    <p class="detail__panel-sub">
+                      <AppIcon name="file-text" :size="13" />{{ detail.readmePath || 'README' }}
                     </p>
                   </div>
-                  <div v-if="!uploaded" class="row gap-2">
-                    <CopyButton v-if="detail.readmeCommit" :value="detail.readmeCommit" label="已复制 README commit" />
+                  <div v-if="detail.readmeCommit && detail.readmePath" class="row gap-2">
                     <AppButton
                       :href="`https://github.com/${detail.plugin.full_name}/blob/${detail.readmeCommit}/${detail.readmePath}`"
                       size="sm"
@@ -207,14 +204,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                   <div class="detail__review-row">
                     <span class="detail__review-label">{{ detail.publicationMode && detail.publicationMode !== 'automatic' ? '上架时间' : '审核时间' }}</span>
                     <span>{{ (detail.publicationMode && detail.publicationMode !== 'automatic' ? detail.publishedAt : detail.reviewedAt) ? formatDateTime((detail.publicationMode && detail.publicationMode !== 'automatic' ? detail.publishedAt : detail.reviewedAt)!) : '—' }}</span>
-                  </div>
-                  <div v-if="!uploaded" class="detail__review-row">
-                    <span class="detail__review-label">README commit</span>
-                    <span class="row gap-1"><code class="small">{{ shortHash(detail.readmeCommit) }}</code><CopyButton :value="detail.readmeCommit" label="已复制 commit" :size="15" /></span>
-                  </div>
-                  <div v-if="!uploaded" class="detail__review-row">
-                    <span class="detail__review-label">安装包源码 commit</span>
-                    <span class="row gap-1"><code class="small">{{ shortHash(detail.sourceCommit) }}</code><CopyButton :value="detail.sourceCommit" label="已复制 commit" :size="15" /></span>
                   </div>
                 </div>
               </section>
@@ -246,7 +235,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
                     :data-asset-id="asset.id"
                     @click="download(String(asset.id), asset.name)"
                   >
-                    下载此文件
+                    下载安装包
                   </AppButton>
                 </div>
 
@@ -257,10 +246,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 
                 <div class="download-card__extra">
                   <div class="download-card__line">
-                    <span class="detail__review-label">下载统计</span>
-                    <span class="tnum">{{ formatNumber(detail.plugin.download_count) }} 次尝试</span>
-                  </div>
-                  <div class="download-card__line">
                     <span class="detail__review-label">最近更新</span>
                     <span>{{ formatDateTime(detail.publishedAt || detail.plugin.updated_at) }}</span>
                   </div>
@@ -269,7 +254,7 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
             </aside>
           </div>
 
-          <div class="detail-mobile-bar">
+          <div v-if="detail.assets.length" class="detail-mobile-bar">
             <div class="detail-mobile-bar__info">
               <span class="strong">{{ detail.plugin.version || '—' }}</span>
               <span class="small muted">{{ detail.assets.length }} 个安装包</span>
@@ -328,7 +313,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .detail__tabs { margin-bottom: 16px; flex-wrap: wrap; }
 .detail__panel { padding: 32px; }
 .detail__panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 1px solid var(--line); }
-.detail__panel-title { font-size: var(--fs-h3); font-weight: 650; }
 .detail__panel-sub { display: flex; align-items: center; gap: 5px; margin-top: 4px; font-size: var(--fs-sm); color: var(--text-3); flex-wrap: wrap; }
 .detail__panel-dot { opacity: 0.6; padding-inline: 2px; }
 .detail__readme { max-width: 78ch; }
@@ -353,11 +337,6 @@ watch(() => route.hash, hash => { if (hash === '#downloads') scrollToDownloads()
 .asset__meta span { min-width: 0; overflow-wrap: anywhere; }
 .download-card__extra { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .download-card__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: var(--fs-sm); }
-
-.detail__side-card { padding: 18px; }
-.detail__side-title { display: flex; align-items: center; gap: 8px; font-size: var(--fs-body); font-weight: 640; }
-.detail__side-list { list-style: disc; margin-top: 10px; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.6; }
-.detail__side-list li::marker { color: var(--signal); }
 
 .detail-mobile-bar { display: none; }
 

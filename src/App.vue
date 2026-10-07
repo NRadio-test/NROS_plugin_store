@@ -3,18 +3,25 @@ import { onBeforeUnmount, onMounted } from 'vue'
 import AppHeader from './components/AppHeader.vue'
 import AppFooter from './components/AppFooter.vue'
 import AppToaster from './components/AppToaster.vue'
-import { loadSession } from './lib/api'
+import { loadSession, session } from './lib/api'
 
+let accountRefresh: ReturnType<typeof setInterval> | undefined
 onMounted(() => {
   void loadSession(true)
   document.addEventListener('visibilitychange', refreshOnFocus)
+  accountRefresh = setInterval(() => {
+    if (document.visibilityState === 'visible' && session.ssoEnabled && session.user) void loadSession()
+  }, 60000)
 })
 function refreshOnFocus() {
   if (document.visibilityState !== 'visible') return
   sessionStorage.removeItem('plugin-sso-checked')
   void loadSession(true)
 }
-onBeforeUnmount(() => document.removeEventListener('visibilitychange', refreshOnFocus))
+onBeforeUnmount(() => {
+  document.removeEventListener('visibilitychange', refreshOnFocus)
+  clearInterval(accountRefresh)
+})
 </script>
 
 <template>

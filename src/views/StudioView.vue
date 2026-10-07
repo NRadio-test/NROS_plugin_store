@@ -254,8 +254,6 @@ function select(key: PanelKey) {
 }
 @media (max-width: 900px) {
   .studio-login { grid-template-columns: 1fr; gap: 20px; padding-top: 28px; }
-  .studio-login__aside { padding: 0; background: transparent; }
-  .studio-login__list { display: none; }
   .studio-login__form { padding: 24px; }
 }
 </style>
